@@ -1,0 +1,55 @@
+{
+  "level": "L1D",
+  "sim_instructions": 9000000,
+  "operating_point": {
+    "tau": 0.0,
+    "gamma": 0.04,
+    "H": 0.25,
+    "n_sets": 2048,
+    "n_L": 32,
+    "n_F": 32,
+    "window_accesses": 40000,
+    "m_per_bucket_approx": 19,
+    "note": "differs from synthetic (tau=0.05,H=0.8,m=64); the noisier real Delta-hat forced a looser (tau,H)"
+  },
+  "traces": {
+    "lbm": {
+      "name": "619.lbm_s",
+      "ipc": {
+        "unguarded_clean": 0.4585,
+        "bouncer_clean": 0.448,
+        "unguarded_attack": 0.4221,
+        "bouncer_attack": 0.4464
+      },
+      "clean_tax": 0.9771,
+      "unguarded_attack_loss_pct": 7.94,
+      "bouncer_atk_vs_unguarded_atk_pct": 5.76
+    },
+    "roms": {
+      "name": "654.roms_s",
+      "ipc": {
+        "unguarded_clean": 1.139,
+        "bouncer_clean": 1.011,
+        "unguarded_attack": 1.08,
+        "bouncer_attack": 1.009
+      },
+      "clean_tax": 0.8876,
+      "unguarded_attack_loss_pct": 5.18,
+      "bouncer_atk_vs_unguarded_atk_pct": -6.57
+    },
+    "perlbench": {
+      "name": "600.perlbench_s",
+      "ipc": {
+        "unguarded_clean": 1.929,
+        "bouncer_clean": 1.897,
+        "unguarded_attack": 1.924,
+        "bouncer_attack": 1.897
+      },
+      "clean_tax": 0.9834,
+      "unguarded_attack_loss_pct": 0.26,
+      "bouncer_atk_vs_unguarded_atk_pct": -1.4
+    }
+  },
+  "interpretation": "The auditor RUNS in a real simulator on SPEC with no added cache-access-critical-path latency, computing Delta-hat from real per-set cache-hit signals and operating the gate. KEY HONEST FINDING: the auditor is only as good as its competence reward. With a per-set L1D cache-hit PROXY (a poor stand-in for a prefetcher's true latency/MLP benefit): on lbm it correctly caps the corrupted prefetcher's 7.9% pollution loss to the off floor (bouncer_attack 0.4464 > unguarded_attack 0.4221); but on roms the SAME proxy under-credits a genuinely-helpful prefetcher (unguarded_clean 1.139) and over-gates it (clean tax 11.2%; gating even loses vs the attacked prefetcher). This motivates the design choice (Sec 8): use the controller's OWN in-silicon reward (Pythia accuracy x timeliness), which tracks real benefit. Gate TRUSTED->GATED transition dynamics are validated where competence is controllable (synthetic P1); the real-trace runs show end-to-end floor behavior under a realized-competence proxy.",
+  "suite_note": "3-trace suite spanning compute-bound (perlbench: prefetch +1.7%, attack near-harmless -0.3%, tax 1.7%), streaming (lbm: attack -7.9% pollution, Bouncer caps to floor), and memory-bound (roms: prefetch genuinely helps +12.7% but cache-hit proxy misses it -> over-gate, 11% tax). Consistent finding: the floor CAP reliably bounds the attack's worst case, but the per-set cache-hit reward PROXY mis-estimates prefetch competence (tax ranges 1.7-11%). The mechanism works; the reward proxy is the limiting factor."
+}

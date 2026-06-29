@@ -1,0 +1,221 @@
+{
+  "n_findings": 21,
+  "n_blocking": 5,
+  "reviews": [
+    {
+      "key": "theory",
+      "summary": "Variance bound exactly tight at p=1/2, Siegmund ARL correct and matches empirics, Lemma 1 sound. Two blocking issues (Prop 1, regret-bound plot) plus minor gaps; none individually fatal.",
+      "findings": [
+        {
+          "severity": "major",
+          "location": "bouncer.tex:334-365",
+          "issue": "Proposition 1 (mimicry resistance) is stated unconditionally, but its exchangeability argument equates E[reward on Leader-L] and E[reward on victim sets] only because both are uniform samples of one global pool. A redistributive adversary that degrades a specific victim region while holding the global mean fixed breaks the premise; the Honest caveat concedes exactly this, and it is the strongest adversary actually run in P4b. Exchangeability is also only approximate because real cache sets / PC-buckets are not i.i.d. (hot/cold sets, conflict skew), leaving an unquantified heterogeneity bias.",
+          "fix": "Restate Prop 1 conditionally (per-domain dueling within contested region R, conditional on within-R exchangeability); move the per-domain construction into the proposition and prove the (1-f) residual-signal bound for the redistributive case rather than asserting it; bound the heterogeneity bias; state plainly a global Delta-hat has no guarantee against redistribution.",
+          "is_blocking": true
+        },
+        {
+          "severity": "major",
+          "location": "exp_theory.py:108-109; results/theory.json regret.bound; bouncer.tex:300-302",
+          "issue": "The plotted Lemma-1 bound is not Eq.(floor). The Lemma detection term is N_ep*D*r_max, but the experiment computes N_ep*D*ipc_slope*(1-q0)=N_ep*D*0.7, replacing r_max (=1.4 in IPC units) with 0.5*r_max (the harness gap mu0-mu_C_min) and setting alpha*T*c_sw=0. The figure thus envelopes (measured 5.9 vs bound 7.6 at Nep=6) a quantity about 2x smaller than the stated bound.",
+          "fix": "Plot the bound as stated (N_ep*D*r_max + alpha*T*c_sw, noting it is loose) or tighten Eq.(floor) to N_ep*D*(r_max_C - r_min_C) and justify alpha*T*c_sw negligibility with the actual alpha value; make the plotted curve and the theorem statement identical.",
+          "is_blocking": true
+        },
+        {
+          "severity": "major",
+          "location": "exp_theory.py:50-64; bouncer.tex:530-538",
+          "issue": "ARL validation uses i.i.d. Gaussian draws at low SNR (mean_in=0.5 sigma), but the deployed detector runs on a bounded-reward mean Delta-hat at drift/sigma about 28 (K-Delta=0.444, sigma=0.0156). The 1.166 overshoot correction matters only in the small-drift heavy-overshoot regime, which is never exercised for the real signal; at drift/sigma=28 the deterministic H/(K-Delta) already matches (1.80 vs 1.84). The text presents the Gaussian match as validating the deployed constants.",
+          "fix": "Validate ARL on the actual bounded-reward Delta-hat distribution at the deployed operating point, or state explicitly that the deployed regime is the strong-drift limit where ARL1 tends to H/(K-Delta) and the overshoot correction is negligible, so the Gaussian sweep is only a formula sanity check.",
+          "is_blocking": false
+        },
+        {
+          "severity": "minor",
+          "location": "bouncer.tex:319,288-294,426-429,443-444; bouncer/cusum.py:113-128",
+          "issue": "Several smaller gaps. (a) D=H/(K-Delta) is the deterministic-drift mean (ARL1), not a high-probability quantile, yet A2 asserts detection within D w.p. at least 1-delta with delta untied to sigma. (b) A2 triggers on Delta below -gamma while the CUSUM reference is K=tau+gamma/2=0.10>0 and off-policy is Delta<tau=0.05, so drops in (-gamma,tau) incur regret vs pi0 and are detectable yet uncovered, charged but unbounded by N_ep*D. (c) P0 RMSE 0.014 approx sigma 0.016 conflates tracking RMSE with sampling std; RMSE below sigma hints the ground truth is window-averaged. (d) the one-window detection claim in P1/abstract contradicts the worked D about 1.8. (e) ARL0 clamps to 1e18 at the op point (H/sigma=51) so alpha is effectively 0 by saturation, making the alpha*T*c_sw term vacuous there.",
+          "fix": "Make D a high-probability bound (ARL1 plus a tail term); align A2 with the CUSUM by defining a drop episode as Delta<tau or add a steady-state-regret term for (-gamma,tau); separate tracking RMSE from sampling std and state the ground truth used; headline the mean delay (about 1.8 windows) with one-window as best case; report the pre-clamp alpha or state the false-alarm term is negligible by design at n_L=32.",
+          "is_blocking": false
+        }
+      ]
+    },
+    {
+      "key": "code",
+      "summary": "Mostly sound with one circular triage experiment and minor secondary issues listed in findings",
+      "findings": [
+        {
+          "severity": "critical",
+          "location": "experiments/exp_p3_generality.py:84-87,105-116",
+          "issue": "Triage accuracy is circular: co-tenant feature is drawn from the ground-truth label (verified 100pct separable, zero overlap), and the logistic is fit and scored on the same data with no split or CV. Cannot support the section-7 separability claim.",
+          "fix": "Make co-tenant correlation a measured feature in adversary.py independent of the label; use a held-out split or CV; report a per-feature ablation.",
+          "is_blocking": true
+        },
+        {
+          "severity": "major",
+          "location": "bouncer/adversary.py:141-171",
+          "issue": "Docstring claims covert attack preserves aggregate reward via redistribution; code does not (only ~3 of 32 leader sets in the 256-set region, aggregate reward 0.765 to 0.690, residual 0.024 to -0.146 at full leakage). Only marginals are held fixed.",
+          "fix": "Implement real redistribution or correct the docstring to claim marginal suppression only. Headline still holds since the residual never gates at full leakage.",
+          "is_blocking": false
+        },
+        {
+          "severity": "minor",
+          "location": "experiments/exp_p4_mimicry.py:71-72;bouncer/bouncer.py:72-77",
+          "issue": "Ablation region is 256 sets vs 2048, so the estimator keeps only ~3 leader-C and ~6 leader-F sets; in-region variance far exceeds the 0.0156 quoted, so P4-B power reflects this tiny pool, not headline pool size.",
+          "fix": "Scale region with total set count, or report effective in-region leader count and estimator std with the sweep.",
+          "is_blocking": false
+        },
+        {
+          "severity": "minor",
+          "location": "experiments/exp_p1_floor.py:32,40",
+          "issue": "Clean and attack episodes share one reward-RNG run seed (pre-onset rates 0.76074 vs 0.76071), undeclared common-random-numbers, so clean tax and perf recovered use a correlated baseline.",
+          "fix": "Use distinct run seeds or document the CRN design and report paired differences.",
+          "is_blocking": false
+        }
+      ]
+    },
+    {
+      "key": "claims",
+      "summary": "The paper's headline numbers are, with few exceptions, faithfully backed by the released JSON: R\u00b2=0.997 (0.99741), the variance-bound ratio range 0.85\u20130.98x, the P2 pool\u2192\u03c3\u2192H\u2192latency chain, the ARL/Siegmund match (927 vs 938, geomean 1.00), the regret envelope (5.9 vs 7.6 at N_ep=6), triage accuracy 1.0 over 120 episodes, the 336-byte/0.13%/0ns overhead, and the P4 secrecy-ablation curve all check out against p0\u2013p4/theory.json. The defects are concentrated not in fabricated numbers but in (1) two mildly favorable roundings, (2) several robustness/absolute claims (TPR=1.0, FPR=0, S_in\u21920, floor \"holds\") that are real in the harness but stated without acknowledging they are single-seed/finite-resolution simulation artifacts, and (3) a framing problem: the abstract and contributions repeatedly imply a systems-grade result (\"the systems result\", \"0 ns added datapath latency\", IPC numbers) when the entire evaluation is a single synthetic harness and the ChampSim path is an un-run \"skeleton.\" The simulation-only nature is disclosed honestly in \u00a7Methodology and \u00a7Discussion, but the abstract/intro oversell it; no actual ChampSim or SPEC/GAP results exist and the paper is mostly careful not to claim otherwise, though several phrasings invite the reader to assume more. Nothing rises to fabrication, but the absolute \"TPR=1.0 / detection rate exactly 0 / 0 ns\" framing and the \"systems result\" labeling are the reviewer-bait that an HPCA committee will press on.",
+      "findings": [
+        {
+          "severity": "minor",
+          "location": "Abstract (bouncer.tex:58); P1 \u00a7eval (line 444)",
+          "issue": "Abstract states the safety floor 'holds to within 0.6% of the fallback under attack.' The JSON floor_violation_steady is 0.006328 = 0.633%, which the body text (line 444) correctly reports as 0.6% but the underlying value rounds to 0.63%, not 0.6%. This is a mild down-round in the favorable direction.",
+          "fix": "State '0.63%' or 'under 0.7%' to match floor_violation_steady=0.00633 exactly, consistent with the P3 '\u22640.7%' phrasing.",
+          "is_blocking": false
+        },
+        {
+          "severity": "minor",
+          "location": "Abstract (line 62-63); \u00a7threat (166-171); P2 (462-465); P4 (508-519)",
+          "issue": "The headline 'Bouncer holds TPR=1.0' / 'input-OOD detection rate collapses to 0' is stated as an absolute property. In the JSON these are exact (full_tpr=[1,1,1,1,1], sin_tpr=[0,...], sin_mim ROC all zeros), but they come from a single synthetic harness with n_episodes=40 (P4) and finite ROC resolution; TPR=1.0 and FPR=0 are point estimates with a confidence interval that is never reported. Presenting 1.0/0.0 as the robustness guarantee overclaims certainty the experiment cannot provide (e.g. 0/40 only bounds the true miss rate to roughly <7% at 95%).",
+          "fix": "Report these as '1.00 (40/40 episodes, no false negatives observed)' and '0/N detections' with the episode count and a note on confidence, rather than as exact constants; soften 'collapses to 0' to 'failed to detect any of N mimicry episodes.'",
+          "is_blocking": false
+        },
+        {
+          "severity": "major",
+          "location": "Abstract (line 59-60); contributions (124); \u00a7overhead (548-555); Table II (557-572)",
+          "issue": "'Zero added datapath latency (0 ns)' and '<1% energy' are presented as measured systems results ('Table II is the systems result'), but the JSON marks them as analytical/asserted: p2.overhead.added_latency_ns=0 is a design assumption (everything is sampled/off-path), energy_pct_target is the literal string '<1%' (a target, not a measurement), and area_pct_est=0.1282 is an estimate. The caption of Table II already says '(analytical)', but the abstract and \u00a7overhead present 0 ns / <1% as established results. There is no RTL, no power model, no cycle-accurate measurement.",
+          "fix": "Consistently label 0 ns latency, <1% energy, and 0.13% area as analytical/design-target estimates (as Table II's caption does) and remove 'the systems result' framing from \u00a7overhead; reserve 'systems result' for when ChampSim IPC numbers exist.",
+          "is_blocking": true
+        },
+        {
+          "severity": "major",
+          "location": "Abstract (line 56-60); contributions (126-128); \u00a7method (401-420); \u00a7discussion (587-590)",
+          "issue": "The evaluation is entirely a single synthetic harness (controller reward mu_C(u)=rmax*clip(0.8-0.7u), flat floor 0.5*rmax, IPC=0.6+1.4*r transfer \u2014 all in \u00a7method). The abstract calls it 'a faithful, fully-released simulation harness' and contribution 5 promises 'a ChampSim-deployable C++ skeleton bridging to the systems evaluation,' but no ChampSim run, no SPEC/GAP workload, and no absolute-IPC number exists in any JSON. The 'IPC' values in theory.json regret are harness transfer-function outputs, not simulated IPC. A reader of the abstract could reasonably infer microarchitectural simulation results that are not present.",
+          "fix": "In the abstract, state explicitly that all results are from a synthetic competence harness and that the ChampSim skeleton is un-evaluated (no IPC results yet). The honest disclosure already in \u00a7method/\u00a7discussion should be promoted into the abstract so the framing is consistent end-to-end.",
+          "is_blocking": true
+        },
+        {
+          "severity": "minor",
+          "location": "\u00a7method (402-403); contributions/Lemma framing",
+          "issue": "'Bouncer's guarantees are environment-agnostic' is an overclaim relative to what is shown. The harness validates ONE environment (a prefetcher-like reward model with a specific stress->reward map); P3 'generality' reuses the same synthetic substrate with relabeled axes (the JSON keys are 'prefetch(Pythia)', 'replacement(Hawkeye)', 'scheduler' but all share the harness, and the floor_viol values are nearly identical ~0.62-0.69%, indicating the same generator). 'Environment-agnostic' is a property of the proof's assumptions, not something the evaluation demonstrates across real environments.",
+          "fix": "Qualify to 'the guarantees rest only on bounded reward and a partitionable resource (assumptions A1-A5), which we argue are environment-agnostic; we validate the mechanism in one synthetic environment instantiated three ways.' Avoid implying empirical cross-environment generality.",
+          "is_blocking": false
+        },
+        {
+          "severity": "minor",
+          "location": "P1 \u00a7eval (line 444)",
+          "issue": "P1 text emphasizes the 0.6% steady-state violation but does not mention that floor_violation_transient=0.364 (36.4%) \u2014 i.e., the single pre-detection window dips ~36% below the floor. The text refers to it qualitatively ('the single bounded pre-detection window') but never gives the 36% number, so a reader sees only '0.6%'. This is selective reporting of the favorable steady-state figure while omitting the large transient magnitude.",
+          "fix": "Report the transient magnitude explicitly (e.g., 'the lone pre-detection window dips 36% below floor, the bounded <=D*rmax term') so the reader sees both the steady-state and worst-window numbers.",
+          "is_blocking": false
+        },
+        {
+          "severity": "nit",
+          "location": "P0 \u00a7eval (line 426)",
+          "issue": "Text says competence carries 'from +0.27 to negative.' The starting value +0.27 is not present in any JSON (p0.json contains r2/rmse/sigma and the variance sweep, but not the tracking trajectory). The claim is plausible from the figure but unverifiable from the released numbers.",
+          "fix": "Ensure the tracking trajectory (including the +0.27 start) is in the released artifact, or cite the figure data file; otherwise drop the specific +0.27.",
+          "is_blocking": false
+        },
+        {
+          "severity": "nit",
+          "location": "P4 \u00a7eval (line 516-517)",
+          "issue": "Rounding: text says 'TPR=0.98 at f=0.6' and 'collapsing to 0.08 at f=0.8.' JSON values are 0.975 and 0.075. Both round up favorably (0.975->0.98 standard; 0.075->0.08 standard) but worth noting they are the rounded forms of 0.975/0.075.",
+          "fix": "Either report 0.975 and 0.075, or keep 0.98/0.08 but confirm rounding is acceptable; no real discrepancy, just transparency.",
+          "is_blocking": false
+        },
+        {
+          "severity": "minor",
+          "location": "P1 (line 451); abstract 'safety floor holds'",
+          "issue": "alpha in p1.json is 1e-18 and cumulative_regret_final is -70.3 (Bouncer beats the floor). The claim that cumulative regret goes negative 'while never exceeding the Lemma 1 ceiling' is supported, but alpha=1e-18 is effectively asserting zero false alarms over the run \u2014 another instance where a finite simulation yields a number (1e-18) that reads as an exact analytic value rather than an empirical false-alarm rate. Worth flagging that alpha here is computed/analytic, not observed.",
+          "fix": "Clarify whether alpha=1e-18 is the analytic Siegmund ARL0^-1 at the operating point (likely) vs an observed false-alarm frequency; label it as the former.",
+          "is_blocking": false
+        },
+        {
+          "severity": "nit",
+          "location": "Theory \u00a7eval (line 534)",
+          "issue": "'geometric-mean ratio 1.00 over a threshold sweep' \u2014 JSON arl0_ratio_geomean=0.99758, which rounds to 1.00 but the in-control ARL theory slightly under-predicts at low H and over-predicts at high H (e.g. H=5: emp 927 < th 938). Reporting '1.00' is fair to 2 sig figs but obscures a small systematic curvature.",
+          "fix": "Optionally report the ratio as 0.998 and note the small H-dependent bias; not blocking.",
+          "is_blocking": false
+        }
+      ]
+    },
+    {
+      "key": "threat",
+      "summary": "part 3: minors and nit",
+      "findings": [
+        {
+          "severity": "minor",
+          "location": "simulate.py 81-82 leaders always run fixed policy; Tier-B section",
+          "issue": "Leader-F always runs the fallback and Leader-C always runs C every window regardless of gate state. Once an attacker localizes leaders (the leak-fraction-positive regime), Leader-F is a persistent observable QoS anomaly: a fixed fraction of the resource always runs the fallback even when C is trusted everywhere else, which is itself a partition-identification channel and a permanent clean tax beyond the 0.35 percent headline if the fallback is meaningfully worse than C in distribution. Neither effect is analyzed.",
+          "fix": "Quantify the steady-state cost of permanently running the fallback on the Leader-F sets when C is good (part of the real clean tax; belongs in the overhead table) and discuss persistent leader behavior as a partition-identification side channel.",
+          "is_blocking": false
+        },
+        {
+          "severity": "minor",
+          "location": "Threat model GATED-freezes-learning; gate_fsm.py",
+          "issue": "Learning poisoning is countered by GATED freezing learning, but poisoning happens while TRUSTED; freezing only after the gate fires does not undo poisoned weights, and PROBING re-trust restores the poisoned policy. No experiment models an attacker poisoning C's online weights during TRUSTED so C looks competent on the secret leaders but degraded on followers, the learning-mediated analogue of the redistributive attack. The freeze claim is asserted, not shown.",
+          "fix": "Either scope online-learning poisoning out explicitly and prominently rather than as a parenthetical, or add a minimal experiment where C's policy depends on attacker-injected history and show whether secret-leader competence measurement still catches the poisoned-follower case.",
+          "is_blocking": false
+        },
+        {
+          "severity": "nit",
+          "location": "metrics.py 65-70 detection_latency_onset; P4 secrecy ablation",
+          "issue": "For the regional-covert attack the ground-truth positive is the onset itself (global competence barely moves by design) and detection is whether GATED ever fires after onset. The reported full detection at low leak fraction depends on the chosen deadline and on the attack moving the competence estimate enough on the unprotected leaders, which depends on the sink stress of 0.9 and the region size. The sharp cliff (near full at leak 0.6 to near zero at 0.8) is sensitive to these fixed magnitudes; a weaker sink shifts it. The single-curve presentation hides this.",
+          "fix": "Report the secrecy-ablation detection rate as a two-dimensional surface over leak fraction and sink stress so the cliff location is shown to be a property of secrecy rather than of one hand-picked magnitude.",
+          "is_blocking": false
+        }
+      ]
+    }
+  ],
+  "synthesis": {
+    "verdict": "Sound and honest but not submission ready. Four blocking issues verified in source.",
+    "must_fix": [
+      {
+        "title": "Circular triage experiment defeats Section 7 separability",
+        "location": "exp_p3_generality lines 84 to 87",
+        "why": "Co-tenant feature sampled from the label; same-data fit and score; accuracy 1.0 is tautological.",
+        "fix": "Label-independent feature with cross-validation and ablation, or present triage as qualitative."
+      },
+      {
+        "title": "Plotted regret bound does not match the Lemma",
+        "location": "exp_theory lines 108 to 109",
+        "why": "Code uses half r_max and zeroes the false-alarm term; the bound is about two times too small.",
+        "fix": "Plot the stated bound or tighten the equation so curve and theorem match."
+      },
+      {
+        "title": "Abstract oversells analytical as measured systems result",
+        "location": "bouncer tex lines 58 to 63 and 548 to 555",
+        "why": "Latency, energy, and area shown as established but the JSON marks them assumption, target, estimate; ChampSim un-run, no IPC.",
+        "fix": "Promote the sim-only disclosure into the abstract; label as analytical; strike the systems-result framing."
+      },
+      {
+        "title": "Proposition 1 overstates redistribution resistance",
+        "location": "bouncer tex 334 to 365; adversary py 136 to 171",
+        "why": "Stated unconditionally though a redistributive adversary breaks it; docstring claims aggregate preservation but code holds only marginals; never run.",
+        "fix": "Restate Prop 1 conditionally and prove the residual bound; fix the docstring."
+      }
+    ],
+    "should_fix": [
+      "TPR and FPR as finite-sample estimates with a confidence note.",
+      "Qualify environment-agnostic: P3 environments share one generator.",
+      "Validate ARL at the deployed point; the Gaussian sweep is a sanity check.",
+      "Report the P1 transient 0.364 alongside the 0.6 percent steady-state.",
+      "Fix roundings and verify the P0 plus-0.27 start in the release.",
+      "Harness-realism: P4 region size, P1 shared seed, D as a high-probability bound.",
+      "Threat channels: Leader-F fallback side channel and learning poisoning while TRUSTED."
+    ],
+    "strengths": [
+      "Headline numbers reproduce: R2 of 0.99741, ARL 927 versus 938.",
+      "Variance bound exactly tight at p equals one half.",
+      "Self-aware: the Honest caveat names the redistribution gap.",
+      "Defects are framing, not fabricated data."
+    ]
+  }
+}

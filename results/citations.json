@@ -1,0 +1,512 @@
+[
+  {
+    "bibkey": "bera2021pythia",
+    "title": "Pythia: A Customizable Hardware Prefetching Framework Using Online Reinforcement Learning",
+    "authors": "Bera, Kanellopoulos, Nori, Shahroodi, Subramoney, Mutlu",
+    "venue": "MICRO",
+    "year": "2021",
+    "relevance": "The canonical learned-RL prefetcher: an online contextual-bandit/RL agent that picks prefetch offsets from program context and is rewarded by prefetch quality under current memory-bandwidth utilization. This is exactly the class of learned microarchitectural controller Bouncer must bound \u2014 its dynamic, performance-coupled policy is the kind of unverified learned controller that needs a safe-fallback floor and competence auditing.",
+    "bibtex": "@inproceedings{bera2021pythia,\n  author    = {Rahul Bera and Konstantinos Kanellopoulos and Anant V. Nori and Taha Shahroodi and Sreenivas Subramoney and Onur Mutlu},\n  title     = {Pythia: A Customizable Hardware Prefetching Framework Using Online Reinforcement Learning},\n  booktitle = {Proceedings of the 54th Annual IEEE/ACM International Symposium on Microarchitecture (MICRO)},\n  pages     = {1121--1137},\n  year      = {2021},\n  doi       = {10.1145/3466752.3480114}\n}",
+    "area": "learned-controllers"
+  },
+  {
+    "bibkey": "jain2016hawkeye",
+    "title": "Back to the Future: Leveraging Belady's Algorithm for Improved Cache Replacement",
+    "authors": "Jain and Lin",
+    "venue": "ISCA",
+    "year": "2016",
+    "relevance": "Hawkeye: a learning-based last-level-cache replacement policy that trains a PC-indexed predictor to imitate the offline-optimal Belady (MIN) decisions reconstructed from past accesses. A foundational learned cache controller whose accuracy can drift across workload phases \u2014 a prime target for runtime competence auditing against a simple fallback (e.g. LRU/RRIP) floor.",
+    "bibtex": "@inproceedings{jain2016hawkeye,\n  author    = {Akanksha Jain and Calvin Lin},\n  title     = {Back to the Future: Leveraging Belady's Algorithm for Improved Cache Replacement},\n  booktitle = {Proceedings of the 43rd International Symposium on Computer Architecture (ISCA)},\n  pages     = {78--89},\n  year      = {2016},\n  doi       = {10.1109/ISCA.2016.17}\n}",
+    "area": "learned-controllers"
+  },
+  {
+    "bibkey": "shi2019glider",
+    "title": "Applying Deep Learning to the Cache Replacement Problem",
+    "authors": "Shi, Huang, Jain, Lin",
+    "venue": "MICRO",
+    "year": "2019",
+    "relevance": "Glider: distills an offline attention-LSTM model of cache reuse into a hardware-cheap integer-SVM (ISVM) online replacement predictor indexed by PC history. Demonstrates the offline-train / online-deploy pattern whose deployment-time behavior can diverge from training \u2014 motivating Bouncer's set-dueling + CUSUM monitoring of a learned controller versus a fallback floor.",
+    "bibtex": "@inproceedings{shi2019glider,\n  author    = {Zhan Shi and Xiangru Huang and Akanksha Jain and Calvin Lin},\n  title     = {Applying Deep Learning to the Cache Replacement Problem},\n  booktitle = {Proceedings of the 52nd Annual IEEE/ACM International Symposium on Microarchitecture (MICRO)},\n  pages     = {413--425},\n  year      = {2019},\n  doi       = {10.1145/3352460.3358319}\n}",
+    "area": "learned-controllers"
+  },
+  {
+    "bibkey": "ipek2008selfoptimizing",
+    "title": "Self-Optimizing Memory Controllers: A Reinforcement Learning Approach",
+    "authors": "Ipek, Mutlu, Martinez, Caruana",
+    "venue": "ISCA",
+    "year": "2008",
+    "relevance": "The seminal RL-based DRAM scheduler: an online RL agent learns memory-command scheduling to maximize long-term performance, adapting to dynamic workload state. The earliest learned microarchitectural controller of this family; its long-horizon, hardware-deployed RL policy is precisely the kind of agent Bouncer aims to keep above a safe-fallback scheduling floor at runtime.",
+    "bibtex": "@inproceedings{ipek2008selfoptimizing,\n  author    = {Engin Ipek and Onur Mutlu and Jos{\\'e} F. Mart{\\'i}nez and Rich Caruana},\n  title     = {Self-Optimizing Memory Controllers: A Reinforcement Learning Approach},\n  booktitle = {Proceedings of the 35th Annual International Symposium on Computer Architecture (ISCA)},\n  pages     = {39--50},\n  year      = {2008},\n  doi       = {10.1109/ISCA.2008.21}\n}",
+    "area": "learned-controllers"
+  },
+  {
+    "bibkey": "jimenez2001perceptron",
+    "title": "Dynamic Branch Prediction with Perceptrons",
+    "authors": "Jimenez and Lin",
+    "venue": "HPCA",
+    "year": "2001",
+    "relevance": "Introduces the perceptron branch predictor, the first dynamic branch predictor built on a neural network, exploiting long histories with linearly-scaling hardware. A canonical learned microarchitectural predictor and the lineage Bouncer's learned-controller framing builds on; its per-branch online learning illustrates accuracy that varies by program region.",
+    "bibtex": "@inproceedings{jimenez2001perceptron,\n  author    = {Daniel A. Jim{\\'e}nez and Calvin Lin},\n  title     = {Dynamic Branch Prediction with Perceptrons},\n  booktitle = {Proceedings of the 7th International Symposium on High-Performance Computer Architecture (HPCA)},\n  pages     = {197--206},\n  year      = {2001},\n  doi       = {10.1109/HPCA.2001.903263}\n}",
+    "area": "learned-controllers"
+  },
+  {
+    "bibkey": "seznec2006tage",
+    "title": "A Case for (Partially) TAgged GEometric History Length Branch Prediction",
+    "authors": "Seznec and Michaud",
+    "venue": "JILP",
+    "year": "2006",
+    "relevance": "TAGE: the geometric-history-length tagged predictor that remains the state-of-the-art branch-prediction substrate and a multi-time championship winner. As the dominant learned/adaptive branch predictor, it anchors the family of online-trained microarchitectural controllers whose competence Bouncer bounds against a simpler baseline predictor floor.",
+    "bibtex": "@article{seznec2006tage,\n  author  = {Andr{\\'e} Seznec and Pierre Michaud},\n  title   = {A Case for (Partially) {TA}gged {GE}ometric History Length Branch Prediction},\n  journal = {Journal of Instruction-Level Parallelism (JILP)},\n  volume  = {8},\n  pages   = {1--23},\n  year    = {2006}\n}",
+    "area": "learned-controllers"
+  },
+  {
+    "bibkey": "qureshi2007dip",
+    "title": "Adaptive Insertion Policies for High Performance Caching",
+    "authors": "Moinuddin K. Qureshi, Aamer Jaleel, Yale N. Patt, Simon C. Steely Jr., Joel Emer",
+    "venue": "ISCA",
+    "year": "2007",
+    "relevance": "The origin of set dueling: dedicate a few sampled sets to each of two competing insertion policies (LRU vs. BIP) and let the winner drive the follower sets via a single saturating PSEL counter. This is the direct architectural ancestor of Bouncer's secret set-dueling design, which uses the same dedicated-sets-plus-counter mechanism to compare a learned controller against a safe fallback floor at near-zero hardware cost.",
+    "bibtex": "@inproceedings{qureshi2007dip,\n  author    = {Qureshi, Moinuddin K. and Jaleel, Aamer and Patt, Yale N. and Steely, Simon C. and Emer, Joel},\n  title     = {Adaptive Insertion Policies for High Performance Caching},\n  booktitle = {Proceedings of the 34th Annual International Symposium on Computer Architecture (ISCA)},\n  year      = {2007},\n  pages     = {381--391},\n  publisher = {ACM},\n  doi       = {10.1145/1250662.1250709}\n}",
+    "area": "set-dueling"
+  },
+  {
+    "bibkey": "jaleel2010rrip",
+    "title": "High Performance Cache Replacement Using Re-Reference Interval Prediction (RRIP)",
+    "authors": "Aamer Jaleel, Kevin B. Theobald, Simon C. Steely Jr., Joel Emer",
+    "venue": "ISCA",
+    "year": "2010",
+    "relevance": "Introduces RRIP/DRRIP: a scan- and thrash-resistant replacement family whose Dynamic variant (DRRIP) uses set dueling to choose between SRRIP and BRRIP at runtime. DRRIP is the canonical strong baseline a competence auditor like Bouncer must bound against, and its set-dueling-based policy selection is the mechanism Bouncer generalizes into a safety floor.",
+    "bibtex": "@inproceedings{jaleel2010rrip,\n  author    = {Jaleel, Aamer and Theobald, Kevin B. and Steely, Simon C. and Emer, Joel},\n  title     = {High Performance Cache Replacement Using Re-Reference Interval Prediction (RRIP)},\n  booktitle = {Proceedings of the 37th Annual International Symposium on Computer Architecture (ISCA)},\n  year      = {2010},\n  pages     = {60--71},\n  publisher = {ACM},\n  doi       = {10.1145/1815961.1815971}\n}",
+    "area": "set-dueling"
+  },
+  {
+    "bibkey": "jaleel2008tadip",
+    "title": "Adaptive Insertion Policies for Managing Shared Caches",
+    "authors": "Aamer Jaleel, William Hasenplaugh, Moinuddin K. Qureshi, Julien Sebot, Simon C. Steely Jr., Joel Emer",
+    "venue": "PACT",
+    "year": "2008",
+    "relevance": "Extends DIP/set dueling to shared multi-core caches with the Thread-Aware Dynamic Insertion Policy (TADIP), running an independent set-dueling decision per application thread. Directly relevant to how Bouncer must scope per-context competence monitoring when one shared learned controller serves multiple co-running workloads.",
+    "bibtex": "@inproceedings{jaleel2008tadip,\n  author    = {Jaleel, Aamer and Hasenplaugh, William and Qureshi, Moinuddin K. and Sebot, Julien and Steely, Simon C. and Emer, Joel},\n  title     = {Adaptive Insertion Policies for Managing Shared Caches},\n  booktitle = {Proceedings of the 17th International Conference on Parallel Architectures and Compilation Techniques (PACT)},\n  year      = {2008},\n  pages     = {208--219},\n  publisher = {ACM},\n  doi       = {10.1145/1454115.1454145}\n}",
+    "area": "set-dueling"
+  },
+  {
+    "bibkey": "qureshi2006ucp",
+    "title": "Utility-Based Cache Partitioning: A Low-Overhead, High-Performance, Runtime Mechanism to Partition Shared Caches",
+    "authors": "Moinuddin K. Qureshi, Yale N. Patt",
+    "venue": "MICRO",
+    "year": "2006",
+    "relevance": "Establishes the set-sampling / auxiliary-tag-directory monitor methodology that set dueling later distilled: track a small sampled subset of sets to estimate the marginal benefit of a resource allocation at low storage cost. Bouncer's secret-set monitoring inherits this sampling-monitor lineage for low-overhead online competence estimation.",
+    "bibtex": "@inproceedings{qureshi2006ucp,\n  author    = {Qureshi, Moinuddin K. and Patt, Yale N.},\n  title     = {Utility-Based Cache Partitioning: A Low-Overhead, High-Performance, Runtime Mechanism to Partition Shared Caches},\n  booktitle = {Proceedings of the 39th Annual IEEE/ACM International Symposium on Microarchitecture (MICRO)},\n  year      = {2006},\n  pages     = {423--432},\n  publisher = {IEEE Computer Society},\n  doi       = {10.1109/MICRO.2006.49}\n}",
+    "area": "set-dueling"
+  },
+  {
+    "bibkey": "khan2010sdbp",
+    "title": "Sampling Dead Block Prediction for Last-Level Caches",
+    "authors": "Samira Manabi Khan, Yingying Tian, Daniel A. Jim\u00e9nez",
+    "venue": "MICRO",
+    "year": "2010",
+    "relevance": "Canonical sampling-based dead-block predictor (SDBP): learns per-PC dead-block behavior from a small sampler of sets using partial tags, achieving high accuracy with far less state than full-cache predictors. The sampler design is the template for cheap, learning-based microarchitectural predictors that a runtime auditor like Bouncer must supervise and bound.",
+    "bibtex": "@inproceedings{khan2010sdbp,\n  author    = {Khan, Samira Manabi and Tian, Yingying and Jim{\\'e}nez, Daniel A.},\n  title     = {Sampling Dead Block Prediction for Last-Level Caches},\n  booktitle = {Proceedings of the 43rd Annual IEEE/ACM International Symposium on Microarchitecture (MICRO)},\n  year      = {2010},\n  pages     = {175--186},\n  publisher = {IEEE Computer Society},\n  doi       = {10.1109/MICRO.2010.24}\n}",
+    "area": "set-dueling"
+  },
+  {
+    "bibkey": "wu2011ship",
+    "title": "SHiP: Signature-Based Hit Predictor for High Performance Caching",
+    "authors": "Carole-Jean Wu, Aamer Jaleel, William Hasenplaugh, Margaret Martonosi, Simon C. Steely Jr., Joel Emer",
+    "venue": "MICRO",
+    "year": "2011",
+    "relevance": "Combines RRIP with a learned signature-based hit predictor (SHCT indexed by PC/memory-region/instruction-sequence) to set insertion priority, and still relies on set-dueling-style mechanisms. A representative learned-predictor-augmented replacement policy that defines the competence target a controller-bounding auditor like Bouncer is meant to track without regressing below a safe floor.",
+    "bibtex": "@inproceedings{wu2011ship,\n  author    = {Wu, Carole-Jean and Jaleel, Aamer and Hasenplaugh, William and Martonosi, Margaret and Steely, Simon C. and Emer, Joel},\n  title     = {{SHiP}: Signature-Based Hit Predictor for High Performance Caching},\n  booktitle = {Proceedings of the 44th Annual IEEE/ACM International Symposium on Microarchitecture (MICRO)},\n  year      = {2011},\n  pages     = {430--441},\n  publisher = {ACM},\n  doi       = {10.1145/2155620.2155671}\n}",
+    "area": "set-dueling"
+  },
+  {
+    "bibkey": "seshadri2012eaf",
+    "title": "The Evicted-Address Filter: A Unified Mechanism to Address Both Cache Pollution and Thrashing",
+    "authors": "Vivek Seshadri, Onur Mutlu, Michael A. Kozuch, Todd C. Mowry",
+    "venue": "PACT",
+    "year": "2012",
+    "relevance": "Uses a Bloom-filter of recently evicted addresses plus periodic clearing and BIP to jointly fight pollution and thrashing, and dynamically selects behavior in the spirit of set dueling. Relevant to Bouncer as an example of a lightweight online filter that gates a learned insertion decision, mirroring how a CUSUM-monitored auditor gates a controller against a fallback.",
+    "bibtex": "@inproceedings{seshadri2012eaf,\n  author    = {Seshadri, Vivek and Mutlu, Onur and Kozuch, Michael A. and Mowry, Todd C.},\n  title     = {The Evicted-Address Filter: A Unified Mechanism to Address Both Cache Pollution and Thrashing},\n  booktitle = {Proceedings of the 21st International Conference on Parallel Architectures and Compilation Techniques (PACT)},\n  year      = {2012},\n  pages     = {355--366},\n  publisher = {ACM},\n  doi       = {10.1145/2370816.2370868}\n}",
+    "area": "set-dueling"
+  },
+  {
+    "bibkey": "qureshi2007retro",
+    "title": "RETROSPECTIVE: Adaptive Insertion Policies for High-Performance Caching",
+    "authors": "Moinuddin K. Qureshi, Aamer Jaleel, Yale N. Patt, Simon C. Steely Jr., Joel Emer",
+    "venue": "ISCA@50 Retrospective",
+    "year": "2023",
+    "relevance": "The authors' own 50-years-of-ISCA retrospective on DIP and set dueling, documenting its industrial adoption and limitations in hindsight. Useful framing for Bouncer's motivation: it articulates why cheap online policy-selection mechanisms (set dueling) became standard and where they fall short, which is the gap a formal competence-bounding auditor targets.",
+    "bibtex": "@inproceedings{qureshi2007retro,\n  author    = {Qureshi, Moinuddin K. and Jaleel, Aamer and Patt, Yale N. and Steely, Simon C. and Emer, Joel},\n  title     = {RETROSPECTIVE: Adaptive Insertion Policies for High-Performance Caching},\n  booktitle = {ISCA@50 25-Year Retrospective: 1996--2020},\n  year      = {2023},\n  note      = {Retrospective on the ISCA 2007 DIP/set-dueling paper}\n}",
+    "area": "set-dueling"
+  },
+  {
+    "bibkey": "sha2001simplicity",
+    "title": "Using Simplicity to Control Complexity",
+    "authors": "Lui Sha",
+    "venue": "IEEE Software",
+    "year": "2001",
+    "relevance": "The foundational statement of the Simplex architecture: a simple, formally-verified safety controller plus a decision module bound the behavior of an unverifiable high-performance controller. This is the direct conceptual ancestor of Bouncer's design \u2014 a learned uarch controller running on top, dropped to a safe-fallback floor whenever a runtime monitor detects danger. Sha's 'use simplicity to control complexity' framing is exactly the worst-case-vs-baseline guarantee Bouncer enforces in hardware.",
+    "bibtex": "@article{sha2001simplicity,\n  author    = {Lui Sha},\n  title     = {Using Simplicity to Control Complexity},\n  journal   = {{IEEE} Software},\n  volume    = {18},\n  number    = {4},\n  pages     = {20--28},\n  year      = {2001},\n  doi       = {10.1109/MS.2001.936213}\n}",
+    "area": "safe-rl-shielding"
+  },
+  {
+    "bibkey": "alshiekh2018shielding",
+    "title": "Safe Reinforcement Learning via Shielding",
+    "authors": "Alshiekh, Bloem, Ehlers, K\u00f6nighofer, Niekum, Topcu",
+    "venue": "AAAI",
+    "year": "2018",
+    "relevance": "Canonical 'shielding' paper: a correct-by-construction shield, synthesized from a temporal-logic safety specification, sits between the RL agent and the environment and overrides any action that could violate safety, while leaving the agent otherwise free to learn. This is the policy-correction analogue of Bouncer's runtime competence audit \u2014 the shield provides the hard worst-case floor that the learned controller cannot cross.",
+    "bibtex": "@inproceedings{alshiekh2018shielding,\n  author    = {Mohammed Alshiekh and Roderick Bloem and R{\\\"u}diger Ehlers and Bettina K{\\\"o}nighofer and Scott Niekum and Ufuk Topcu},\n  title     = {Safe Reinforcement Learning via Shielding},\n  booktitle = {Proceedings of the Thirty-Second {AAAI} Conference on Artificial Intelligence ({AAAI})},\n  pages     = {2669--2678},\n  year      = {2018},\n  publisher = {{AAAI} Press}\n}",
+    "area": "safe-rl-shielding"
+  },
+  {
+    "bibkey": "garcia2015survey",
+    "title": "A Comprehensive Survey on Safe Reinforcement Learning",
+    "authors": "Garc\u00eda, Fern\u00e1ndez",
+    "venue": "JMLR",
+    "year": "2015",
+    "relevance": "The standard survey that organizes safe RL into worst-case, constrained, and risk-sensitive criteria, and surveys safe-exploration methods including baseline/teacher guidance. Useful for Bouncer to position its 'bound a learned controller to a safe-fallback floor' guarantee within the established taxonomy (worst-case criterion enforced at runtime rather than at training time).",
+    "bibtex": "@article{garcia2015survey,\n  author  = {Javier Garc{\\'i}a and Fernando Fern{\\'a}ndez},\n  title   = {A Comprehensive Survey on Safe Reinforcement Learning},\n  journal = {Journal of Machine Learning Research},\n  volume  = {16},\n  pages   = {1437--1480},\n  year    = {2015}\n}",
+    "area": "safe-rl-shielding"
+  },
+  {
+    "bibkey": "achiam2017cpo",
+    "title": "Constrained Policy Optimization",
+    "authors": "Achiam, Held, Tamar, Abbeel",
+    "venue": "ICML",
+    "year": "2017",
+    "relevance": "CPO is the first general-purpose policy-search algorithm with near-constraint-satisfaction guarantees at every iteration, operationalizing the constrained-MDP formulation for deep RL. It is the canonical reference for trading off performance against a cost-constraint budget \u2014 directly relevant to how Bouncer reasons about a learned controller that must stay within a bounded competence/safety envelope.",
+    "bibtex": "@inproceedings{achiam2017cpo,\n  author    = {Joshua Achiam and David Held and Aviv Tamar and Pieter Abbeel},\n  title     = {Constrained Policy Optimization},\n  booktitle = {Proceedings of the 34th International Conference on Machine Learning ({ICML})},\n  series    = {Proceedings of Machine Learning Research},\n  volume    = {70},\n  pages     = {22--31},\n  year      = {2017},\n  editor    = {Doina Precup and Yee Whye Teh},\n  publisher = {{PMLR}}\n}",
+    "area": "safe-rl-shielding"
+  },
+  {
+    "bibkey": "altman1999cmdp",
+    "title": "Constrained Markov Decision Processes",
+    "authors": "Eitan Altman",
+    "venue": "Chapman & Hall/CRC (book)",
+    "year": "1999",
+    "relevance": "The foundational monograph defining constrained MDPs and their LP/Lagrangian solution theory \u2014 the formal substrate underlying essentially all constrained and safe-baseline RL. Bouncer's notion of bounding a controller subject to a safety/competence constraint inherits directly from Altman's CMDP feasibility-and-optimality machinery.",
+    "bibtex": "@book{altman1999cmdp,\n  author    = {Eitan Altman},\n  title     = {Constrained Markov Decision Processes},\n  publisher = {Chapman and Hall/CRC},\n  year      = {1999}\n}",
+    "area": "safe-rl-shielding"
+  },
+  {
+    "bibkey": "thomas2015hcpi",
+    "title": "High Confidence Policy Improvement",
+    "authors": "Thomas, Theocharous, Ghavamzadeh",
+    "venue": "ICML",
+    "year": "2015",
+    "relevance": "Provides a batch-RL algorithm that returns a new policy only when it can guarantee, with user-specified confidence, that the policy's performance exceeds a baseline lower bound \u2014 the canonical 'never ship a policy worse than the baseline' result. This is the statistical-guarantee analogue of Bouncer's runtime floor: only deviate from the safe fallback when the deviation is provably (here, high-confidence) at least as good.",
+    "bibtex": "@inproceedings{thomas2015hcpi,\n  author    = {Philip S. Thomas and Georgios Theocharous and Mohammad Ghavamzadeh},\n  title     = {High Confidence Policy Improvement},\n  booktitle = {Proceedings of the 32nd International Conference on Machine Learning ({ICML})},\n  series    = {Proceedings of Machine Learning Research},\n  volume    = {37},\n  pages     = {2380--2388},\n  year      = {2015},\n  publisher = {{PMLR}}\n}",
+    "area": "safe-rl-shielding"
+  },
+  {
+    "bibkey": "laroche2019spibb",
+    "title": "Safe Policy Improvement with Baseline Bootstrapping",
+    "authors": "Laroche, Trichelair, Tachet des Combes",
+    "venue": "ICML",
+    "year": "2019",
+    "relevance": "SPIBB falls back to the data-collecting baseline policy precisely on the state-actions where uncertainty is high, and only deviates where the data supports improvement \u2014 coming with a formal safe-policy-improvement guarantee relative to the baseline. This 'bootstrap to the safe baseline under uncertainty' mechanism is the algorithmic mirror of Bouncer's set-dueling/CUSUM gate that reverts a learned uarch controller to the safe-fallback floor when its competence is not established.",
+    "bibtex": "@inproceedings{laroche2019spibb,\n  author    = {Romain Laroche and Paul Trichelair and R{\\'e}mi Tachet des Combes},\n  title     = {Safe Policy Improvement with Baseline Bootstrapping},\n  booktitle = {Proceedings of the 36th International Conference on Machine Learning ({ICML})},\n  series    = {Proceedings of Machine Learning Research},\n  volume    = {97},\n  pages     = {3652--3661},\n  year      = {2019},\n  publisher = {{PMLR}}\n}",
+    "area": "safe-rl-shielding"
+  },
+  {
+    "bibkey": "berkenkamp2017stability",
+    "title": "Safe Model-based Reinforcement Learning with Stability Guarantees",
+    "authors": "Berkenkamp, Turchetta, Schoellig, Krause",
+    "venue": "NeurIPS",
+    "year": "2017",
+    "relevance": "Extends Lyapunov stability verification to learned dynamics so the agent can safely expand its region of attraction while never leaving a certified-safe set. Provides the control-theoretic version of a 'safe region you cannot exit' \u2014 relevant to Bouncer as the formal counterpart of a runtime floor that guarantees the system stays within a verified-safe operating envelope while the learned controller explores.",
+    "bibtex": "@inproceedings{berkenkamp2017stability,\n  author    = {Felix Berkenkamp and Matteo Turchetta and Angela P. Schoellig and Andreas Krause},\n  title     = {Safe Model-based Reinforcement Learning with Stability Guarantees},\n  booktitle = {Advances in Neural Information Processing Systems 30 ({NeurIPS})},\n  pages     = {908--918},\n  year      = {2017}\n}",
+    "area": "safe-rl-shielding"
+  },
+  {
+    "bibkey": "chow2018lyapunov",
+    "title": "A Lyapunov-based Approach to Safe Reinforcement Learning",
+    "authors": "Chow, Nachum, Duenez-Guzman, Ghavamzadeh",
+    "venue": "NeurIPS",
+    "year": "2018",
+    "relevance": "Constructs Lyapunov functions that guarantee constraint satisfaction during both training and deployment within the CMDP framework, yielding policies that provably stay feasible at every step. This 'safety guaranteed throughout, not just in expectation at convergence' property is exactly the runtime-assurance posture Bouncer needs: the learned controller's actions are admissible only inside the Lyapunov-/floor-defined safe set.",
+    "bibtex": "@inproceedings{chow2018lyapunov,\n  author    = {Yinlam Chow and Ofir Nachum and Edgar Duenez-Guzman and Mohammad Ghavamzadeh},\n  title     = {A Lyapunov-based Approach to Safe Reinforcement Learning},\n  booktitle = {Advances in Neural Information Processing Systems 31 ({NeurIPS})},\n  pages     = {8092--8101},\n  year      = {2018}\n}",
+    "area": "safe-rl-shielding"
+  },
+  {
+    "bibkey": "page1954cusum",
+    "title": "Continuous Inspection Schemes",
+    "authors": "E. S. Page",
+    "venue": "Biometrika",
+    "year": "1954",
+    "relevance": "The origin of the CUSUM statistic, which is the exact detector Bouncer runs over its secret set-dueling competence signal to flag when the learned uarch controller drifts below the safe-fallback floor. CUSUM accumulates log-likelihood-ratio increments and triggers at a threshold, giving Bouncer a memory-light, single-statistic change alarm.",
+    "bibtex": "@article{page1954cusum,\n  author  = {Page, E. S.},\n  title   = {Continuous Inspection Schemes},\n  journal = {Biometrika},\n  year    = {1954},\n  volume  = {41},\n  number  = {1/2},\n  pages   = {100--115},\n  doi     = {10.1093/biomet/41.1-2.100}\n}",
+    "area": "change-detection-ood"
+  },
+  {
+    "bibkey": "lorden1971reacting",
+    "title": "Procedures for Reacting to a Change in Distribution",
+    "authors": "G. Lorden",
+    "venue": "Annals of Mathematical Statistics",
+    "year": "1971",
+    "relevance": "Establishes the asymptotic optimality of Page's CUSUM under the worst-case expected-detection-delay (Lorden's E[T]) criterion subject to a mean-time-to-false-alarm constraint. This is the theory that lets Bouncer claim near-minimal detection latency for competence regressions while bounding nuisance fallbacks, i.e. the formal delay-vs-false-alarm tradeoff governing how fast it bounces a degraded controller.",
+    "bibtex": "@article{lorden1971reacting,\n  author  = {Lorden, G.},\n  title   = {Procedures for Reacting to a Change in Distribution},\n  journal = {The Annals of Mathematical Statistics},\n  year    = {1971},\n  volume  = {42},\n  number  = {6},\n  pages   = {1897--1908},\n  doi     = {10.1214/aoms/1177693055}\n}",
+    "area": "change-detection-ood"
+  },
+  {
+    "bibkey": "moustakides1986optimal",
+    "title": "Optimal Stopping Times for Detecting Changes in Distributions",
+    "authors": "George V. Moustakides",
+    "venue": "Annals of Statistics",
+    "year": "1986",
+    "relevance": "Proves CUSUM is exactly (not just asymptotically) optimal under Lorden's criterion for i.i.d. observations with known pre- and post-change distributions, via optimal-stopping theory. Justifies Bouncer's choice of CUSUM over ad hoc thresholding: for a given tolerated false-bounce rate, no detector reverts a sub-floor controller sooner.",
+    "bibtex": "@article{moustakides1986optimal,\n  author  = {Moustakides, George V.},\n  title   = {Optimal Stopping Times for Detecting Changes in Distributions},\n  journal = {The Annals of Statistics},\n  year    = {1986},\n  volume  = {14},\n  number  = {4},\n  pages   = {1379--1387},\n  doi     = {10.1214/aos/1176350164}\n}",
+    "area": "change-detection-ood"
+  },
+  {
+    "bibkey": "siegmund1985sequential",
+    "title": "Sequential Analysis: Tests and Confidence Intervals",
+    "authors": "David Siegmund",
+    "venue": "Springer Series in Statistics, Springer-Verlag",
+    "year": "1985",
+    "relevance": "Canonical reference for average-run-length (ARL) computation and the renewal/Wald-approximation theory behind it. Bouncer sizes its CUSUM threshold to hit a target ARL-to-false-alarm; Siegmund's corrected-diffusion and renewal-theoretic ARL approximations are the tools used to translate a tolerable spurious-fallback budget into a concrete detector threshold.",
+    "bibtex": "@book{siegmund1985sequential,\n  author    = {Siegmund, David},\n  title     = {Sequential Analysis: Tests and Confidence Intervals},\n  series    = {Springer Series in Statistics},\n  publisher = {Springer-Verlag},\n  address   = {New York},\n  year      = {1985},\n  doi       = {10.1007/978-1-4757-1862-1}\n}",
+    "area": "change-detection-ood"
+  },
+  {
+    "bibkey": "tartakovsky2014sequential",
+    "title": "Sequential Analysis: Hypothesis Testing and Changepoint Detection",
+    "authors": "Alexander Tartakovsky, Igor Nikiforov, Mich\u00e8le Basseville",
+    "venue": "Chapman & Hall/CRC Monographs on Statistics and Applied Probability",
+    "year": "2014",
+    "relevance": "The modern, comprehensive monograph unifying quickest changepoint detection (CUSUM, Shiryaev-Roberts), ARL/expected-delay theory, and false-alarm constraints. Serves as Bouncer's standing reference for the non-Bayesian quickest-detection framing of online competence monitoring and for variants (e.g. Shiryaev-Roberts) worth contrasting against the deployed CUSUM detector.",
+    "bibtex": "@book{tartakovsky2014sequential,\n  author    = {Tartakovsky, Alexander and Nikiforov, Igor and Basseville, Mich{\\`e}le},\n  title     = {Sequential Analysis: Hypothesis Testing and Changepoint Detection},\n  series    = {Monographs on Statistics and Applied Probability},\n  publisher = {Chapman \\& Hall/CRC},\n  address   = {Boca Raton, FL},\n  year      = {2014},\n  isbn      = {978-1-4398-3820-4}\n}",
+    "area": "change-detection-ood"
+  },
+  {
+    "bibkey": "hendrycks2017baseline",
+    "title": "A Baseline for Detecting Misclassified and Out-of-Distribution Examples in Neural Networks",
+    "authors": "Dan Hendrycks, Kevin Gimpel",
+    "venue": "ICLR",
+    "year": "2017",
+    "relevance": "The reference baseline for out-of-distribution detection via softmax-confidence statistics, framing per-input competence as a monitorable scalar. Bouncer's competence signal is conceptually a streaming OOD/confidence score; this paper anchors the per-example detectability of inputs on which a learned controller is operating outside its trained regime.",
+    "bibtex": "@inproceedings{hendrycks2017baseline,\n  author    = {Hendrycks, Dan and Gimpel, Kevin},\n  title     = {A Baseline for Detecting Misclassified and Out-of-Distribution Examples in Neural Networks},\n  booktitle = {International Conference on Learning Representations (ICLR)},\n  year      = {2017}\n}",
+    "area": "change-detection-ood"
+  },
+  {
+    "bibkey": "vovk2005algorithmic",
+    "title": "Algorithmic Learning in a Random World",
+    "authors": "Vladimir Vovk, Alexander Gammerman, Glenn Shafer",
+    "venue": "Springer",
+    "year": "2005",
+    "relevance": "Foundational text on conformal prediction, which yields distribution-free, finite-sample validity guarantees on prediction reliability under exchangeability. Relevant to Bouncer as the principled way to attach calibrated, assumption-light confidence to the learned controller's outputs and to detect when exchangeability (and thus competence) breaks down at deployment.",
+    "bibtex": "@book{vovk2005algorithmic,\n  author    = {Vovk, Vladimir and Gammerman, Alexander and Shafer, Glenn},\n  title     = {Algorithmic Learning in a Random World},\n  publisher = {Springer},\n  address   = {New York},\n  year      = {2005},\n  doi       = {10.1007/b106715}\n}",
+    "area": "change-detection-ood"
+  },
+  {
+    "bibkey": "lei2018distribution",
+    "title": "Distribution-Free Predictive Inference for Regression",
+    "authors": "Jing Lei, Max G'Sell, Alessandro Rinaldo, Ryan J. Tibshirani, Larry Wasserman",
+    "venue": "Journal of the American Statistical Association (JASA)",
+    "year": "2018",
+    "relevance": "Develops split/full conformal prediction for regression with finite-sample marginal coverage atop any black-box predictor. This is the practical mechanism by which Bouncer can wrap a learned uarch controller in calibrated prediction sets cheaply enough for online use, turning coverage violations into a monitorable competence signal feeding the change detector.",
+    "bibtex": "@article{lei2018distribution,\n  author  = {Lei, Jing and G'Sell, Max and Rinaldo, Alessandro and Tibshirani, Ryan J. and Wasserman, Larry},\n  title   = {Distribution-Free Predictive Inference for Regression},\n  journal = {Journal of the American Statistical Association},\n  year    = {2018},\n  volume  = {113},\n  number  = {523},\n  pages   = {1094--1111},\n  doi     = {10.1080/01621459.2017.1307116}\n}",
+    "area": "change-detection-ood"
+  },
+  {
+    "bibkey": "gama2014survey",
+    "title": "A Survey on Concept Drift Adaptation",
+    "authors": "Jo\u00e3o Gama, Indr\u0117 \u017dliobait\u0117, Albert Bifet, Mykola Pechenizkiy, Abdelhamid Bouchachia",
+    "venue": "ACM Computing Surveys",
+    "year": "2014",
+    "relevance": "The standard taxonomy of concept-drift detection and adaptation in deployed learners, including drift detectors that are themselves sequential change tests on a streaming error signal. Directly frames Bouncer's problem: detecting when a deployed controller's input/target relationship has shifted enough to warrant reverting to the safe fallback, and the detect-vs-adapt design space around it.",
+    "bibtex": "@article{gama2014survey,\n  author  = {Gama, Jo{\\~a}o and {\\v{Z}}liobait{\\.e}, Indr{\\.e} and Bifet, Albert and Pechenizkiy, Mykola and Bouchachia, Abdelhamid},\n  title   = {A Survey on Concept Drift Adaptation},\n  journal = {ACM Computing Surveys},\n  year    = {2014},\n  volume  = {46},\n  number  = {4},\n  pages   = {44:1--44:37},\n  doi     = {10.1145/2523813}\n}",
+    "area": "change-detection-ood"
+  },
+  {
+    "bibkey": "rabanser2019failing",
+    "title": "Failing Loudly: An Empirical Study of Methods for Detecting Dataset Shift",
+    "authors": "Stephan Rabanser, Stephan G\u00fcnnemann, Zachary C. Lipton",
+    "venue": "NeurIPS",
+    "year": "2019",
+    "relevance": "Empirically benchmarks dataset-shift detectors (two-sample tests on learned representations, BBSD, domain classifiers), finding pretrained-feature two-sample testing most reliable. Directly informs how Bouncer should construct and dimensionally reduce its competence signal so that shifts which actually harm the learned controller are detected loudly rather than failing silently.",
+    "bibtex": "@inproceedings{rabanser2019failing,\n  author    = {Rabanser, Stephan and G{\\\"u}nnemann, Stephan and Lipton, Zachary C.},\n  title     = {Failing Loudly: An Empirical Study of Methods for Detecting Dataset Shift},\n  booktitle = {Advances in Neural Information Processing Systems (NeurIPS)},\n  year      = {2019},\n  volume    = {32}\n}",
+    "area": "change-detection-ood"
+  },
+  {
+    "bibkey": "osvik2006cache",
+    "title": "Cache Attacks and Countermeasures: The Case of AES",
+    "authors": "Dag Arne Osvik, Adi Shamir, Eran Tromer",
+    "venue": "CT-RSA",
+    "year": "2006",
+    "relevance": "The foundational Prime+Probe paper: an unprivileged spy primes cache sets and measures eviction to recover AES keys. It establishes the access-driven contention primitive whose behavioral signature (timing variance from cross-process cache pressure) is exactly the kind of microarchitectural anomaly a runtime competence auditor like Bouncer must distinguish from a learned controller's benign exploration.",
+    "bibtex": "@inproceedings{osvik2006cache,\n  author    = {Dag Arne Osvik and Adi Shamir and Eran Tromer},\n  title     = {Cache Attacks and Countermeasures: The Case of {AES}},\n  booktitle = {Topics in Cryptology -- CT-RSA 2006, The Cryptographers' Track at the RSA Conference},\n  series    = {Lecture Notes in Computer Science},\n  volume    = {3860},\n  pages     = {1--20},\n  year      = {2006},\n  publisher = {Springer},\n  doi       = {10.1007/11605805_1}\n}",
+    "area": "uarch-security"
+  },
+  {
+    "bibkey": "yarom2014flushreload",
+    "title": "FLUSH+RELOAD: A High Resolution, Low Noise, L3 Cache Side-Channel Attack",
+    "authors": "Yuval Yarom, Katrina Falkner",
+    "venue": "USENIX Security",
+    "year": "2014",
+    "relevance": "Canonical Flush+Reload attack exploiting shared (deduplicated) memory and clflush timing on the inclusive L3 to leak victim memory-line accesses at high resolution. It is the reference cross-core leakage primitive whose detectable footprint a runtime auditor would model; Bouncer's set-dueling/CUSUM machinery is conceptually adjacent to detecting the periodic probe cadence such attacks impose.",
+    "bibtex": "@inproceedings{yarom2014flushreload,\n  author    = {Yuval Yarom and Katrina Falkner},\n  title     = {{FLUSH+RELOAD}: A High Resolution, Low Noise, {L3} Cache Side-Channel Attack},\n  booktitle = {23rd USENIX Security Symposium (USENIX Security 14)},\n  pages     = {719--732},\n  year      = {2014},\n  publisher = {USENIX Association},\n  address   = {San Diego, CA}\n}",
+    "area": "uarch-security"
+  },
+  {
+    "bibkey": "liu2015llc",
+    "title": "Last-Level Cache Side-Channel Attacks are Practical",
+    "authors": "Fangfei Liu, Yuval Yarom, Qian Ge, Gernot Heiser, Ruby B. Lee",
+    "venue": "IEEE S&P",
+    "year": "2015",
+    "relevance": "Demonstrates a practical cross-core, cross-VM Prime+Probe on the LLC without shared memory, building eviction sets against the slice-hashed last-level cache. This is the canonical cloud-relevant contention attack and a key threat model for any controller (prefetcher/replacement) that Bouncer audits: the learned policy's cache footprint must not become an exfiltration covert channel.",
+    "bibtex": "@inproceedings{liu2015llc,\n  author    = {Fangfei Liu and Yuval Yarom and Qian Ge and Gernot Heiser and Ruby B. Lee},\n  title     = {Last-Level Cache Side-Channel Attacks are Practical},\n  booktitle = {2015 IEEE Symposium on Security and Privacy (SP)},\n  pages     = {605--622},\n  year      = {2015},\n  publisher = {IEEE Computer Society},\n  doi       = {10.1109/SP.2015.43}\n}",
+    "area": "uarch-security"
+  },
+  {
+    "bibkey": "gruss2016flushflush",
+    "title": "Flush+Flush: A Fast and Stealthy Cache Attack",
+    "authors": "Daniel Gruss, Cl\u00e9mentine Maurice, Klaus Wagner, Stefan Mangard",
+    "venue": "DIMVA",
+    "year": "2016",
+    "relevance": "Introduces a stealthy attack that times clflush alone (no loads), producing far fewer cache hits/misses and evading performance-counter-based detectors. Directly motivates Bouncer's design tension: a competence auditor relying on coarse hardware-counter signals can be blinded by stealth variants, so its CUSUM-based floor must be robust to low-footprint adversarial behavior.",
+    "bibtex": "@inproceedings{gruss2016flushflush,\n  author    = {Daniel Gruss and Cl{\\'e}mentine Maurice and Klaus Wagner and Stefan Mangard},\n  title     = {Flush+Flush: A Fast and Stealthy Cache Attack},\n  booktitle = {Detection of Intrusions and Malware, and Vulnerability Assessment (DIMVA)},\n  series    = {Lecture Notes in Computer Science},\n  volume    = {9721},\n  pages     = {279--299},\n  year      = {2016},\n  publisher = {Springer},\n  doi       = {10.1007/978-3-319-40667-1_14}\n}",
+    "area": "uarch-security"
+  },
+  {
+    "bibkey": "gruss2016prefetch",
+    "title": "Prefetch Side-Channel Attacks: Bypassing SMAP and Kernel ASLR",
+    "authors": "Daniel Gruss, Cl\u00e9mentine Maurice, Anders Fogh, Moritz Lipp, Stefan Mangard",
+    "venue": "CCS",
+    "year": "2016",
+    "relevance": "First to weaponize software prefetch instructions as a side channel, leaking address-translation timing to defeat KASLR/SMAP. Central to Bouncer's premise that a learned prefetcher controller is a security-sensitive surface: the same prefetch machinery being tuned for performance can leak addresses, so bounding the controller to a vetted safe-fallback floor is a security as well as performance argument.",
+    "bibtex": "@inproceedings{gruss2016prefetch,\n  author    = {Daniel Gruss and Cl{\\'e}mentine Maurice and Anders Fogh and Moritz Lipp and Stefan Mangard},\n  title     = {Prefetch Side-Channel Attacks: Bypassing {SMAP} and Kernel {ASLR}},\n  booktitle = {Proceedings of the 2016 ACM SIGSAC Conference on Computer and Communications Security (CCS)},\n  pages     = {368--379},\n  year      = {2016},\n  publisher = {ACM},\n  doi       = {10.1145/2976749.2978356}\n}",
+    "area": "uarch-security"
+  },
+  {
+    "bibkey": "guo2022adversarialprefetch",
+    "title": "Adversarial Prefetch: New Cross-Core Cache Side Channel Attacks",
+    "authors": "Yanan Guo, Andrew Zigerelli, Youtao Zhang, Jun Yang",
+    "venue": "IEEE S&P",
+    "year": "2022",
+    "relevance": "Exploits PREFETCHW coherence-state timing to build cross-core Prefetch+Reload / Prefetch+Prefetch channels with record single-line covert-channel capacity. The most direct prior art that a prefetch controller can be an adversarial attack surface, sharpening Bouncer's motivation for keeping any learned prefetcher provably bounded to a safe baseline rather than free to amplify coherence-state leakage.",
+    "bibtex": "@inproceedings{guo2022adversarialprefetch,\n  author    = {Yanan Guo and Andrew Zigerelli and Youtao Zhang and Jun Yang},\n  title     = {Adversarial Prefetch: New Cross-Core Cache Side Channel Attacks},\n  booktitle = {2022 IEEE Symposium on Security and Privacy (SP)},\n  pages     = {1458--1473},\n  year      = {2022},\n  publisher = {IEEE},\n  doi       = {10.1109/SP46214.2022.9833692}\n}",
+    "area": "uarch-security"
+  },
+  {
+    "bibkey": "evtyushkin2018branchscope",
+    "title": "BranchScope: A New Side-Channel Attack on Directional Branch Predictor",
+    "authors": "Dmitry Evtyushkin, Ryan Riley, Nael B. Abu-Ghazaleh, Dmitry Ponomarev",
+    "venue": "ASPLOS",
+    "year": "2018",
+    "relevance": "First fine-grained attack on the directional branch predictor (distinct from BTB attacks), recovering branch directions by colliding predictor state with the victim. A canonical example of a learned/adaptive microarchitectural predictor being adversarially manipulated, directly paralleling Bouncer's threat model of a learned controller whose internal state can be steered or poisoned and therefore must be fenced by a fallback floor.",
+    "bibtex": "@inproceedings{evtyushkin2018branchscope,\n  author    = {Dmitry Evtyushkin and Ryan Riley and Nael B. Abu-Ghazaleh and Dmitry Ponomarev},\n  title     = {{BranchScope}: A New Side-Channel Attack on Directional Branch Predictor},\n  booktitle = {Proceedings of the 23rd International Conference on Architectural Support for Programming Languages and Operating Systems (ASPLOS)},\n  pages     = {693--707},\n  year      = {2018},\n  publisher = {ACM},\n  doi       = {10.1145/3173162.3173204}\n}",
+    "area": "uarch-security"
+  },
+  {
+    "bibkey": "evtyushkin2016jumpoveraslr",
+    "title": "Jump Over ASLR: Attacking Branch Predictors to Bypass ASLR",
+    "authors": "Dmitry Evtyushkin, Dmitry Ponomarev, Nael Abu-Ghazaleh",
+    "venue": "MICRO",
+    "year": "2016",
+    "relevance": "Shows BTB collisions leak branch target addresses to defeat kernel and user ASLR, the canonical branch-target-buffer attack on an adaptive predictor. Reinforces Bouncer's case that performance-driven learned predictors carry exploitable secret state; a runtime auditor that bounds the controller to a safe floor limits how much an attacker can read out of that learned state.",
+    "bibtex": "@inproceedings{evtyushkin2016jumpoveraslr,\n  author    = {Dmitry Evtyushkin and Dmitry Ponomarev and Nael Abu-Ghazaleh},\n  title     = {Jump Over {ASLR}: Attacking Branch Predictors to Bypass {ASLR}},\n  booktitle = {49th Annual IEEE/ACM International Symposium on Microarchitecture (MICRO)},\n  pages     = {1--13},\n  year      = {2016},\n  publisher = {IEEE},\n  doi       = {10.1109/MICRO.2016.7783743}\n}",
+    "area": "uarch-security"
+  },
+  {
+    "bibkey": "ristenpart2009heyyou",
+    "title": "Hey, You, Get Off of My Cloud: Exploring Information Leakage in Third-Party Compute Clouds",
+    "authors": "Thomas Ristenpart, Eran Tromer, Hovav Shacham, Stefan Savage",
+    "venue": "CCS",
+    "year": "2009",
+    "relevance": "The seminal co-tenancy paper: maps EC2 placement, forces co-residence with a target VM, then uses shared-cache contention to leak keystroke timing. Establishes the cloud co-tenant interference threat model that makes a runtime competence auditor like Bouncer meaningful in shared datacenter hardware where a learned controller's contention behavior is observable by neighbors.",
+    "bibtex": "@inproceedings{ristenpart2009heyyou,\n  author    = {Thomas Ristenpart and Eran Tromer and Hovav Shacham and Stefan Savage},\n  title     = {Hey, You, Get Off of My Cloud: Exploring Information Leakage in Third-Party Compute Clouds},\n  booktitle = {Proceedings of the 16th ACM Conference on Computer and Communications Security (CCS)},\n  pages     = {199--212},\n  year      = {2009},\n  publisher = {ACM},\n  doi       = {10.1145/1653662.1653687}\n}",
+    "area": "uarch-security"
+  },
+  {
+    "bibkey": "shusterman2019occupancy",
+    "title": "Robust Website Fingerprinting Through the Cache Occupancy Channel",
+    "authors": "Anatoly Shusterman, Lachlan Kang, Yarden Haskal, Yosef Meltser, Prateek Mittal, Yossi Oren, Yuval Yarom",
+    "venue": "USENIX Security",
+    "year": "2019",
+    "relevance": "Introduces the cache-occupancy channel: rather than targeting specific sets, it measures whole-cache contention over time and classifies it with machine learning, working even from JavaScript without high-resolution timers. The aggregate-occupancy + ML-classification methodology mirrors Bouncer's CUSUM/statistical monitoring of a controller's competence, and shows occupancy traces alone carry exploitable signal.",
+    "bibtex": "@inproceedings{shusterman2019occupancy,\n  author    = {Anatoly Shusterman and Lachlan Kang and Yarden Haskal and Yosef Meltser and Prateek Mittal and Yossi Oren and Yuval Yarom},\n  title     = {Robust Website Fingerprinting Through the Cache Occupancy Channel},\n  booktitle = {28th USENIX Security Symposium (USENIX Security 19)},\n  pages     = {639--656},\n  year      = {2019},\n  publisher = {USENIX Association},\n  address   = {Santa Clara, CA}\n}",
+    "area": "uarch-security"
+  },
+  {
+    "bibkey": "qureshi2007setdueling",
+    "title": "Adaptive Insertion Policies for High Performance Caching",
+    "venue": "ISCA",
+    "year": "2007",
+    "authors": "Qureshi, Jaleel, Patt, Steely, Emer",
+    "relevance": "Introduces set dueling: dedicate a few sets to each of two competing policies and let the runtime winner govern the rest at near-zero hardware cost. This is the exact low-overhead online A/B mechanism Bouncer adapts to duel a learned controller against its safe fallback, here used for competence auditing rather than policy selection.",
+    "bibtex": "@inproceedings{qureshi2007setdueling,\n  author    = {Moinuddin K. Qureshi and Aamer Jaleel and Yale N. Patt and Simon C. {Steely Jr.} and Joel Emer},\n  title     = {Adaptive Insertion Policies for High Performance Caching},\n  booktitle = {Proceedings of the 34th Annual International Symposium on Computer Architecture (ISCA)},\n  pages     = {381--391},\n  year      = {2007},\n  doi       = {10.1145/1250662.1250709}\n}",
+    "area": "ml-systems-monitoring"
+  },
+  {
+    "bibkey": "liu2020imitationcache",
+    "title": "An Imitation Learning Approach for Cache Replacement",
+    "venue": "ICML",
+    "year": "2020",
+    "authors": "Liu, Hashemi, Swersky, Ranganathan, Ahn",
+    "relevance": "PARROT trains a model to imitate Belady's oracle for cache eviction, a flagship ML-for-systems controller. Its oracle-imitation accuracy degrades off-distribution, which is precisely the silent-competence-loss failure mode Bouncer detects and bounds against a non-learned fallback policy.",
+    "bibtex": "@inproceedings{liu2020imitationcache,\n  author    = {Evan Zheran Liu and Milad Hashemi and Kevin Swersky and Parthasarathy Ranganathan and Junwhan Ahn},\n  title     = {An Imitation Learning Approach for Cache Replacement},\n  booktitle = {Proceedings of the 37th International Conference on Machine Learning (ICML)},\n  pages     = {6237--6247},\n  year      = {2020}\n}",
+    "area": "ml-systems-monitoring"
+  },
+  {
+    "bibkey": "carstens2023smartchoices",
+    "title": "SmartChoices: Augmenting Software with Learned Implementations",
+    "venue": "arXiv",
+    "year": "2023",
+    "authors": "Carbune et al. (Google)",
+    "relevance": "Closest production-systems analogue to Bouncer's safety design: a learned contextual-bandit layer that detects inference faults (malformed inputs, infinite predicted rewards, compiler bugs) and safely falls back to a default arm with alerting. Bouncer generalizes this from fault-triggered fallback to continuous competence auditing with a guaranteed performance floor.",
+    "bibtex": "@article{carstens2023smartchoices,\n  author  = {Victor Carbune and Thierry Coppey and Alexander Daryin and Thomas Deselaers and Nikhil Sarda and Jay Yagnik},\n  title   = {SmartChoices: Augmenting Software with Learned Implementations},\n  journal = {arXiv preprint arXiv:2304.13033},\n  year    = {2023}\n}",
+    "area": "ml-systems-monitoring"
+  },
+  {
+    "bibkey": "lo2015heracles",
+    "title": "Heracles: Improving Resource Efficiency at Scale",
+    "venue": "ISCA",
+    "year": "2015",
+    "authors": "Lo, Cheng, Govindaraju, Ranganathan, Kozyrakis",
+    "relevance": "A feedback controller that safely colocates best-effort work with a latency-critical service by continuously monitoring SLO/QoS and clamping isolation knobs to never violate tail-latency targets. This is the canonical 'bound an aggressive optimizer to a safety floor via runtime monitoring' design that Bouncer mirrors for learned controllers.",
+    "bibtex": "@inproceedings{lo2015heracles,\n  author    = {David Lo and Liqun Cheng and Rama Govindaraju and Parthasarathy Ranganathan and Christos Kozyrakis},\n  title     = {Heracles: Improving Resource Efficiency at Scale},\n  booktitle = {Proceedings of the 42nd Annual International Symposium on Computer Architecture (ISCA)},\n  pages     = {450--462},\n  year      = {2015},\n  doi       = {10.1145/2749469.2749475}\n}",
+    "area": "ml-systems-monitoring"
+  },
+  {
+    "bibkey": "rzadca2020autopilot",
+    "title": "Autopilot: Workload Autoscaling at Google",
+    "venue": "EuroSys",
+    "year": "2020",
+    "authors": "Rzadca et al. (Google)",
+    "relevance": "Production ML-plus-heuristic autoscaler explicitly engineered so the learned recommender minimizes resource slack while bounding the risk of catastrophic OOM kills. It is a concrete datacenter case of guarding a learned component against tail-risk failures, the deployment context Bouncer targets.",
+    "bibtex": "@inproceedings{rzadca2020autopilot,\n  author    = {Krzysztof Rzadca and Pawel Findeisen and Jacek Swiderski and Przemyslaw Zych and Przemyslaw Broniek and Jarek Kusmierek and Pawel Nowak and Beata Strack and Piotr Witusowski and Steven Hand and John Wilkes},\n  title     = {Autopilot: Workload Autoscaling at {Google}},\n  booktitle = {Proceedings of the Fifteenth European Conference on Computer Systems (EuroSys)},\n  pages     = {16:1--16:16},\n  year      = {2020},\n  doi       = {10.1145/3342195.3387524}\n}",
+    "area": "ml-systems-monitoring"
+  },
+  {
+    "bibkey": "mao2019park",
+    "title": "Park: An Open Platform for Learning-Augmented Computer Systems",
+    "venue": "NeurIPS",
+    "year": "2019",
+    "authors": "Mao, Negi, Narayan, Wang, et al.",
+    "relevance": "The standard benchmark suite for RL-driven systems controllers, and its motivating analysis documents why ML-for-systems policies are brittle and behave differently from RL-for-games (noisy, non-stationary, distribution-shifting workloads). This is the empirical case for runtime competence monitoring that Bouncer provides.",
+    "bibtex": "@inproceedings{mao2019park,\n  author    = {Hongzi Mao and Parimarjan Negi and Akshay Narayan and Hanrui Wang and Jiacheng Yang and Haonan Wang and Ryan Marcus and Ravichandra Addanki and Mehrdad Khani Shirkoohi and Songtao He and Vikram Nathan and Frank Cangialosi and Shaileshh Bojja Venkatakrishnan and Wei-Hung Weng and Song Han and Tim Kraska and Mohammad Alizadeh},\n  title     = {Park: An Open Platform for Learning-Augmented Computer Systems},\n  booktitle = {Advances in Neural Information Processing Systems 32 (NeurIPS)},\n  pages     = {2490--2502},\n  year      = {2019}\n}",
+    "area": "ml-systems-monitoring"
+  },
+  {
+    "bibkey": "marcus2020benchmarklearnedindex",
+    "title": "Benchmarking Learned Indexes",
+    "venue": "PVLDB",
+    "year": "2020",
+    "authors": "Marcus, Kipf, van Renen, Stoian, Misra, Kemper, Neumann, Kraska",
+    "relevance": "Rigorous evaluation showing learned indexes lose their advantage and robustness on datasets lacking local structure / with erratic CDFs, i.e. they fail under data distribution shift. Direct evidence that a learned system component needs an error-bounded fallback, motivating Bouncer's safety-floor guarantee.",
+    "bibtex": "@article{marcus2020benchmarklearnedindex,\n  author  = {Ryan Marcus and Andreas Kipf and Alexander van Renen and Mihail Stoian and Sanchit Misra and Alfons Kemper and Thomas Neumann and Tim Kraska},\n  title   = {Benchmarking Learned Indexes},\n  journal = {Proceedings of the VLDB Endowment (PVLDB)},\n  volume  = {14},\n  number  = {1},\n  pages   = {1--13},\n  year    = {2020},\n  doi     = {10.14778/3421424.3421425}\n}",
+    "area": "ml-systems-monitoring"
+  },
+  {
+    "bibkey": "sculley2015technicaldebt",
+    "title": "Hidden Technical Debt in Machine Learning Systems",
+    "venue": "NeurIPS",
+    "year": "2015",
+    "authors": "Sculley et al.",
+    "relevance": "Foundational articulation of why deployed ML components incur hidden, system-level risk: entanglement, hidden feedback loops, undeclared consumers, and silent changes in the external world. It frames the maintenance and trust hazards that a runtime auditor like Bouncer is built to contain.",
+    "bibtex": "@inproceedings{sculley2015technicaldebt,\n  author    = {D. Sculley and Gary Holt and Daniel Golovin and Eugene Davydov and Todd Phillips and Dietmar Ebner and Vinay Chaudhary and Michael Young and Jean-Fran{\\c{c}}ois Crespo and Dan Dennison},\n  title     = {Hidden Technical Debt in Machine Learning Systems},\n  booktitle = {Advances in Neural Information Processing Systems 28 (NeurIPS)},\n  pages     = {2503--2511},\n  year      = {2015}\n}",
+    "area": "ml-systems-monitoring"
+  }
+]

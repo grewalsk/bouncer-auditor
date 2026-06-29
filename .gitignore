@@ -1,0 +1,8 @@
+__pycache__/
+*.pyc
+champsim_plugin/bouncer_selftest
+paper/*.aux
+paper/*.log
+paper/*.out
+paper/*.bbl
+paper/*.blg
