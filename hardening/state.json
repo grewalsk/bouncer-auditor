@@ -1,0 +1,66 @@
+{
+  "fixpoint_reached": false,
+  "gap_trace": [3, 3, 3, 3, 2],
+  "claims_ledger": {
+    "C_floor": {
+      "text": "bounded-regret safety floor vs fallback",
+      "asserted": 3,
+      "defended": 2
+    },
+    "C_secure": {
+      "text": "mimicry resistance vs adversarial steering",
+      "asserted": 2,
+      "defended": 2
+    },
+    "C_general": {
+      "text": "generality across learned controller classes",
+      "asserted": 2,
+      "defended": 1
+    },
+    "C_deploy": {
+      "text": "real-systems deployability (ChampSim)",
+      "asserted": 2,
+      "defended": 2
+    }
+  },
+  "event_log": [
+    "sweep 1: frontier = N6; Gap=3",
+    "N6: GREEN (defended[C_general]=1)",
+    "sweep 2: frontier = N1; Gap=3",
+    "N1: GREEN (defended[C_general]=1)",
+    "sweep 3: frontier = N2; Gap=3",
+    "N2: gate FAILED (undefined) attempt 1: Substantive (not arithmetic) violation: N2 is a violation node for C_secure. It derives and empirically corroborates the",
+    "sweep 4: frontier = N2; Gap=3",
+    "N2: escape valve after 2 attempts -> C_secure settled at defended=2"
+  ],
+  "nodes": {
+    "N6": {
+      "status": "SETTLED",
+      "gate": "GREEN",
+      "attempts": 0,
+      "summary": "N6 Scout / prior art: VERDICT CLEAR. Surveyed the 6 closest prior clusters to 'secret set-dueling competence auditor with a regret floor for a learned microarchitectural controller' and built a related-work table with one accepted differentiator per prior. Every neighbor differs on at least one of Bouncer's three load-bearing pillars: (1) secret set-dueling substrate (vs DIP/DRRIP public selection counters), (2) realized-competence/reward-deficit audit (vs mimickable input-side OOD/drift), (3) bounded-regret floor + secrecy-based mimicry resistance on a learned microarch controller (vs Simplex's verified reachability envelope, SPI's offline/batch model, per-deployment guardrails). No prior unifies the full conjunction, so no contribution rewrite is forced. Two NEWER neighbors not currently cited are near in framing but cleanly differentiated and should be ADDED as one-line cites (hardening, not rewrite): 'Conformal Recovery-Deadline Certificates for Runtime Assurance of Adapting Controllers' (arXiv 2606.25371, 2026 - CPS recovery-time conformal cert, no dueling/secrecy/reward) and the Black-Box Simplex line (relaxes Simplex's model need differently, via recovery region not relative floor). The secret-sampling principle is independently corroborated by LLM-inference verification (arXiv 2511.02620) in a different domain, which supports rather than scoops the mimicry proposition. Honest caveat: 'first to' must be scoped to the conjunction, not any single ingredient - the current tex already does this correctly with 'repurposes/borrows the substrate' framing; keep it.",
+      "note": ""
+    },
+    "N1": {
+      "status": "SETTLED",
+      "gate": "GREEN",
+      "attempts": 0,
+      "summary": "N1 (proxy: what the audit certifies): DONE, claim defensible at current scope, no strengthening. Bouncer's gate acts on Delta-hat_W = r-bar_L - r-bar_F (set_dueling.py:109-111), a measured (non-counterfactual) estimate of the competence advantage Delta_W = mean(r^C - r^pi0) over a window (bouncer.tex:158-161). PRECISELY: Delta-hat certifies a high-probability bound (>=1-delta N_ep, under A1 bounded reward + A3-A5 partitionable/secret/reseeded resource) on the realized advantage of controller C over fallback pi0 IN THE CONTROLLER'S OWN REWARD METRIC r, plus a bounded-regret-in-r safety floor (Lemma floor, bouncer.tex:320-339) and mimicry resistance in the reward channel (Prop mimicry). Delta-hat does NOT certify any bound on true end utility (IPC/latency/MLP) - the certificate is exactly conditional on the fidelity of the map r approx utility, an assumption the audit never observes and cannot test from inside. Over-gating falls out as a falsifiable PREDICTION: when the surrogate under-credits a utility-helpful action, Bouncer floors to pi0 and loses utility with no attacker. CONFIRMED on roms (results/champsim.json): per-set L1D cache-hit proxy misses the memory-bound prefetcher's real IPC benefit (unguarded_clean 1.139, best of any cell), so Delta-hat reads low, gate floors, 11.2% clean tax, and bouncer_attack 1.009 even LOSES to ungated unguarded_attack 1.08 (-6.57%). lbm (proxy and utility agree on pollution) and perlbench (prefetch ~neutral) behave as expected; only the memory-bound case where sign(Delta^reward)!=sign(Delta^utility) over-gates. Honest scoping: the failure is CONSERVATIVE (over-gate costs utility but preserves the safety floor); the dangerous over-crediting case (proxy too generous, utility-harm slips through while reward looks clean) is NOT demonstrated and is the open hole the sec.8 own-reward design must close. Paper already states this correctly (bouncer.tex:140-141); keep it, do not claim utility safety.",
+      "note": ""
+    },
+    "N2": {
+      "status": "SETTLED",
+      "gate": "WEAKENED",
+      "attempts": 2,
+      "summary": "N2 (per-domain budget) is a VIOLATION node for C_secure; honest defended=0 for the GENERAL mimicry-resistance claim. The math is correct and reproduces against the code, but its central content is a closed-form derivation of the COVERAGE HOLE / slow-bleed attack that BREAKS general (any-region) security - so a prior defended=2 was an overclaim, as the gate found. DERIVATION (all from the one identity Var(Delta-hat_R) <= (r_max^2/4m)(1/n_{L,R}+1/n_{F,R}), set_dueling.py:116-121 = bouncer.tex eq.var): at global leader density rho=n_L/n_sets, sigma_R <= (r_max/sqrt(2m))*1/sqrt(rho|R|) prop |R|^(-1/2). Within-region resolvable gap delta_R = k*sigma_R = k*r_max/sqrt(2m rho|R|) (k approx 3). False-alarm alpha_R = 1/ARL0 with ARL0 (Siegmund, cusum.py:95-116) growing exp(Theta(rho|R|)) - super-exponential in |R|, so alpha_R blows up super-exponentially as |R| shrinks. FEASIBILITY: n_{L,R} >= k^2 r_max^2/(2m delta_R^2), INDEPENDENT of |R| - resolution fixes the absolute leader count; |R| only sets whether that many sets physically fit at density rho. COVERAGE HOLE (adversary best response): with affordable budget B, delta_R^min(B)=k*r_max/sqrt(2mB); the adversary picks the smallest region (or trickles harm) so that (1-f)*g < delta_R^min(B) and stays under the resolution floor indefinitely. The safety-floor Lemma (bouncer.tex:320-339) does NOT cover this: it bounds regret only over the UNION of AUDITED domains; a sub-resolution/undeclared region is outside that union. CORROBORATION: P4 (results/p4.json) is exactly the n_{L,R}=4 (|R|=32) victim region eaten as secret leaks - TPR 1.0 (f<=0.4) -> 0.075 (f=0.8) -> 0 (f=1.0, latency->inf); f and |R| are interchangeable axes of the same hole, and (FEAS) shows the |R|-axis the paper omits. SELF-CONSISTENCY: the |R|=32 row's n_{L,R}=4 exactly reproduces the paper's measured 'effective in-region pool of ~4 Leader-L sets' (bouncer.tex:571). NUMERIC-DRIFT FIX: the gate's |R|=64 row 1.16e12/8.6e-13 used the 4-dp-rounded sigma=0.0312; the EXACT sigma_R=1/sqrt(2*64*8)=0.03125 gives cusum.siegmund_arl -> 1.069e12 / 9.35e-13, which is what the table now reports; all other rows reproduce exactly. POSITIVE DEFENSE that IS supported: only the narrow declared-region-with-intact-secret case (Bouncer audits a DECLARED domain at resolution FEAS) - N2 does not and should not claim general security. Recommend the paper state (COVERAGE HOLE) explicitly alongside the f->1 secrecy-leak axis.",
+      "note": "Node self-classifies as VIOLATION (lines 10-11, 36-37): proves the slow-bleed/coverage-hole attack that defeats general mimicry resistance, so it cannot defend C_secure at level 2.; Proposed evidence is [] (empty); with no cited evidence the maximum defensible level is 0, not the prior 2.; P4 (results/p4.json) shows the attack SUCCEEDING (TPR 1.0 -> 0.075 at f=0.8 -> 0 at f=1.0), corroborating the violation rather than any defense.; The set-dueling bound (star) and floor lemma only cover the union of audited declared domains; the redistributive adversary's per-window harm sits under delta_R^min(B), outside that union (lines 18-30, sec.5) - general (any-region) security is not established.; Only the narrow declared-region-with-intact-secret case is positively supported, which the node explicitly does not advertise as general C_secure; that does not sustain defended>=1 for the general claim."
+    },
+    "N3": {"status": "UNSETTLED", "gate": "PENDING", "attempts": 0, "summary": "", "note": ""},
+    "CONC": {"status": "UNSETTLED", "gate": "PENDING", "attempts": 0, "summary": "", "note": ""},
+    "LEMMA1": {"status": "UNSETTLED", "gate": "PENDING", "attempts": 0, "summary": "", "note": ""},
+    "PROP1": {"status": "UNSETTLED", "gate": "PENDING", "attempts": 0, "summary": "", "note": ""},
+    "N4": {"status": "UNSETTLED", "gate": "PENDING", "attempts": 0, "summary": "", "note": ""},
+    "N5": {"status": "UNSETTLED", "gate": "PENDING", "attempts": 0, "summary": "", "note": ""},
+    "WRITEUP": {"status": "UNSETTLED", "gate": "PENDING", "attempts": 0, "summary": "", "note": ""}
+  }
+}

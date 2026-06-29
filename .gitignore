@@ -6,3 +6,5 @@ paper/*.log
 paper/*.out
 paper/*.bbl
 paper/*.blg
+hardening/experiments/**/*.csv
+hardening/experiments/**/*.log

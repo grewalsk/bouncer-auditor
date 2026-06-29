@@ -3,6 +3,7 @@
 
 #include <cstdint>
 #include <unordered_map>
+#include <unordered_set>
 #include <fstream>
 #include <string>
 
@@ -32,8 +33,20 @@ struct bouncer_pref : public champsim::modules::prefetcher {
   std::unordered_map<uint64_t, strider> stride_table;
 
   uint64_t access_count = 0, window_idx = 0;
+  uint64_t window_accesses = WINDOW_ACCESSES;  // BOUNCER_WINDOW override (supplementary SNR probe)
   bool gate_enabled = true;
   long attack_window = -1;
+  // N1 reward-fidelity isolation (BOUNCER_REWARD): which competence signal feeds Δ̂.
+  //   0 = cachehit        : per-access cache-hit (the borrowed proxy; baseline)
+  //   1 = ownpf           : controller's OWN reward, event-scoped coverage-accuracy
+  //                         useful/(useful + uncovered-miss) ~ accuracy x timeliness
+  //   2 = ownpf_peraccess : per-access useful_prefetch (sparse/diluted ablation)
+  //   3 = ownacc          : faithful own prefetch ACCURACY, in-module tracked with
+  //                         issue-time set attribution, demand-use=+1 / evict-unused
+  //                         =0, pf_pending cleared at each reseed -> no cross-
+  //                         partition credit leak; off arm earns 0 by construction.
+  int reward_mode = 0;
+  std::unordered_set<uint64_t> pf_pending;  // ownacc: prefetched-but-unused blocks (this window)
   std::string log_path;
   std::ofstream log;
 

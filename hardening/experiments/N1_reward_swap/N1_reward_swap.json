@@ -1,0 +1,182 @@
+{
+  "cachehit": {
+    "ipc": {
+      "unguarded_clean": 1.139,
+      "bouncer_clean": 1.011,
+      "unguarded_attack": 1.08,
+      "bouncer_attack": 1.009
+    },
+    "clean_tax_pct": 11.24,
+    "unguarded_attack_loss_pct": 5.18,
+    "bouncer_atk_vs_unguarded_atk_pct": -6.57,
+    "gate": {
+      "unguarded_clean": {
+        "windows": 47,
+        "gated_windows": 30,
+        "gated_frac": 0.638,
+        "mean_delta_hat": 0.00011,
+        "final_state": "GATED",
+        "first_gated_window": 6
+      },
+      "bouncer_clean": {
+        "windows": 47,
+        "gated_windows": 35,
+        "gated_frac": 0.745,
+        "mean_delta_hat": 0.03839,
+        "final_state": "GATED",
+        "first_gated_window": 6
+      },
+      "unguarded_attack": {
+        "windows": 47,
+        "gated_windows": 35,
+        "gated_frac": 0.745,
+        "mean_delta_hat": 0.01192,
+        "final_state": "GATED",
+        "first_gated_window": 6
+      },
+      "bouncer_attack": {
+        "windows": 47,
+        "gated_windows": 35,
+        "gated_frac": 0.745,
+        "mean_delta_hat": 0.03839,
+        "final_state": "GATED",
+        "first_gated_window": 6
+      }
+    }
+  },
+  "ownacc": {
+    "ipc": {
+      "unguarded_clean": 1.139,
+      "bouncer_clean": 1.028,
+      "unguarded_attack": 1.08,
+      "bouncer_attack": 1.026
+    },
+    "clean_tax_pct": 9.75,
+    "unguarded_attack_loss_pct": 5.18,
+    "bouncer_atk_vs_unguarded_atk_pct": -5.0,
+    "gate": {
+      "unguarded_clean": {
+        "windows": 47,
+        "gated_windows": 6,
+        "gated_frac": 0.128,
+        "mean_delta_hat": 0.0,
+        "final_state": "PROBING",
+        "first_gated_window": 12
+      },
+      "bouncer_clean": {
+        "windows": 47,
+        "gated_windows": 18,
+        "gated_frac": 0.383,
+        "mean_delta_hat": 0.06383,
+        "final_state": "PROBING",
+        "first_gated_window": 12
+      },
+      "unguarded_attack": {
+        "windows": 47,
+        "gated_windows": 6,
+        "gated_frac": 0.128,
+        "mean_delta_hat": 0.0,
+        "final_state": "PROBING",
+        "first_gated_window": 12
+      },
+      "bouncer_attack": {
+        "windows": 47,
+        "gated_windows": 6,
+        "gated_frac": 0.128,
+        "mean_delta_hat": 0.02128,
+        "final_state": "PROBING",
+        "first_gated_window": 12
+      }
+    }
+  },
+  "ownpf": {
+    "ipc": {
+      "unguarded_clean": 1.139,
+      "bouncer_clean": 1.005,
+      "unguarded_attack": 1.08,
+      "bouncer_attack": 1.004
+    },
+    "clean_tax_pct": 11.76,
+    "unguarded_attack_loss_pct": 5.18,
+    "bouncer_atk_vs_unguarded_atk_pct": -7.04,
+    "gate": {
+      "unguarded_clean": {
+        "windows": 47,
+        "gated_windows": 39,
+        "gated_frac": 0.83,
+        "mean_delta_hat": -0.06541,
+        "final_state": "GATED",
+        "first_gated_window": 4
+      },
+      "bouncer_clean": {
+        "windows": 47,
+        "gated_windows": 18,
+        "gated_frac": 0.383,
+        "mean_delta_hat": -0.01708,
+        "final_state": "PROBING",
+        "first_gated_window": 4
+      },
+      "unguarded_attack": {
+        "windows": 47,
+        "gated_windows": 39,
+        "gated_frac": 0.83,
+        "mean_delta_hat": -0.1068,
+        "final_state": "GATED",
+        "first_gated_window": 4
+      },
+      "bouncer_attack": {
+        "windows": 47,
+        "gated_windows": 18,
+        "gated_frac": 0.383,
+        "mean_delta_hat": -0.01708,
+        "final_state": "PROBING",
+        "first_gated_window": 4
+      }
+    }
+  },
+  "ownpf_peraccess": {
+    "ipc": {
+      "unguarded_clean": 1.139,
+      "bouncer_clean": 1.022,
+      "unguarded_attack": 1.08,
+      "bouncer_attack": 1.021
+    },
+    "clean_tax_pct": 10.27,
+    "unguarded_attack_loss_pct": 5.18,
+    "bouncer_atk_vs_unguarded_atk_pct": -5.46,
+    "gate": {
+      "unguarded_clean": {
+        "windows": 47,
+        "gated_windows": 35,
+        "gated_frac": 0.745,
+        "mean_delta_hat": -0.00456,
+        "final_state": "GATED",
+        "first_gated_window": 10
+      },
+      "bouncer_clean": {
+        "windows": 47,
+        "gated_windows": 6,
+        "gated_frac": 0.128,
+        "mean_delta_hat": -0.00055,
+        "final_state": "PROBING",
+        "first_gated_window": 10
+      },
+      "unguarded_attack": {
+        "windows": 47,
+        "gated_windows": 18,
+        "gated_frac": 0.383,
+        "mean_delta_hat": -0.00277,
+        "final_state": "PROBING",
+        "first_gated_window": 10
+      },
+      "bouncer_attack": {
+        "windows": 47,
+        "gated_windows": 6,
+        "gated_frac": 0.128,
+        "mean_delta_hat": -0.00055,
+        "final_state": "PROBING",
+        "first_gated_window": 10
+      }
+    }
+  }
+}

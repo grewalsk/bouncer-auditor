@@ -1,0 +1,24 @@
+{
+  "experiment": "N1 clean isolation: swap ONLY the reward signal on roms, hold (tau,H,window,partition,FSM) fixed",
+  "simulator": "real ChampSim (champsim_bouncer), 654.roms_s, 1M warmup + 9M sim, L1D bouncer_pref",
+  "fixed_operating_point": {"tau": 0.0, "gamma": 0.04, "H": 0.25, "n_sets": 2048, "n_L": 32, "n_F": 32, "window_accesses": 40000, "attack_window": 30, "K_cusum": 0.02},
+  "rewards": {
+    "cachehit":        {"desc": "per-access cache-hit (borrowed proxy, baseline)", "ipc": {"unguarded_clean": 1.139, "bouncer_clean": 1.011, "unguarded_attack": 1.08, "bouncer_attack": 1.009}, "clean_tax_pct": 11.24, "bouncer_atk_vs_unguarded_atk_pct": -6.57, "clean_gated_windows": "35/47", "mean_delta_hat_unguarded": 0.0001},
+    "ownacc":          {"desc": "controller's OWN prefetch accuracy x timeliness, in-module tracked, leak-free across windows", "ipc": {"unguarded_clean": 1.139, "bouncer_clean": 1.028, "unguarded_attack": 1.08, "bouncer_attack": 1.026}, "clean_tax_pct": 9.75, "bouncer_atk_vs_unguarded_atk_pct": -5.00, "clean_gated_windows": "18/47", "mean_delta_hat_unguarded": 0.0000},
+    "ownpf":           {"desc": "event-scoped useful/(useful+miss) via cache useful_prefetch bit (cross-window leak ablation)", "ipc": {"unguarded_clean": 1.139, "bouncer_clean": 1.005, "unguarded_attack": 1.08, "bouncer_attack": 1.004}, "clean_tax_pct": 11.76, "bouncer_atk_vs_unguarded_atk_pct": -7.04, "clean_gated_windows": "18/47", "mean_delta_hat_unguarded": -0.0654},
+    "ownpf_peraccess": {"desc": "per-access useful_prefetch over all accesses (sparse/diluted ablation)", "ipc": {"unguarded_clean": 1.139, "bouncer_clean": 1.022, "unguarded_attack": 1.08, "bouncer_attack": 1.021}, "clean_tax_pct": 10.27, "bouncer_atk_vs_unguarded_atk_pct": -5.46, "clean_gated_windows": "6/47", "mean_delta_hat_unguarded": -0.0046}
+  },
+  "supplementary_window_5x": {
+    "note": "window 40000 -> 200000, (tau,H) unchanged; attack onset (window 30) does not fire at 9 windows so attack==clean here",
+    "cachehit": {"bouncer_clean_ipc": 1.138, "clean_tax_pct": 0.0, "gated_windows": "0/9", "mean_delta_hat": -0.0059},
+    "ownacc":   {"bouncer_clean_ipc": 1.138, "clean_tax_pct": 0.0, "gated_windows": "0/9", "mean_delta_hat": 0.0154}
+  },
+  "verdict": {
+    "n1_proposed_test": "If over-gating disappears under the better proxy at the same threshold, the failure is proxy-fidelity, not threshold tuning.",
+    "outcome": "FAILS the test. Swapping cache-hit -> own reward at the fixed threshold does NOT eliminate over-gating (clean_tax 11.24% -> 9.75%; gate still flickers; still loses -5.0% to attacked prefetcher).",
+    "dominant_cause": "operating point / observability. At a 5x window the over-gate vanishes for BOTH the borrowed proxy and the own reward (clean_tax -> ~0%).",
+    "sign_mismatch": "real but minor: cache-hit Delta-hat has genuine negative windows (to -0.22) in pollution episodes, but the unconfounded mean is ~0 and SNR dominates.",
+    "fundamental_obstruction": "prefetch benefit is de-localized (prefetches cross sets) and sparse (rare high-latency misses), so a faithful own-accuracy reward is not cleanly set-dualizable (Delta-hat -> 0) while the localizable cache-hit reward is a poor utility proxy.",
+    "recommended_n1_revision": "N1.md sec 4-5 overclaim; roms is NOT clean confirmation of proxy-fidelity-over-threshold. It is co-caused by low-SNR de-localized signal + short-window operating point. The sec 8 own-reward remedy is insufficient alone for the memory-bound case."
+  }
+}

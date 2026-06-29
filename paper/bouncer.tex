@@ -399,6 +399,24 @@ load-bearing.} The whole argument rests on the adversary being blind to the
 within-$R$ assignment---which is why the secrecy ablation (\Cref{sec:eval-p4}) is
 the headline experiment.
 
+\textbf{The coverage hole (an explicit slow-bleed attack on the budget).} The
+proposition is genuinely scoped, not merely hedged: it covers a \emph{declared}
+domain audited at finite resolution. From the concentration bound, the within-$R$
+gap resolvable with leader density $\rho$ is $\delta_R = k\,\sigma_{\Delta,R} =
+k\,r_{\max}/\sqrt{2m\rho|R|}$, and---crucially---the leader count to audit at
+resolution $\delta_R$ is $n_{L,R}\ge k^2 r_{\max}^2/(2m\,\delta_R^2)$,
+\emph{independent of $|R|$}. So under a fixed budget $B$ there is a finest
+resolution $\delta_R^{\min}(B)$, and a redistributive adversary can pick a region
+small enough (or trickle harm slowly enough) that its per-window competence drop
+stays \emph{below} $\delta_R^{\min}(B)$ forever---an undeclared, sub-resolution
+``coverage hole'' that the safety-floor lemma, proven only over the \emph{union of
+audited domains}, does not bound. This is the same hole the secrecy ablation walks
+on its $f$ axis (TPR $1.0\!\to\!0$ as $f\!\to\!1$). \emph{We therefore claim
+mimicry resistance only for declared domains audited at resolution
+$\delta_R^{\min}(B)$ with an intact secret---not general, any-region security}; the
+slow-bleed attack is a real, un-closed vulnerability that bounds the contribution
+honestly.
+
 \section{Attack-vs-drift triage}\label{sec:triage}
 Both threats fail $\Dw<\tau$; their signatures differ enough to set the response
 prior (a secondary contribution---detection does not depend on it). Drift is
@@ -725,12 +743,26 @@ SPEC trace & prefetch benefit & attack loss (unguard) & Bouncer clean tax\\
 \end{tabular}
 \end{table}
 
-Both failure directions point to the same fix and motivate the
-\Cref{sec:instantiation} design: use the controller's \emph{own} in-silicon
-reward (Pythia's accuracy$\times$timeliness, computed for its RL update), which by
-construction tracks the controller's real benefit instead of a hit-rate proxy. A
-full SPEC/GAP sweep with that reward---and with the production controllers of
-\Cref{tab:instances}---is the systems evaluation this proof-of-deployment sets up.
+It is tempting to blame the hit-rate proxy and propose the controller's
+\emph{own} reward as the fix---but we tested exactly that and it is
+\emph{insufficient}. Holding $(\tau,H,\text{window},\text{partition},\text{FSM})$
+fixed and swapping \emph{only} the reward, from per-set cache-hit to the
+prefetcher's own accuracy$\times$timeliness, moves the roms clean tax only
+$11.2\%\!\to\!9.7\%$ and still loses $5\%$ to the attacked-but-ungated prefetcher.
+The reason is a \textbf{fundamental tension in what set-dueling can measure}: the
+cache-hit reward is \emph{set-local} (attributable to the dueling set) but a poor
+utility proxy, whereas the own-accuracy reward is a faithful proxy but \emph{not
+set-local}---a prefetch triggered on a Leader-L set targets a \emph{different}
+address that lands on a \emph{different} set, so the dueling mis-credits it and
+$\dhat$ collapses to $\approx\!0$. The dominant lever is therefore the
+observation window / signal SNR, not reward fidelity: lengthening the epoch
+(window $40\mathrm{k}\!\to\!200\mathrm{k}$) removes the over-gating even with the
+crude proxy. This is a genuine limitation of set-dueling \emph{for prefetchers},
+whose benefit is inherently de-localized; \emph{cache replacement}---where the
+decision and its hit/miss outcome share a set---is the clean case (the paper's
+``home turf'' claim, now with a mechanism). The milestone this proof-of-deployment
+sets up is accordingly sharper: a long-epoch, \emph{set-local} competence signal
+(latency-weighted, replacement-style), not merely ``the controller's own reward.''
 
 The same auditor C++ also compiles and runs as a real ChampSim \emph{LLC
 replacement} module (SRRIP-vs-LRU dueling on physical sets, hit/miss reward),
@@ -748,7 +780,9 @@ trace Bouncer ends at the prefetch-off floor (the cap), bounding the corruption
 attack's worst case (lbm: $7.9\%$ unguarded loss cannot reach the gated victim).
 The per-set cache-hit reward proxy sets the clean tax ($1.7$--$11\%$): roms shows
 the failure mode---a genuinely-helpful prefetcher under-credited and over-gated.
-The fix is the controller's own in-silicon reward.}
+Swapping to the controller's own reward does \emph{not} fix this (only
+$11.2\%\!\to\!9.7\%$); a prefetcher's benefit is not set-local, so set-dueling
+needs a longer epoch or a set-local signal (replacement is the clean case).}
 \label{fig:champsim}
 \end{figure}
 
@@ -787,9 +821,14 @@ CUSUM detectors ($\times 4$) & 16\,B & 2 add/cmp each\\
 \section{Discussion and limitations}\label{sec:disc}
 \textbf{Counterfactual cost.} Controllers without clean set-sampling (the memory
 scheduler) force a model-based $\dhat$, which weakens \Cref{prop:mimicry}; we
-scope sampling-friendly controllers first. \textbf{Redistributive mimicry.} A
-global $\dhat$ cannot see an attack that preserves the global mean; per-domain
-dueling restores detection at the cost of more leader sets per protected domain.
+scope sampling-friendly controllers first. \textbf{Redistributive mimicry and the
+coverage hole.} A global $\dhat$ cannot see an attack that preserves the global
+mean; per-domain dueling raises detection but does \emph{not} fully close it---a
+finite leader budget $B$ has a resolution floor $\delta_R^{\min}(B)$, and a
+slow-bleed adversary that keeps its per-window harm below it evades indefinitely
+(\Cref{prop:mimicry}). We therefore claim mimicry resistance only for declared
+domains audited at that resolution with an intact secret, and name the sub-
+resolution coverage hole as an open vulnerability rather than hiding it.
 \textbf{Ground-truth labeling.} ``Off-policy'' is operationalized as a sustained
 competence drop beyond a fixed margin, against which we measure latency.
 \textbf{Overhead vs.\ sensitivity.} The auditor dies if the Tier-B duty cycle is
@@ -799,14 +838,19 @@ controlled quantitative claims are validated on a faithful harness; the real
 ChampSim L1D module (\Cref{sec:eval-champsim}) shows the mechanism survives a real
 simulator and bounds a corrupted prefetcher to the safe floor across a 3-trace SPEC suite---a full SPEC/GAP sweep with a timeliness-aware reward (and the
 production controllers of \Cref{tab:instances}) is the natural next step.
-\textbf{Reward-proxy fidelity is decisive.} The ChampSim runs make this concrete:
-a per-set L1D cache-hit reward is a poor proxy for a prefetcher's true (latency/
-MLP) benefit, and it fails in \emph{both} directions---over-gating a genuinely-
-helpful prefetcher on roms ($11\%$ tax) and only incidentally protecting against
-the lbm attack (the prefetcher was already distrusted). The auditor is only as
-good as its competence reward; the fix is to feed it the controller's \emph{own}
-in-silicon reward (Pythia's accuracy$\times$timeliness), which tracks real benefit
-by construction. This is a property of the \emph{reward}, not the gate.
+\textbf{Reward \emph{localizability}, not just fidelity, is decisive.} The ChampSim
+runs make this concrete and correct a tempting but wrong fix. A per-set cache-hit
+reward is a poor proxy for a prefetcher's true (latency/MLP) benefit and over-gates
+a helpful prefetcher on roms ($11\%$ tax)---but we showed (\Cref{sec:eval-champsim})
+that swapping to the controller's \emph{own} accuracy$\times$timeliness reward does
+\emph{not} fix it ($11.2\%\!\to\!9.7\%$ at fixed window). Set-dueling needs a
+\emph{set-local} reward, and a prefetcher's benefit is intrinsically de-localized
+(it fetches a different set than it was triggered on), so the faithful reward is
+the one that cannot be dualized. The practical levers are a longer epoch (which
+removes the over-gating empirically) and a set-local signal; the structurally clean
+case is a controller whose decision and outcome share a set---\emph{replacement}.
+This is a property of the controller-reward \emph{geometry}, and it sharply scopes
+where set-dueling competence auditing is faithful.
 
 \section{Conclusion}
 Bouncer turns ``is the learned controller still earning its keep?'' into one
