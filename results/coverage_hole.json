@@ -1,0 +1,67 @@
+{
+  "synthetic": true,
+  "branch": "FALLBACK (controlled harness, real Bouncer region dueling)",
+  "horizon": 360,
+  "onset": 40,
+  "m": 64,
+  "k": 3.0,
+  "clean_delta": 0.265,
+  "K": 0.1,
+  "budgets": [
+    {
+      "region_size": 128,
+      "nLR": 2,
+      "B": 4,
+      "sigma_R": 0.0625,
+      "dRmin": 0.1875
+    },
+    {
+      "region_size": 256,
+      "nLR": 4,
+      "B": 8,
+      "sigma_R": 0.04419417382415922,
+      "dRmin": 0.13258252147247768
+    },
+    {
+      "region_size": 512,
+      "nLR": 8,
+      "B": 16,
+      "sigma_R": 0.03125,
+      "dRmin": 0.09375
+    },
+    {
+      "region_size": 1024,
+      "nLR": 16,
+      "B": 32,
+      "sigma_R": 0.02209708691207961,
+      "dRmin": 0.06629126073623884
+    }
+  ],
+  "h_evade": 0.06,
+  "main_trace": {
+    "h": 0.06,
+    "gated": null,
+    "evaded": true,
+    "cumulative_harm": 19.199999999999974,
+    "delta_hat_min": 0.0,
+    "delta_hat_mean_postonset": 0.20488624209449405,
+    "cusum_ever_alarmed": false
+  },
+  "horizon_scaling": {
+    "T": [
+      120,
+      240,
+      360,
+      480,
+      600
+    ],
+    "cum_harm": [
+      4.8,
+      12.0,
+      19.2,
+      26.4,
+      33.6
+    ],
+    "all_evaded": true
+  }
+}
