@@ -1,11 +1,19 @@
-# Bouncer: An Off-Policy Competence Auditor for Learned Microarchitectural Controllers
+# Bouncer: Competence Auditing for Set-Local Learned Microarchitectural Controllers
 
 > A runtime monitor + trust gate that **bounds the worst-case cost of a learned
-> microarchitectural controller** (prefetcher, replacement policy, memory
-> scheduler, branch predictor) to that of a known-safe heuristic — under both
-> **adversarial steering** and **benign distribution shift** — with no
+> microarchitectural controller** to that of a known-safe heuristic — under
+> **adaptive mimicry** and **benign distribution shift** — with no
 > POMDP/belief-state machinery and no added latency on the cache-access critical
 > path.
+>
+> **The organizing insight — *set-locality*.** A secret per-set competence audit
+> is faithful exactly when a controller's *reward shares a dueling set with its
+> decision*. Cache **replacement** is the canonical clean case (the eviction on
+> set `s` is scored by hits/misses on `s`); **prefetching** is the characterized
+> boundary (it fetches a *different* set than it was triggered on, so its benefit
+> can't be localized — and we show in real ChampSim that *not even the
+> controller's own reward* fixes this). Set-locality is what decides where the
+> mechanism works.
 
 This repository is the full research artifact for an HPCA-style systems-security
 paper: the mechanism, two proven guarantees, a comprehensive simulation harness
@@ -320,18 +328,28 @@ what the prose claims.
 
 ## 10. Honest scope & status
 
+- **The mechanism is for the *set-local* class.** Set-dueling competence auditing
+  is faithful exactly when reward and decision share a set — **replacement** is the
+  clean case; **prefetching** is the de-localized boundary (confirmed in real
+  ChampSim: even the controller's own reward only moves the over-gating tax
+  11.2% → 9.7%). This characterization is the paper's organizing contribution.
 - **Controlled quantitative claims** (estimator fidelity, safety floor, mimicry
   survival, secrecy, sensitivity, robustness) come from a faithful **synthetic
-  competence harness**. This is legitimate because the guarantees are
-  environment-agnostic: they rest only on bounded reward and a randomly
-  partitionable resource — and the misspecification sweep shows they survive
-  violating the harness's i.i.d. assumption.
+  competence harness**, which is itself a set-local model — legitimate because the
+  guarantees rest only on bounded reward + a partitionable resource, and the
+  misspecification sweep shows they survive violating the i.i.d. assumption.
+- **Security is scoped, with a named open vulnerability.** Mimicry resistance holds
+  only for a *declared domain audited at resolution `δ_R^min(B)` with an intact
+  secret*; a sub-resolution **slow-bleed / coverage-hole** adversary evades forever
+  (closed-form + demonstrated — `figures/coverage_hole.pdf`). The general
+  any-region claim is explicitly **refuted**, not hidden.
 - The **ChampSim integration** is a real-simulator *proof of deployment* (the
-  auditor compiles into two real module types and runs on SPEC), plus a candid
-  reward-proxy lesson — **not** a full SPEC/GAP IPC sweep.
-- **Next milestone** to make the systems story a headline: the controller's native
-  reward + long-horizon DIP-style accumulation across a SPEC/GAP suite, exhibiting
-  a genuine pre-attack TRUSTED state and a post-attack transition.
+  auditor compiles into two real module types — replacement and prefetcher — and
+  runs on SPEC), **not** a full SPEC/GAP IPC sweep.
+- **Next milestones:** (a) close the coverage hole (multi-resolution / randomized-
+  region dueling); (b) long-horizon DIP-style accumulation on the **replacement**
+  (set-local) reward across SPEC/GAP for a genuine pre-attack TRUSTED → post-attack
+  GATED transition.
 
 ## 11. Related work (positioning)
 

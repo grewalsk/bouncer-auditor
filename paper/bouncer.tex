@@ -26,7 +26,7 @@
 
 \begin{document}
 
-\title{Bouncer: An Off-Policy Competence Auditor for\\ Learned Microarchitectural Controllers}
+\title{Bouncer: Competence Auditing for\\ Set-Local Learned Microarchitectural Controllers}
 
 \author{\IEEEauthorblockN{Anonymous Submission}
 \IEEEauthorblockA{Paper \#---\quad HPCA Submission}}
@@ -43,11 +43,16 @@ under distribution shift, and a co-located adversary that knows the design can
 innocuous on aggregate performance counters. We present \textbf{Bouncer}, a
 runtime monitor and trust gate that---for a declared domain audited at finite
 resolution with its secret intact---bounds the worst-case \emph{competence} cost
-(in the controller's own reward) of any such controller to that of a known-safe
-fallback heuristic, under adaptive mimicry and benign drift, with no
-POMDP/belief-state machinery and no added latency on the cache-access critical
-path; a sub-resolution \emph{slow-bleed} steering attack is an explicitly named
-open vulnerability. Bouncer reduces ``is the learned controller still
+(in the controller's own reward) of any \emph{set-local} controller---one whose
+decision and its reward fall on the same dueling set, canonically cache
+\emph{replacement}---to that of a known-safe fallback heuristic, under adaptive
+mimicry and benign drift, with no POMDP/belief-state machinery and no added
+latency on the cache-access critical path; a sub-resolution \emph{slow-bleed}
+steering attack is an explicitly named open vulnerability. \emph{Set-locality is
+the enabling condition}: it is exactly what lets a secret per-set audit attribute
+reward to the right policy, and it cleanly separates the controllers Bouncer
+faithfully audits (replacement, PC-indexed predictors) from the cautionary
+boundary case (prefetching, whose benefit is de-localized). Bouncer reduces ``is the learned controller still
 trustworthy?'' to a single scalar---a competence advantage $\Dw$ over the
 fallback---estimated \emph{without counterfactuals} by repurposing the
 set-dueling substrate already in silicon, but with a twist: the run-learned /
@@ -71,10 +76,13 @@ declared, secret-intact domain}, an input-OOD monitor detects \emph{none} of the
 attacks ($0/50$, Wilson 95\% upper bound $0.07$) while Bouncer detects \emph{all}
 ($50/50$, lower bound $0.93$)---a robustness purchased entirely by the secrecy of
 the dueling sets, which collapses both as the assignment leaks and against a
-sub-resolution redistributive (slow-bleed) adversary outside the audited domain. The auditor also runs as a real
-\emph{ChampSim L1D prefetcher module} on SPEC\,CPU2017, bounding a corrupted
-prefetcher's damage to the prefetch-off floor---and candidly exposing that its
-decisions are only as good as the competence reward it is given. The mechanism's
+sub-resolution redistributive (slow-bleed) adversary outside the audited domain. We confirm the set-locality
+boundary on real ChampSim deployments on SPEC\,CPU2017: the auditor compiles as
+both a cache-replacement module (set-local---the clean case) and an L1D prefetcher
+module, where it bounds a corrupted prefetcher to the prefetch-off floor but, as
+a non-set-local controller, over-gates a genuinely-helpful prefetcher under a
+per-set cache-hit proxy---and swapping to the controller's own reward does
+\emph{not} fix it, because a prefetcher's reward cannot be localized to a set. The mechanism's
 quantitative guarantees are validated in a fully-released synthetic harness; the
 ChampSim integration is a real-simulator proof of deployment, not a SPEC sweep.
 \end{abstract}
@@ -125,8 +133,28 @@ making the controller good (in that reward metric). The certificate is over the
 controller's own reward, not end utility, which it tracks only insofar as the
 reward proxies utility (\Cref{sec:eval-champsim}).
 
+\paragraph{The set-locality condition (the organizing insight).} A secret per-set
+audit can only certify a controller whose \emph{reward is attributable to the same
+dueling set as its decision}---we call such a controller \emph{set-local}. Cache
+\emph{replacement} is the canonical set-local controller: the eviction decision on
+set $s$ is rewarded by the hit/miss outcome \emph{on set $s$}, so the dueling
+estimate $\dhat$ is a clean, localized competence signal. PC-indexed predictors
+(branch, confidence) are likewise local. \emph{Prefetching is the cautionary
+boundary}: a prefetch triggered on set $s$ fetches a \emph{different} set $s'$, so
+its benefit is de-localized and no per-set reward captures it---a faithful reward
+cannot be dualized, which we confirm in real ChampSim
+(\Cref{sec:eval-champsim}). Set-locality thus \emph{characterizes when competence
+auditing is faithful}, and reframes Bouncer as a clean mechanism for the set-local
+class (replacement first), with prefetching and the coverage hole as its honest
+boundaries.
+
 \paragraph{Contributions.}
 \begin{enumerate}
+\item \textbf{The set-locality characterization} (\Cref{sec:setting}): the
+condition---decision and reward share a dueling set---that determines \emph{when}
+secret-set-dueling competence auditing is faithful, separating the clean class
+(replacement, PC-indexed predictors) from the de-localized boundary (prefetching),
+which we confirm in real ChampSim.
 \item \textbf{A scalar off-policy condition} (\Cref{sec:setting}) that unifies
 benign drift and adversarial steering: the competence advantage $\Dw$ falling
 below a trust threshold $\tau$.
@@ -186,6 +214,24 @@ This one scalar unifies the two threats: an adversarial push toward $C$'s
 decision boundary and a benign distribution shift both manifest as $\Dw$ falling.
 The auditor detects the condition; a lightweight triage (\Cref{sec:triage})
 guesses the cause to pick the response.
+
+\begin{definition}[Set-locality]\label{def:setlocal}
+Let the resource be partitioned into dueling sets $\{s\}$. A controller is
+\emph{set-local} if the reward $r_t$ for a decision made on set $s$ is realized on
+set $s$ (so it can be attributed to $s$'s pool). Then the per-pool means
+$\bar r_L,\bar r_F$ are unbiased estimates of each policy's competence on the
+sampled sets, and $\dhat=\bar r_L-\bar r_F$ is a faithful competence estimate.
+\end{definition}
+
+Set-locality is the enabling condition for the entire mechanism: it is precisely
+what makes $\dhat$ (\Cref{sec:tierb}) a clean signal rather than a mis-attributed
+one. Cache \emph{replacement} satisfies it exactly (the eviction on $s$ is
+rewarded by hits/misses on $s$); PC-indexed predictors satisfy it; \emph{prefetch}
+violates it (a prefetch on $s$ benefits a different set $s'$), and we show in
+\Cref{sec:eval-champsim} that no per-set reward---not even the controller's own---
+recovers a faithful $\dhat$ for it. We therefore present Bouncer as a mechanism for
+the \emph{set-local} class, with replacement as the canonical instance and
+prefetching as the characterized boundary.
 
 \section{Threat model}\label{sec:threat}
 \textbf{In scope.} A co-located tenant/process sharing $C$ that issues arbitrary
@@ -459,24 +505,29 @@ corr})$ suffices (\Cref{sec:eval} P3 validates it under cross-validation);
 misclassification only mis-selects between equally-safe responses.
 
 \section{Per-controller instantiation}\label{sec:instantiation}
-\Cref{tab:instances} maps Bouncer onto four controller classes. We lead with
-Pythia (built-in reward, an existing attack surface, cleanest dueling),
-replacement second (set-dueling's home turf), and the memory scheduler last
-(hardest counterfactual---no clean set-sampling on a shared command bus forces a
-\emph{model-based} $\dhat$, which weakens \Cref{prop:mimicry} and is scoped as
-the ``how far does it stretch'' case).
+\Cref{tab:instances} maps Bouncer onto four controller classes, ordered by
+\emph{set-locality}. \textbf{Cache replacement} leads: its hit/miss reward is
+attributed to the very set whose eviction it decided, so the dueling $\dhat$ is a
+clean, localized competence signal---the home turf. \textbf{Branch/perceptron}
+predictors are PC-indexed and likewise local. \textbf{Prefetching} is
+\emph{not} set-local---a prefetch on set $s$ rewards a different set $s'$, so the
+faithful reward cannot be dualized (\Cref{sec:eval-champsim}); it is the
+cautionary boundary. The \textbf{memory scheduler} is the hardest: no clean
+set-sampling on a shared command bus forces a \emph{model-based} $\dhat$, which
+weakens \Cref{prop:mimicry}.
 
 \begin{table}[t]\centering\footnotesize
-\caption{Per-controller instantiation.}
+\caption{Per-controller instantiation, ordered by set-locality (whether reward and
+decision share a dueling set).}
 \label{tab:instances}
-\begin{tabular}{@{}llll@{}}
+\begin{tabular}{@{}lclll@{}}
 \toprule
-Controller & $r_t$ proxy & fallback $\pizero$ & dueling resource\\
+Controller & set-local? & $r_t$ proxy & fallback $\pizero$ & dueling resource\\
 \midrule
-Pythia (RL prefetch) & acc.$\times$timeliness & next-line/off & PC-hash buckets\\
-Hawkeye/Glider (repl.) & hit/miss & RRIP/LRU & cache sets\\
-RL mem.\ scheduler & $-$latency/$+$BW & FR-FCFS & banks/channels\\
-Perceptron branch & correct & bimodal/gshare & PC-indexed slices\\
+Hawkeye/Glider (repl.) & \textbf{yes} & hit/miss & RRIP/LRU & cache sets\\
+Perceptron branch & yes (PC) & correct & bimodal/gshare & PC slices\\
+Pythia (RL prefetch) & \textbf{no} & acc.$\times$timel. & next-line/off & PC buckets\\
+RL mem.\ scheduler & partial & $-$lat./$+$BW & FR-FCFS & banks/chan.\\
 \bottomrule
 \end{tabular}
 \end{table}
@@ -722,8 +773,16 @@ measured regret.}
 \label{fig:theory}
 \end{figure}
 
-\subsection{Real-systems integration (ChampSim)}\label{sec:eval-champsim}
-To show the auditor is genuinely deployable, we built it as a real
+\subsection{Real-systems integration: the set-locality boundary}\label{sec:eval-champsim}
+The auditor compiles and runs in real ChampSim as \emph{both} a cache-replacement
+module (set-local---the clean case, \Cref{def:setlocal}) and an L1D prefetcher
+module (\emph{not} set-local). The two together test the set-locality
+characterization on real hardware traces: the prefetcher case exhibits the
+de-localization boundary in detail, and the replacement case confirms the clean
+side. We present the prefetcher case first because it is where the boundary
+\emph{bites}---it is the cautionary result, not the headline.
+
+\textbf{Prefetcher (the cautionary, non-set-local case).} We built a real
 \textbf{ChampSim L1D prefetcher module}---the same set-dueling estimator, CUSUM,
 and gate FSM C++ as \Cref{sec:overhead}---with the ``learned controller'' a
 per-IP stride prefetcher, the fallback prefetch-\emph{off}, the reward the per-set
@@ -793,14 +852,18 @@ decision and its hit/miss outcome share a set---is the clean case (the paper's
 sets up is accordingly sharper: a long-epoch, \emph{set-local} competence signal
 (latency-weighted, replacement-style), not merely ``the controller's own reward.''
 
-The same auditor C++ also compiles and runs as a real ChampSim \emph{LLC
-replacement} module (SRRIP-vs-LRU dueling on physical sets, hit/miss reward),
-confirming the mechanism is controller-agnostic in a real simulator; but at
-feasible (tens-of-millions-of-instruction) run lengths the per-window LLC dueling
-signal is sample-starved ($\sim\!25$ accesses/leader/window, $\dhat\!\approx\!0$),
-which is why the controlled competence and transition results live in the
-synthetic harness. Both real instantiations point to the same milestone:
-long-horizon, DIP-style accumulation with the controller's native reward.
+\textbf{Replacement (the clean, set-local case).} The same auditor C++ also
+compiles and runs as a real ChampSim \emph{LLC replacement} module---SRRIP-vs-LRU
+dueling on \emph{physical} cache sets with a hit/miss reward. Here the reward
+\emph{is} set-local by construction (the eviction on set $s$ is scored by the
+hits/misses on $s$, \Cref{def:setlocal}), so the only obstacle is \emph{sampling},
+not localizability: at feasible (tens-of-millions-of-instruction) run lengths the
+LLC is touched too sparsely ($\sim\!25$ accesses/leader/window, $\dhat\!\approx\!0$)
+for the per-window estimate to resolve the SRRIP-vs-LRU gap. This is a benign,
+horizon-limited issue---unlike the prefetcher's de-localization, which no run
+length fixes---so the clean competence and transition dynamics live in the
+synthetic harness (which is itself a faithful set-local model), and the milestone
+is long-horizon, DIP-style accumulation on the replacement reward.
 
 \begin{figure}[t]\centering
 \includegraphics[width=\columnwidth]{champsim.pdf}
@@ -883,14 +946,19 @@ where set-dueling competence auditing is faithful.
 
 \section{Conclusion}
 Bouncer turns ``is the learned controller still earning its keep?'' into one
-measurable scalar and bounds the answer's cost. By repurposing the set-dueling
-substrate into a \emph{secret} competence audit, gating an expensive confirmer
-behind cheap tripwires, and proving a safety floor tied directly to the CUSUM
-constants, then---for declared domains audited at resolution $\delta_R^{\min}(B)$
-with the secret intact---it caps the worst-case \emph{competence} (in the
-controller's own reward) of a learned microarchitectural controller at its vetted
-fallback, under benign drift and an adaptive mimicry adversary alike, for
-$\sim\!336$\,bytes and no added datapath latency. The robustness is not free, and
+measurable scalar and bounds the answer's cost---for the controllers a secret
+per-set audit can faithfully measure. Our organizing result is the
+\emph{set-locality} condition (\Cref{def:setlocal}): set-dueling competence
+auditing is faithful exactly when a controller's reward shares a set with its
+decision, which makes cache \emph{replacement} the clean case and characterizes
+prefetching as the de-localized boundary. For the set-local class: by repurposing
+the set-dueling substrate into a \emph{secret} competence audit, gating an
+expensive confirmer behind cheap tripwires, and proving a safety floor tied
+directly to the CUSUM constants, then---for declared domains audited at resolution
+$\delta_R^{\min}(B)$ with the secret intact---Bouncer caps the worst-case
+\emph{competence} (in the controller's own reward) at its vetted fallback, under
+benign drift and an adaptive mimicry adversary alike, for $\sim\!336$\,bytes and
+no added datapath latency. The robustness is not free, and
 not unconditional: we show it is purchased exactly by the secrecy of the dueling
 sets, quantify the price of losing it, and name the sub-resolution slow-bleed
 adversary outside the audited domain as a real, un-closed vulnerability.
