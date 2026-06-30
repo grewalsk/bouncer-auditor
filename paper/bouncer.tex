@@ -17,6 +17,7 @@
 \newtheorem{proposition}{Proposition}
 \newtheorem{definition}{Definition}
 \newtheorem{assumption}{Assumption}
+\newtheorem{remark}{Remark}
 
 \newcommand{\dhat}{\hat{\Delta}}
 \newcommand{\Dw}{\Delta_W}
@@ -29,7 +30,7 @@
 \title{Bouncer: Competence Auditing for\\ Set-Local Learned Microarchitectural Controllers}
 
 \author{\IEEEauthorblockN{Anonymous Submission}
-\IEEEauthorblockA{Paper \#---\quad HPCA Submission}}
+\IEEEauthorblockA{Paper \#---\quad MLSys Submission}}
 
 \maketitle
 
@@ -76,15 +77,22 @@ declared, secret-intact domain}, an input-OOD monitor detects \emph{none} of the
 attacks ($0/50$, Wilson 95\% upper bound $0.07$) while Bouncer detects \emph{all}
 ($50/50$, lower bound $0.93$)---a robustness purchased entirely by the secrecy of
 the dueling sets, which collapses both as the assignment leaks and against a
-sub-resolution redistributive (slow-bleed) adversary outside the audited domain. We confirm the set-locality
-boundary on real ChampSim deployments on SPEC\,CPU2017: the auditor compiles as
-both a cache-replacement module (set-local---the clean case) and an L1D prefetcher
-module, where it bounds a corrupted prefetcher to the prefetch-off floor but, as
-a non-set-local controller, over-gates a genuinely-helpful prefetcher under a
-per-set cache-hit proxy---and swapping to the controller's own reward does
-\emph{not} fix it, because a prefetcher's reward cannot be localized to a set. The mechanism's
-quantitative guarantees are validated in a fully-released synthetic harness; the
-ChampSim integration is a real-simulator proof of deployment, not a SPEC sweep.
+sub-resolution redistributive (slow-bleed) adversary outside the audited domain. We probe the set-locality
+boundary on real ChampSim deployments on SPEC\,CPU2017. As an L1D prefetcher module
+it bounds a corrupted prefetcher to the prefetch-off floor but, as a non-set-local
+controller, over-gates a genuinely-helpful prefetcher under a per-set cache-hit
+proxy---and swapping to the controller's own reward does \emph{not} fix it, because
+a prefetcher's reward cannot be localized to a set. As an LLC \emph{replacement}
+module it \emph{is} set-local, yet exposes a second, subtler boundary: a cache's
+reward is \emph{stateful} (path-dependent), so the secret per-epoch reseed that
+buys mimicry resistance \emph{confounds} the per-window competence estimate (fixed
+leaders resolve it; the prior ``$\dhat\!\approx\!0$'' was in fact a missing-callback
+software artifact, now fixed). \textbf{Set-locality is therefore necessary but not
+sufficient: a secret, reseeded audit also needs a (near-)stateless reward.} The
+mechanism's quantitative guarantees are validated in a fully-released synthetic
+harness whose i.i.d.\ per-decision reward meets exactly that condition; the ChampSim
+integration is a real-simulator \emph{boundary} study, not a clean-case validation
+or a SPEC sweep.
 \end{abstract}
 
 \section{Introduction}
@@ -154,7 +162,11 @@ boundaries.
 condition---decision and reward share a dueling set---that determines \emph{when}
 secret-set-dueling competence auditing is faithful, separating the clean class
 (replacement, PC-indexed predictors) from the de-localized boundary (prefetching),
-which we confirm in real ChampSim.
+which we confirm in real ChampSim. We further show it is \emph{necessary but not
+sufficient}: a secret, \emph{reseeded} audit also needs a (near-)\emph{stateless}
+reward (\Cref{rem:stateless}), because reseeding---the source of mimicry
+resistance---erases the policy-specific state a path-dependent reward (a real cache)
+needs to be measured.
 \item \textbf{A scalar off-policy condition} (\Cref{sec:setting}) that unifies
 benign drift and adversarial steering: the competence advantage $\Dw$ falling
 below a trust threshold $\tau$.
@@ -233,6 +245,23 @@ recovers a faithful $\dhat$ for it. We therefore present Bouncer as a mechanism 
 the \emph{set-local} class, with replacement as the canonical instance and
 prefetching as the characterized boundary.
 
+\begin{remark}[Set-locality is necessary, not sufficient---a stateless-reward
+condition]\label{rem:stateless}
+The unbiasedness in \Cref{def:setlocal} holds when the reward $r_t$ depends on the
+policy run on $s$ but \emph{not} on a long policy-specific \emph{history} of $s$.
+If the reward is \emph{stateful}---e.g.\ a cache hit on $s$ depends on which blocks
+prior evictions on $s$ retained---then a \emph{secret, reseeded} sampler breaks it:
+reseeding the leader assignment each epoch (the source of mimicry resistance,
+\Cref{prop:mimicry}) prevents any set from running one policy long enough to
+accumulate its policy-specific state, so $\bar r_L\!\to\!\bar r_F$ and $\dhat$
+collapses to noise even though the controller is set-local. Our synthetic harness's
+i.i.d.\ per-decision reward (A1) is stateless and so unaffected; real cache
+replacement is set-local but stateful, and \Cref{sec:eval-champsim} measures this
+secrecy/measurability tension directly (fixed leaders recover the gap a reseeded
+audit cannot). A secret, reseeded competence audit thus requires both
+set-locality \emph{and} a (near-)stateless reward.
+\end{remark}
+
 \section{Threat model}\label{sec:threat}
 \textbf{In scope.} A co-located tenant/process sharing $C$ that issues arbitrary
 memory accesses and knows the Bouncer design (Kerckhoffs); its goal is to DoS the
@@ -254,6 +283,22 @@ statistics in-distribution while degrading $C$. As we show in
 the competence sampler---an attacker who can identify the dueling sets defeats
 it, which is precisely why the randomized-sampling ablation is the headline
 experiment.
+
+\textbf{Realizability---what we do and do not demonstrate.} Bouncer's guarantees
+bound the cost of \emph{any} in-domain competence degradation \emph{however it
+arises}: benign distribution shift or adversarial steering are the same scalar
+event ($\Dw{<}\tau$) to the auditor. We realize the mimicry/steering adversary in
+the synthetic competence harness, where the latent stress~$u$ is the controllable
+knob; the real-ChampSim study (\Cref{sec:eval-champsim}) drives the auditor with an
+\emph{injected, controlled, labelled} competence degradation---a deliberately-bad
+eviction policy active on a known phase---\emph{not} a demonstrated end-to-end
+real-silicon steering attack. Whether a co-located tenant can realizably steer a
+\emph{specific deployed} controller to sub-resolution harm on real silicon, rather
+than in our harness, is \emph{not established here and is future work}. The open
+question is the attacker's realizability; the defense's guarantee is
+degradation-source-agnostic, so the harness's injected degradation is a faithful
+stand-in for the auditor's input regardless of how a real degradation would be
+induced.
 
 \section{Architecture}\label{sec:arch}
 Bouncer is two-tier because cheap signals are spoofable and the unspoofable
@@ -550,12 +595,46 @@ drift and steering act and which the auditor never observes; controller reward
 $\mu_C(u)=\rmax\,\mathrm{clip}(0.8-0.7u)$ collapsing under stress and a flat
 floor $\mu_0=0.5\rmax$; bounded rewards drawn so $\mathrm{Var}\le\rmax^2/4m$
 exactly. The IPC transfer $\mathrm{IPC}=0.6+1.4\,\bar r$ lets us report the
-systems metrics. We pin the \Cref{sec:tierb} operating point at
+systems metrics. \emph{These two maps are not load-bearing for the qualitative
+guarantees:} \Cref{sec:eval-e3} re-runs the floor and both headline P4 results
+across a family---two collapse shapes (clip, logistic) at two slopes, an
+alternative IPC map, a shifted fallback floor $q_0\in[0.4,0.6]$, and a joint
+$\mu_C{\times}$IPC change---and finds the qualitative guarantees invariant; only
+the exact percentages move. Detection \emph{power} is the one quantity that is not
+constant, and it is not supposed to be: it tracks $|\Dw|$ and degrades near the
+competence crossing, exactly as the $\sigd$ bound predicts. We pin the \Cref{sec:tierb} operating point at
 $n_L{=}n_F{=}32$, $m{=}64$ ($|W|\!\approx\!1.3{\times}10^5$ decisions),
 $\tau{=}0.05$, $K{=}0.10$, $H{=}0.8$. Conditions are clean, benign-drift, and
 three attacks (broad DoS, adaptive mimicry, regional covert); baselines are
 no-auditor, input-OOD-only ($S_{in}$), oracle-$\Delta$, and always-fallback. The
 harness and the ChampSim skeleton are released.
+
+\textbf{Hypothesis discharge.} \Cref{tab:discharge} maps every premise of
+\Cref{lem:floor} (A1--A5) and \Cref{prop:mimicry} to where it is established,
+measured, or assumed---and, crucially, records the \emph{one} premise (A1's
+stateless sub-condition) that the real-systems study shows \emph{fails} for a real
+cache, which is the substance of the set-locality refinement (\Cref{rem:stateless}).
+
+\begin{table}[t]\centering\footnotesize
+\caption{Hypothesis discharge: where each premise is established (E), measured (M),
+or assumed (A). The stateless half of A1 is the load-bearing one---it holds by
+construction in the harness and \emph{fails, measured,} on a real cache.}
+\label{tab:discharge}
+\begin{tabular}{@{}p{0.30\columnwidth}p{0.62\columnwidth}@{}}
+\toprule
+Premise & Discharged \\
+\midrule
+A1 bounded reward $\in[0,\rmax]$ & E/M: synthetic by construction; real hit/miss $\in\{0,1\}$. \\
+A1 \emph{stateless} reward (i.i.d.\ across epochs) & A (synthetic, by construction); \textbf{fails, measured, on a real cache} (\Cref{rem:stateless}, \Cref{sec:eval-champsim}: reseeded $\dhat\!\approx\!0$ vs fixed-leader $0.23$). \\
+A2 detect within $D$ w.p.\ $\ge1{-}\delta$ & E: $\sigd{\to}$CUSUM delay chain (\Cref{sec:tierb}); M: P0/P1 (1-window). \\
+A3 false alarm $\le 1/\mathrm{ARL}_0$ & E: Siegmund ARL (\Cref{sec:tierb}); M: P2 ROC, sensitivity sweep. \\
+A4 switch transient $\le c_{sw}$ & A (analytical); M: P1 one-window dip $\le D\rmax$. \\
+A5 $N_{ep}$ episodes over $T$ & A (definitional, counts episodes). \\
+Prop.\ 1 finite resolution $\delta_R^{\min}(B)$ & E: \Cref{eq:var}; the sub-resolution slow-bleed is the named open hole (M: \Cref{fig:hole}). \\
+Prop.\ 1 intact secret (leak $f{=}0$) & E/M: secrecy ablation (P4), TPR collapses as $f{\to}1$. \\
+\bottomrule
+\end{tabular}
+\end{table}
 
 \section{Evaluation}\label{sec:eval}
 \subsection{P0: the estimator tracks ground truth}
@@ -722,6 +801,35 @@ floor holds; only detection latency drifts up ($1.0\!\to\!1.7$ windows).}
 \label{fig:robust}
 \end{figure}
 
+\subsection{Transfer-function sensitivity}\label{sec:eval-e3}
+A reviewer's natural objection is that the headline percentages are artifacts of
+the chosen controller-collapse curve $\mu_C(u)$ and IPC map. We re-run the floor
+(P1) and both P4 headlines across a family (\Cref{fig:e3}): the collapse curve as
+$\mathrm{clip}$ and as a logistic at two slopes; the IPC map steeper and concave; a
+\emph{joint} $\mu_C{\times}$IPC change; and---the load-bearing axis---the fallback
+floor $q_0$ swept over $[0.4,0.6]$. \textbf{The qualitative guarantees are
+invariant}: across every cell the steady floor violation stays $\le 0.9\%$ with a
+genuine drop detected, mimicry TPR is $1.0$ for competence vs $0$ for the input-OOD
+monitor, and the secrecy ablation keeps its TPR-vs-$f$ shape; only the exact
+percentages move (clean tax $0.49$--$0.52\%$ across maps). The one quantity that is
+\emph{not} constant is detection \emph{power}, and it should not be: a sweep of the
+attack stress toward the competence crossing shows TPR tracking $|\Dw|$ and
+degrading in the small-$|\Dw|$ regime exactly as the $\sigd$ bound predicts---so the
+detector's strength is earned from the signal, not baked in by a deep hard-coded
+attack. \emph{Scope:} this establishes robustness to the \emph{shape} of the
+collapse curve, the IPC map, and the floor location; the Tier-A feature/confidence
+maps are not swept (the headline competence-beats-input result is a Tier-B
+property).
+
+\begin{figure}[t]\centering
+\includegraphics[width=\columnwidth]{e3_sensitivity.pdf}
+\caption{Transfer-function sensitivity. Across collapse-curve shapes (a), the
+competence-beats-input mimicry result (b) and the secrecy-ablation shape (c) are
+invariant; (d) detection power tracks $|\Dw|$ and degrades near the crossing, as
+$\sigd$ predicts---power is earned, not assumed.}
+\label{fig:e3}
+\end{figure}
+
 \subsection{Adaptive timing adversaries}\label{sec:eval-adaptive}
 Two threat-model-completeness attacks (\Cref{fig:adaptive}). \textbf{Boiling-frog}
 (\Cref{fig:adaptive}(a)): a very slow, stealthy degradation tuned to keep the
@@ -852,18 +960,50 @@ decision and its hit/miss outcome share a set---is the clean case (the paper's
 sets up is accordingly sharper: a long-epoch, \emph{set-local} competence signal
 (latency-weighted, replacement-style), not merely ``the controller's own reward.''
 
-\textbf{Replacement (the clean, set-local case).} The same auditor C++ also
-compiles and runs as a real ChampSim \emph{LLC replacement} module---SRRIP-vs-LRU
-dueling on \emph{physical} cache sets with a hit/miss reward. Here the reward
-\emph{is} set-local by construction (the eviction on set $s$ is scored by the
-hits/misses on $s$, \Cref{def:setlocal}), so the only obstacle is \emph{sampling},
-not localizability: at feasible (tens-of-millions-of-instruction) run lengths the
-LLC is touched too sparsely ($\sim\!25$ accesses/leader/window, $\dhat\!\approx\!0$)
-for the per-window estimate to resolve the SRRIP-vs-LRU gap. This is a benign,
-horizon-limited issue---unlike the prefetcher's de-localization, which no run
-length fixes---so the clean competence and transition dynamics live in the
-synthetic harness (which is itself a faithful set-local model), and the milestone
-is long-horizon, DIP-style accumulation on the replacement reward.
+\textbf{Replacement (set-local but \emph{stateful}---a sharper boundary).} The same
+auditor C++ compiles and runs as a real ChampSim \emph{LLC replacement} module:
+DRRIP-style dueling on \emph{physical} cache sets (learned $C=$ an aggressive
+LIP-style insertion, fallback $\pizero=$ SRRIP-HP) scored by the demand-hit reward.
+Three real findings (\Cref{fig:e1repl}, $623$.xalancbmk), each of which
+\emph{sharpens} rather than confirms the easy ``home-turf'' story.
+\emph{(i) The prior ``$\dhat\!\approx\!0$'' was a software artifact, not sampling.}
+A ChampSim replacement module's per-access hook fires only if the module also
+provides a fill hook (\texttt{has\_cache\_fill}); without it the module sees
+\emph{hits only}, the demand-hit reward collapses to $1$, and $\dhat$ is
+\emph{identically} $0$. Adding the fill hook makes $\dhat$ a real signal---so the
+earlier null was a missing callback, not a horizon limit.
+\emph{(ii) The whole-cache competence gap is real and large:} forcing every set to
+the learned policy gives a $33.6\%$ LLC hit rate vs $4.8\%$ for the fallback.
+\emph{(iii) Yet the secret per-epoch reseed---the very mechanism that buys mimicry
+resistance---\textbf{confounds} the per-window estimate for this controller.} With
+reseeding, $\bar r_L\!\approx\!\bar r_F$ and $\dhat$ sits at noise (clean mean
+$0.005$) despite that $29$-point whole-cache gap; with \emph{fixed} leaders (reseed
+off, DRRIP's own configuration) the \emph{same} estimator resolves it (clean mean
+$\dhat\!=\!0.23$). The reason is that a replacement policy's reward is
+\emph{path-dependent}: a set must run one policy \emph{consistently} to accumulate
+the policy-specific cache state DRRIP's PSEL counter integrates, and reseeding each
+epoch erases it. \textbf{Set-locality is thus necessary but not sufficient: a
+secret, reseeded competence audit additionally requires a (near-)\emph{stateless}
+reward}---which the synthetic harness's i.i.d.\ per-decision reward (A1) satisfies
+and a real cache does not at per-window grain. This is a genuine
+secrecy/measurability tension, not a tuning issue: the clean-case competence and
+transition dynamics consequently live in the synthetic harness (a faithful
+\emph{stateless} set-local model, \Cref{fig:floor}), and the deployment milestone
+is a reseed schedule slow enough to amortize cache-state warmup---a trade-off this
+result makes precise.
+
+\begin{figure}[t]\centering
+\includegraphics[width=\columnwidth]{e1_replacement.pdf}
+\caption{Real ChampSim \emph{replacement} (623.xalancbmk). (a) The secret per-epoch
+reseed---load-bearing for mimicry resistance---\emph{confounds} the per-window
+competence estimate for a \emph{stateful} reward: with reseeding $\dhat$ sits at
+noise; with fixed leaders the same estimator resolves the gap. (b) The whole-cache
+gap is real (learned vs fallback); the \texttt{cache\_fill} fix makes $\dhat$
+nonzero (it was identically $0$). Set-locality is necessary but not sufficient---a
+secret, reseeded audit also needs a (near-)stateless reward. This is a boundary
+result; the clean-case dynamics remain in the synthetic harness.}
+\label{fig:e1repl}
+\end{figure}
 
 \begin{figure}[t]\centering
 \includegraphics[width=\columnwidth]{champsim.pdf}
@@ -951,7 +1091,11 @@ per-set audit can faithfully measure. Our organizing result is the
 \emph{set-locality} condition (\Cref{def:setlocal}): set-dueling competence
 auditing is faithful exactly when a controller's reward shares a set with its
 decision, which makes cache \emph{replacement} the clean case and characterizes
-prefetching as the de-localized boundary. For the set-local class: by repurposing
+prefetching as the de-localized boundary. Our real-systems study sharpens this into
+a second condition: set-locality is necessary but not sufficient, because a real
+cache is set-local yet \emph{stateful}, so the secret reseed that buys mimicry
+resistance confounds its per-window measurement---a secrecy/measurability tension a
+(near-)\emph{stateless} reward resolves (\Cref{rem:stateless}). For the set-local class: by repurposing
 the set-dueling substrate into a \emph{secret} competence audit, gating an
 expensive confirmer behind cheap tripwires, and proving a safety floor tied
 directly to the CUSUM constants, then---for declared domains audited at resolution
@@ -965,15 +1109,19 @@ adversary outside the audited domain as a real, un-closed vulnerability.
 
 \section*{Artifact Appendix}
 The full artifact is released: the auditor and environment
-(\texttt{bouncer/}), one script per evaluation phase (\texttt{experiments/}), all
-result JSON and figures, the real ChampSim L1D module
-(\texttt{champsim\_plugin/bouncer\_pref/}), and the paper source. \texttt{./run\_all.sh}
-regenerates every synthetic result, figure, and the PDF in $\sim$4 minutes on a
-laptop (Python 3.12, numpy/scipy/matplotlib); all RNG is explicitly seeded, so
-results are deterministic. \texttt{champsim\_plugin/setup\_champsim.sh} clones and
-builds ChampSim, installs the Bouncer prefetcher module, fetches a public
-SPEC\,CPU2017 trace, and reproduces the \Cref{sec:eval-champsim} safety-floor study
-(C++17 toolchain + vcpkg). The standalone auditor additionally builds with
+(\texttt{bouncer/}), one script per evaluation phase (\texttt{experiments/}),
+including the transfer-function sensitivity sweep
+(\texttt{exp\_e3\_sensitivity.py}, \Cref{sec:eval-e3}), all result JSON and figures,
+the real ChampSim L1D prefetcher \emph{and} LLC replacement modules
+(\texttt{champsim\_plugin/bouncer\_pref/}, \texttt{bouncer\_repl/}), and the paper
+source. \texttt{./run\_all.sh} regenerates every synthetic result, figure, and the
+PDF in $\sim$4 minutes on a laptop (Python 3.12, numpy/scipy/matplotlib); all RNG is
+explicitly seeded, so results are deterministic.
+\texttt{champsim\_plugin/setup\_champsim.sh} clones and builds ChampSim, installs
+the Bouncer modules, fetches public SPEC\,CPU2017 traces, and reproduces the
+prefetcher safety-floor study; \texttt{champsim\_plugin/run\_e1\_replacement.sh}
+reproduces the \Cref{sec:eval-champsim} replacement boundary study
+(\Cref{fig:e1repl}) on \texttt{623.xalancbmk} (C++17 toolchain + vcpkg). The standalone auditor additionally builds with
 \texttt{c++ -std=c++17 bouncer.cc -o bouncer\_selftest}.
 
 \balance

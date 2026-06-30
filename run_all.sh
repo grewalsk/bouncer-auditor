@@ -26,8 +26,11 @@ echo "==> [6c] adaptive timing adversaries (boiling-frog, PROBING-exploit)"
 python3 experiments/exp_adaptive.py
 echo "==> [6c2] misspecification robustness (set heterogeneity)"
 python3 experiments/exp_robust_env.py
-echo "==> [6d] ChampSim real-systems figure (from results/champsim.json)"
+echo "==> [6c3] E3 transfer-function sensitivity sweep"
+python3 experiments/exp_e3_sensitivity.py
+echo "==> [6d] ChampSim real-systems figures (prefetcher suite + replacement boundary)"
 python3 experiments/exp_champsim_fig.py
+python3 experiments/exp_e1_fig.py   # reads committed results/champsim_e1/ logs
 echo "==> [6e] paper diagrams (architecture + gate FSM)"
 python3 experiments/make_diagrams.py
 
