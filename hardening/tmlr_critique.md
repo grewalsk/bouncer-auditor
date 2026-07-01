@@ -10,9 +10,18 @@ prompt below verbatim as the agent's instructions.*
 ```
 ROLE. You are an expert machine-learning / computer-architecture researcher serving as a
 Transactions on Machine Learning Research (TMLR) reviewer. You have no prior context on
-this work. Clone/read the repository you are pointed at END TO END, then write a hostile,
-specific, TMLR-calibrated review. Cite file:line for every claim you make. Do not be
-agreeable; your job is to find where the paper breaks, not to praise it.
+this work.
+
+TARGET REPO — clone this EXACT repo and branch (the hardened paper is on the BRANCH, not on
+`main`; `main` still holds the pre-hardening draft, and reviewing it will critique overclaims
+that are already fixed):
+    git clone https://github.com/grewalsk/bouncer-auditor
+    cd bouncer-auditor && git checkout hardening/focus-pass
+Browse online: https://github.com/grewalsk/bouncer-auditor/tree/hardening/focus-pass
+
+Read the repository END TO END, then write a hostile, specific, TMLR-calibrated review. Cite
+file:line for every claim you make. Do not be agreeable; your job is to find where the paper
+breaks, not to praise it.
 
 =========================================================================
 TMLR'S BAR — apply THESE TWO CRITERIA AND ONLY THESE TWO
@@ -105,6 +114,18 @@ DELIVER — a TMLR review, in this exact structure
   by the two TMLR criteria above. If you would reject, state precisely which claim's
   evidence gap forces it. If your only reservations are novelty/significance/"no real win,"
   the correct TMLR recommendation is NOT reject — say so explicitly and explain why.
+- NEXT STEPS — a prioritized, numbered roadmap to a TMLR accept, highest-leverage first.
+  For each step give: (a) the CONCRETE action — the exact file/section to edit, or the
+  SPECIFIC experiment to run, named (e.g. "rerun ./run_all.sh after rewording X",
+  "the R-latency detection-latency-vs-Delta synthetic sweep to replace the retreated E3
+  claim", "a >=3-trace replication of the replacement reseed-confound to lift the
+  single-trace xalancbmk basis"); (b) which TMLR criterion it serves (C = claims&evidence,
+  A = audience) and whether it is REQUIRED for acceptance or optional polish; (c) rough
+  effort (prose edit / small seeded synthetic run / larger ChampSim run); (d) the expected
+  effect on your verdict. Bias explicitly toward "scope the claim down" (zero-cost, and
+  usually the correct TMLR fix) over "run an experiment" (only when a claim the paper
+  actually needs cannot be scoped). END with THE ONE change that would most move your
+  recommendation, and name the verdict it would move you to.
 - CONFIDENCE (1-5) and what would change your verdict.
 
 Anti-sycophancy: a vague "seems fine" is worthless. Every verdict must be anchored to a
@@ -117,7 +138,8 @@ file:line and, where possible, a number you reproduced. If the authors' self-aud
 ### Optional one-liner to run it with Claude Code / Codex
 
 ```bash
-# from a fresh clone of the repo:
+git clone https://github.com/grewalsk/bouncer-auditor && cd bouncer-auditor \
+  && git checkout hardening/focus-pass
 cat hardening/tmlr_critique.md | sed -n '/^```$/,/^```$/p' | sed '1d;$d' \
   | claude -p --model claude-opus-4-8   # or: | codex exec -
 ```
