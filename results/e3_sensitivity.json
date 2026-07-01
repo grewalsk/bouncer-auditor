@@ -269,7 +269,7 @@
     "detectability_monotone_in_delta": true,
     "sin_blind_everywhere": true,
     "PASS_shape_and_ipc": true,
-    "scope": "Robust to collapse-curve SHAPE (clip/logistic, soft/sharp knee), the reward->IPC map, the fallback floor q0 in [0.4,0.6], and a JOINT mu_C x IPC change. Detection power is NOT constant: it tracks |Delta| and degrades near the crossing (small-|Delta|), per the sigma_Delta bound (see detectability curve). Tier-A feature/confidence maps are NOT swept; the headline competence>input result is a Tier-B property."
+    "scope": "Robust to collapse-curve SHAPE (clip/logistic, soft/sharp knee), the reward->IPC map, the fallback floor q0 in [0.4,0.6], and a JOINT mu_C x IPC change. Detection power is the one quantity NOT claimed invariant: full_tpr stays flat at 1.0 for every tested drop (down to |Delta|=0.015, still >> sigma_Delta); this reduced-episode sweep does NOT reach the |Delta|~sigma_Delta regime where the sigma_Delta bound predicts roll-off, so the roll-off is predicted but not exercised here. Tier-A feature/confidence maps are NOT swept; the headline competence>input result is a Tier-B property."
   },
   "n_episodes": 20,
   "n_episodes_detectability": 40,

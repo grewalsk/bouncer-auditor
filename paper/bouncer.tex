@@ -47,12 +47,15 @@ resolution with its secret intact---bounds the worst-case \emph{competence} cost
 (in the controller's own reward) of any \emph{set-local} controller---one whose
 decision and its reward fall on the same dueling set, canonically cache
 \emph{replacement}---to that of a known-safe fallback heuristic, under adaptive
-mimicry and benign drift, with no POMDP/belief-state machinery and no added
-latency on the cache-access critical path; a sub-resolution \emph{slow-bleed}
+mimicry and benign drift, with no POMDP/belief-state machinery and, by
+construction, off the cache-access critical path (the confirmer is off-path and
+epoch-grained; the resulting no-added-latency property is analytical, with RTL
+timing measurement left to future work); a sub-resolution \emph{slow-bleed}
 steering attack is an explicitly named open vulnerability. \emph{Set-locality is
 the enabling condition}: it is exactly what lets a secret per-set audit attribute
 reward to the right policy, and it cleanly separates the controllers Bouncer
-faithfully audits (replacement, PC-indexed predictors) from the cautionary
+faithfully audits (PC-indexed predictors, and cache replacement under a
+(near-)stateless reward) from the cautionary
 boundary case (prefetching, whose benefit is de-localized). Bouncer reduces ``is the learned controller still
 trustworthy?'' to a single scalar---a competence advantage $\Dw$ over the
 fallback---estimated \emph{without counterfactuals} by repurposing the
@@ -185,14 +188,17 @@ attack named as an open vulnerability---whose strength is exactly the secrecy of
 the sampler.
 \item \textbf{A two-tier microarchitecture} (\Cref{sec:arch,sec:overhead}) whose
 analytical budget is $\sim\!336$\,bytes and which, because the confirmer is
-sampled, off-path, and epoch-grained, adds no latency to the cache-access
-critical path.
-\item \textbf{A faithful, released evaluation} (\Cref{sec:eval}) validating every
-claim in a synthetic competence harness (with multi-seed confidence intervals,
+sampled, off-path, and epoch-grained, is designed to add no latency to the
+cache-access critical path (an analytical argument; RTL timing measurement is
+future work, \Cref{sec:overhead}).
+\item \textbf{A faithful, released evaluation} (\Cref{sec:eval}) validating the
+mechanism's quantitative claims in a synthetic competence harness (with multi-seed confidence intervals,
 sensitivity sweeps, and adaptive timing adversaries), \emph{plus} a real
 \textbf{ChampSim L1D prefetcher module} run on SPEC\,CPU2017 that bounds a
-corrupted prefetcher to the safe floor---and candidly shows the auditor is only
-as good as the competence reward it is given.
+corrupted prefetcher to the safe floor but over-gates a genuinely-helpful one
+($11\%$ tax on roms), candidly showing the auditor is only as good as the
+competence reward it is given---and that the reward's \emph{localizability}, not
+just its fidelity, is decisive.
 \end{enumerate}
 \noindent We are explicit (\Cref{sec:method,sec:disc}) that the controlled
 quantitative claims come from the synthetic harness---whose only load-bearing
@@ -237,8 +243,11 @@ sampled sets, and $\dhat=\bar r_L-\bar r_F$ is a faithful competence estimate.
 
 Set-locality is the enabling condition for the entire mechanism: it is precisely
 what makes $\dhat$ (\Cref{sec:tierb}) a clean signal rather than a mis-attributed
-one. Cache \emph{replacement} satisfies it exactly (the eviction on $s$ is
-rewarded by hits/misses on $s$); PC-indexed predictors satisfy it; \emph{prefetch}
+one. Cache \emph{replacement} satisfies the spatial-attribution requirement exactly
+(the eviction on $s$ is rewarded by hits/misses on $s$); PC-indexed predictors
+satisfy it too---though, as \Cref{rem:stateless} and \Cref{sec:eval-champsim}
+show, replacement's reward is \emph{stateful}, so a secret reseeded audit does
+not recover a faithful $\dhat$ there at per-window grain; \emph{prefetch}
 violates it (a prefetch on $s$ benefits a different set $s'$), and we show in
 \Cref{sec:eval-champsim} that no per-set reward---not even the controller's own---
 recovers a faithful $\dhat$ for it. We therefore present Bouncer as a mechanism for
@@ -380,9 +389,11 @@ C^-_t=\max\!\big(0,\,C^-_{t-1}+(K-\dhat_W)\big),\quad K=\tau+\tfrac{\gamma}{2},
 \end{equation}
 alarming when $C^-_t>H$, and resetting on alarm (repeated-CUSUM, so it re-arms
 for the next change rather than latching after a long excursion). Standard
-quickest-detection theory~\cite{lorden1971reacting,moustakides1986optimal} makes
-this delay-optimal under a false-alarm constraint; we work the constants in
-\Cref{sec:guarantees}.
+quickest-detection theory~\cite{lorden1971reacting,moustakides1986optimal}
+motivates the CUSUM as the near-optimal detector for a downward shift under a
+false-alarm constraint (optimality is exact only for a known post-change law;
+here $\dhat_W$ is an estimated, variance-inflated statistic, so we treat it as a
+well-motivated detector); we work the ARL/delay constants in \Cref{sec:guarantees}.
 
 \section{Tier-A: cheap tripwires}\label{sec:tiera}
 All Tier-A signals update on a sampled $1/k$ of decisions, a few adds/compares
@@ -478,7 +489,9 @@ assignment, the adversary may spare $f\,n_L$ Leader-L sets, biasing $\dhat_R$
 upward by $\le f\,(\bar r^{\text{clean}}-\bar r^{\text{att}})$; the
 \emph{unprotected} $(1-f)$ of the degradation still enters $\dhat_R$, so the gate
 fires once $(1-f)(\bar r^{\text{clean}}-\bar r^{\text{att}})\gtrsim H\,\sigma_{\Delta,R}$,
-i.e.\ detection survives for $f$ bounded away from $1$ and fails as $f\to1$.
+i.e.\ detection is intact while the leaked fraction stays modest (empirically up
+to $f\!\approx\!0.6$, \Cref{sec:eval-p4}) and collapses sharply in the
+$0.6$--$0.8$ band, well before $f{=}1$ (not a gradual roll-off toward $1$).
 \end{proposition}
 \begin{proof}[Proof sketch]
 Within $R$ the Leader-L and follower sets are an exchangeable partition under the
@@ -600,9 +613,11 @@ guarantees:} \Cref{sec:eval-e3} re-runs the floor and both headline P4 results
 across a family---two collapse shapes (clip, logistic) at two slopes, an
 alternative IPC map, a shifted fallback floor $q_0\in[0.4,0.6]$, and a joint
 $\mu_C{\times}$IPC change---and finds the qualitative guarantees invariant; only
-the exact percentages move. Detection \emph{power} is the one quantity that is not
-constant, and it is not supposed to be: it tracks $|\Dw|$ and degrades near the
-competence crossing, exactly as the $\sigd$ bound predicts. We pin the \Cref{sec:tierb} operating point at
+the exact percentages move. Detection \emph{power} is the one quantity we do not
+claim is invariant: the $\sigd$ bound predicts it must degrade once $|\Dw|$
+approaches $\sigd$, but our stress sweep stops short of that regime---TPR stays
+$1.0$ down to the smallest gap tested ($|\Dw|{=}0.015\gg\sigd$), so the predicted
+roll-off is not yet exercised. We pin the \Cref{sec:tierb} operating point at
 $n_L{=}n_F{=}32$, $m{=}64$ ($|W|\!\approx\!1.3{\times}10^5$ decisions),
 $\tau{=}0.05$, $K{=}0.10$, $H{=}0.8$. Conditions are clean, benign-drift, and
 three attacks (broad DoS, adaptive mimicry, regional covert); baselines are
@@ -693,7 +708,8 @@ latency rises $0\!\to\!3.4$ windows, tracking the analytic $D\!\approx\!H/(K-
 gap-limited and pool-insensitive, so larger pools only add overhead;
 \Cref{fig:p2}(b) is the resulting overhead/latency Pareto. The full
 \Cref{sec:overhead} budget is $\sim\!336$\,bytes, $\sim\!0.13\%$ of a 256\,KB
-SRAM, $0$\,ns added.
+SRAM, and adds no cache-access-critical-path latency by construction (analytical;
+RTL timing future work).
 
 \begin{figure}[t]\centering
 \includegraphics[width=0.78\columnwidth]{p2_roc.pdf}
@@ -811,12 +827,15 @@ floor $q_0$ swept over $[0.4,0.6]$. \textbf{The qualitative guarantees are
 invariant}: across every cell the steady floor violation stays $\le 0.9\%$ with a
 genuine drop detected, mimicry TPR is $1.0$ for competence vs $0$ for the input-OOD
 monitor, and the secrecy ablation keeps its TPR-vs-$f$ shape; only the exact
-percentages move (clean tax $0.49$--$0.52\%$ across maps). The one quantity that is
-\emph{not} constant is detection \emph{power}, and it should not be: a sweep of the
-attack stress toward the competence crossing shows TPR tracking $|\Dw|$ and
-degrading in the small-$|\Dw|$ regime exactly as the $\sigd$ bound predicts---so the
-detector's strength is earned from the signal, not baked in by a deep hard-coded
-attack. \emph{Scope:} this establishes robustness to the \emph{shape} of the
+percentages move (clean tax $0.49$--$0.52\%$ across maps, on a reduced $20$-episode
+budget per cell). Detection \emph{power} is the one quantity we do not claim
+invariant: a sweep of the attack stress toward the competence crossing holds TPR
+at $1.0$ for every gap down to the smallest tested ($|\Dw|{=}0.015$, still
+$\gg\sigd$); this reduced-episode sweep does not reach the $|\Dw|\!\sim\!\sigd$
+regime where the $\sigd$ bound predicts roll-off, so within the tested range the
+detector's firing reflects a real competence signal above the resolution floor,
+and a sweep into the $|\Dw|\!\sim\!\sigd$ regime (where power must fall) is left
+to future work. \emph{Scope:} this establishes robustness to the \emph{shape} of the
 collapse curve, the IPC map, and the floor location; the Tier-A feature/confidence
 maps are not swept (the headline competence-beats-input result is a Tier-B
 property).
@@ -825,8 +844,10 @@ property).
 \includegraphics[width=\columnwidth]{e3_sensitivity.pdf}
 \caption{Transfer-function sensitivity. Across collapse-curve shapes (a), the
 competence-beats-input mimicry result (b) and the secrecy-ablation shape (c) are
-invariant; (d) detection power tracks $|\Dw|$ and degrades near the crossing, as
-$\sigd$ predicts---power is earned, not assumed.}
+invariant; (d) across the stress sweep the competence detector holds
+TPR${=}1.0$ (vs.\ input-OOD $0$) for every gap down to the smallest tested
+($|\Dw|{=}0.015\gg\sigd$); the sweep does not enter the $|\Dw|\!\sim\!\sigd$
+regime where power must roll off.}
 \label{fig:e3}
 \end{figure}
 
@@ -883,11 +904,13 @@ measured regret.}
 
 \subsection{Real-systems integration: the set-locality boundary}\label{sec:eval-champsim}
 The auditor compiles and runs in real ChampSim as \emph{both} a cache-replacement
-module (set-local---the clean case, \Cref{def:setlocal}) and an L1D prefetcher
+module (set-local by \Cref{def:setlocal}---structurally the clean case, but
+stateful; see below) and an L1D prefetcher
 module (\emph{not} set-local). The two together test the set-locality
 characterization on real hardware traces: the prefetcher case exhibits the
-de-localization boundary in detail, and the replacement case confirms the clean
-side. We present the prefetcher case first because it is where the boundary
+de-localization boundary in detail, and the replacement case shows the clean side
+is set-local yet stateful---a second boundary (the secret reseed confounds a
+path-dependent reward), rather than a real-hardware clean-case validation. We present the prefetcher case first because it is where the boundary
 \emph{bites}---it is the cautionary result, not the headline.
 
 \textbf{Prefetcher (the cautionary, non-set-local case).} We built a real
@@ -897,7 +920,10 @@ per-IP stride prefetcher, the fallback prefetch-\emph{off}, the reward the per-s
 cache-hit rate, and the attack a cache-polluting corruption (the dueling
 ``sets'' here are virtual block-address buckets, $\mathrm{blk}\bmod 2048$, not
 physical L1D sets). It compiles and runs
-on SPEC\,CPU2017 with \textbf{no added latency on the cache-access critical path}:
+on SPEC\,CPU2017 with \textbf{no added work on the cache-access critical path by
+construction} (the confirmer/CUSUM/reseed/FSM are off-path and epoch-grained; the
+per-access cost is only a $2$-bit pool-tag lookup and output mux---RTL timing is
+future work, \Cref{sec:overhead}):
 the confirmer/CUSUM/reseed/FSM are off-path and epoch-grained, and the per-access
 work is a $2$-bit pool-tag lookup and an output mux---the same kind of table read
 DIP/DRRIP already carry. Because the real $\dhat$ is far noisier than the
@@ -955,9 +981,11 @@ observation window / signal SNR, not reward fidelity: lengthening the epoch
 (window $40\mathrm{k}\!\to\!200\mathrm{k}$) removes the over-gating even with the
 crude proxy. This is a genuine limitation of set-dueling \emph{for prefetchers},
 whose benefit is inherently de-localized; \emph{cache replacement}---where the
-decision and its hit/miss outcome share a set---is the clean case (the paper's
-``home turf'' claim, now with a mechanism). The milestone this proof-of-deployment
-sets up is accordingly sharper: a long-epoch, \emph{set-local} competence signal
+decision and its hit/miss outcome share a set---is set-local by construction (the
+paper's ``home-turf'' condition): the structurally clean case in theory, though
+\Cref{sec:eval-champsim} shows a real cache's stateful reward adds a second,
+stateless-reward requirement before that cleanness is measurable. The milestone
+this real-simulator boundary study sets up is accordingly sharper: a long-epoch, \emph{set-local} competence signal
 (latency-weighted, replacement-style), not merely ``the controller's own reward.''
 
 \textbf{Replacement (set-local but \emph{stateful}---a sharper boundary).} The same
@@ -1014,7 +1042,9 @@ The per-set cache-hit reward proxy sets the clean tax ($1.7$--$11\%$): roms show
 the failure mode---a genuinely-helpful prefetcher under-credited and over-gated.
 Swapping to the controller's own reward does \emph{not} fix this (only
 $11.2\%\!\to\!9.7\%$); a prefetcher's benefit is not set-local, so set-dueling
-needs a longer epoch or a set-local signal (replacement is the clean case).}
+needs a longer epoch or a set-local signal (replacement is the \emph{set-local}
+case---though a real cache's stateful reward is a further boundary; see
+\Cref{sec:eval-champsim}).}
 \label{fig:champsim}
 \end{figure}
 
@@ -1025,8 +1055,9 @@ existing ATD/sampler; the Tier-A sketches and the 16-weight forward model sit in
 adjacent SRAM and update on a sampled $1/k$ of decisions; the CUSUM detectors are
 two registers and a comparator each. Total $\sim\!336$\,bytes, $\sim\!0.13\%$ of a
 256\,KB SRAM, an estimated $<\!1\%$ energy, and---because the confirmer is
-sampled, off-path, and epoch-grained---\textbf{no added latency on the cache-
-access critical path}, the non-negotiable constraint. The only per-access work is
+sampled, off-path, and epoch-grained---\textbf{no added latency on the cache-access
+critical path by construction} (analytically; RTL timing is future work), the
+non-negotiable constraint. The only per-access work is
 the $2$-bit pool-tag lookup and output mux (a table read comparable to existing
 DIP/DRRIP set-dueling), not the estimator or gate logic.
 
@@ -1090,8 +1121,8 @@ measurable scalar and bounds the answer's cost---for the controllers a secret
 per-set audit can faithfully measure. Our organizing result is the
 \emph{set-locality} condition (\Cref{def:setlocal}): set-dueling competence
 auditing is faithful exactly when a controller's reward shares a set with its
-decision, which makes cache \emph{replacement} the clean case and characterizes
-prefetching as the de-localized boundary. Our real-systems study sharpens this into
+decision, which makes cache \emph{replacement} the \emph{set-local} case and
+characterizes prefetching as the de-localized boundary. Our real-systems study sharpens this into
 a second condition: set-locality is necessary but not sufficient, because a real
 cache is set-local yet \emph{stateful}, so the secret reseed that buys mimicry
 resistance confounds its per-window measurement---a secrecy/measurability tension a
