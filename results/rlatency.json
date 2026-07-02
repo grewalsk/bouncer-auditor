@@ -1,0 +1,93 @@
+{
+  "note": "Positive form of E3 detection power: TPR stays ~1 across the off-policy range (drift K-Delta >= 3.2 sigma_Delta), while detection LATENCY rises toward the tau boundary tracking the deterministic-drift limit D=H/(K-Delta).",
+  "K": 0.1,
+  "H": 0.8,
+  "tau": 0.05,
+  "cells": [
+    {
+      "target": -0.344,
+      "u": 0.92,
+      "n_ep": 40,
+      "tpr": 1.0,
+      "lat_mean": 1.0,
+      "lat_median": 1.0,
+      "D_pred": 1.801801801801802,
+      "drift_sigma": 28.415999999999997
+    },
+    {
+      "target": -0.2,
+      "u": 0.7143,
+      "n_ep": 40,
+      "tpr": 1.0,
+      "lat_mean": 2.0,
+      "lat_median": 2.0,
+      "D_pred": 2.6666666666666665,
+      "drift_sigma": 19.200000000000003
+    },
+    {
+      "target": -0.1,
+      "u": 0.5714,
+      "n_ep": 40,
+      "tpr": 1.0,
+      "lat_mean": 3.45,
+      "lat_median": 3.0,
+      "D_pred": 4.0,
+      "drift_sigma": 12.8
+    },
+    {
+      "target": -0.05,
+      "u": 0.5,
+      "n_ep": 40,
+      "tpr": 1.0,
+      "lat_mean": 4.825,
+      "lat_median": 5.0,
+      "D_pred": 5.333333333333333,
+      "drift_sigma": 9.600000000000001
+    },
+    {
+      "target": -0.02,
+      "u": 0.4571,
+      "n_ep": 40,
+      "tpr": 1.0,
+      "lat_mean": 6.0,
+      "lat_median": 6.0,
+      "D_pred": 6.666666666666666,
+      "drift_sigma": 7.680000000000001
+    },
+    {
+      "target": 0.0,
+      "u": 0.4286,
+      "n_ep": 40,
+      "tpr": 1.0,
+      "lat_mean": 7.375,
+      "lat_median": 7.0,
+      "D_pred": 8.0,
+      "drift_sigma": 6.4
+    },
+    {
+      "target": 0.02,
+      "u": 0.4,
+      "n_ep": 40,
+      "tpr": 1.0,
+      "lat_mean": 9.3,
+      "lat_median": 9.0,
+      "D_pred": 10.0,
+      "drift_sigma": 5.12
+    },
+    {
+      "target": 0.04,
+      "u": 0.3714,
+      "n_ep": 40,
+      "tpr": 1.0,
+      "lat_mean": 12.875,
+      "lat_median": 13.0,
+      "D_pred": 13.333333333333332,
+      "drift_sigma": 3.8400000000000003
+    }
+  ],
+  "invariants": {
+    "tpr_all_ge_095": true,
+    "latency_rises_toward_tau": true,
+    "latency_tracks_prediction": true
+  }
+}

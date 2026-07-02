@@ -139,13 +139,13 @@
     },
     {
       "id": "C_detectpower_rolloff",
-      "text": "Detection power vs gap: CORRECTLY framed (TMLR-R1) as drift-SNR, not estimator resolution. For any off-policy gap Delta<tau the CUSUM drift K-Delta >= gamma/2 = 3.2*sigma_Delta, so TPR~1 at fixed (K,H) across the off-policy range (flat sweep is CONSISTENT with theory); what grows toward tau is LATENCY D=H/(K-Delta) up to ~16 windows. The old 'roll-off as |Delta|->sigma_Delta' AND the interim '0.015>>sigma_Delta' were both conflations, now removed from paper + generator.",
+      "text": "Detection power vs gap: MEASURED positive result (R-latency, exp_rlatency.py). TPR stays 1.0 across the off-policy range (drift 3.8-28 sigma_Delta); detection LATENCY rises 1->13 windows toward tau, tracking D=H/(K-Delta). Promoted from REDUCED: the flat-TPR sweep is now shown CONSISTENT with theory, with the varying quantity (latency) measured directly (fig:rlatency).",
       "asserted_strength": 2,
       "defended_strength": 2,
       "reproduced": true,
       "sentence_refs": [
-        "bouncer.tex methodology + sec:eval-e3 + fig:e3(d) (drift-SNR)",
-        "results/e3_sensitivity.json detectability (flat TPR, consistent)"
+        "bouncer.tex sec:eval-e3 + fig:rlatency",
+        "results/rlatency.json"
       ],
       "overclaim": false,
       "thesis_required_strength": 0
@@ -254,7 +254,8 @@
     "TMLR-R1 G3 GREEN: all grep assertions empty. final_review.json deleted (stale, validated false Lemma).",
     "TMLR-R1 G5/G6: state.json finalized; TMLR_R1_RESPONSE.md complete. G2 pass2 launched for byte-identity.",
     "TMLR-R1 G4: diff critic GREEN after adjudication. One flagged \"7.4 sigma\" item refuted from committed data (critic used wrong sign for Delta_true=-0.015; drift is 7.36 sigma, paper correct). No over-retreat; protected claims intact.",
-    "TMLR-R1 G2 GREEN: run_all byte-identical (pass1==pass2). HALT: gates G0-G6 green, INV-R1..R7 green, response doc complete."
+    "TMLR-R1 G2 GREEN: run_all byte-identical (pass1==pass2). HALT: gates G0-G6 green, INV-R1..R7 green, response doc complete.",
+    "Optional exp 1 (R-latency): TPR 1.0 across off-policy range while latency rises 1->13 windows tracking H/(K-Delta) (drift 3.8-28 sd). fig:rlatency added; run_all + number audit (19) wired. Converts E3 scope-down to a positive result."
   ],
   "revised_odds_guess": {
     "TMLR": "55-65% (fixes are load-bearing here: removes the significance/missing-win bar; genuine strength-3 characterization + reproduced mechanism + zero claim/evidence gaps)",

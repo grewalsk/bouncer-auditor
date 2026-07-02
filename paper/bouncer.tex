@@ -872,8 +872,10 @@ $K-\Dw\ge\gamma/2=0.05\approx 3.2\,\sigd$, so at fixed $(K,H)$ a stress sweep to
 crossing holds TPR at $1.0$ for every tested gap (down to $|\Dw|{=}0.015$, whose drift is
 already $7.4\,\sigd$). The quantity that grows as $\Dw$ rises toward $\tau$ is not the miss
 rate but the detection \emph{latency} $D\approx H/(K-\Dw)$, up to $H/(K-\tau)\approx 16$
-windows at the boundary (the deterministic-drift delay of \Cref{sec:tierb}). The flat-TPR
-sweep is therefore \emph{consistent} with the
+windows at the boundary. We measure this directly (\Cref{fig:rlatency}): sweeping the true
+gap across the off-policy range, TPR stays $1.0$ (drift $3.8$--$28\,\sigd$) while the latency
+rises from $1$ to $13$ windows, tracking $H/(K-\Dw)$. The flat-TPR sweep is therefore
+\emph{consistent} with the
 $\sigd$ theory, not a sweep that stops short of a resolution-limited roll-off. \emph{Scope:} this establishes robustness to the \emph{shape} of the
 collapse curve, the IPC map, and the floor location; the Tier-A feature/confidence
 maps are not swept (the headline competence-beats-input result is a Tier-B
@@ -888,6 +890,15 @@ every off-policy gap, because the CUSUM drift $K-\Dw>3\,\sigd$ throughout; what 
 toward the $\tau$ boundary is the detection \emph{latency} $D\approx H/(K-\Dw)$, not the
 miss rate.}
 \label{fig:e3}
+\end{figure}
+
+\begin{figure}[t]\centering
+\includegraphics[width=0.62\columnwidth]{rlatency.pdf}
+\caption{Detection latency vs.\ competence gap (positive form of \Cref{fig:e3}(d)). TPR
+stays $\approx\!1$ across the off-policy range (drift $3.8$--$28\,\sigd$); the detection
+\emph{latency} rises from $1$ to $13$ windows toward the $\tau$ boundary, tracking the
+deterministic-drift limit $H/(K-\Dw)$.}
+\label{fig:rlatency}
 \end{figure}
 
 \subsection{Adaptive timing adversaries}\label{sec:eval-adaptive}
