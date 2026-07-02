@@ -54,8 +54,8 @@ timing measurement left to future work); a sub-resolution \emph{slow-bleed}
 steering attack is an explicitly named open vulnerability. \emph{Set-locality is
 the enabling condition}: it is exactly what lets a secret per-set audit attribute
 reward to the right policy, and it cleanly separates the controllers Bouncer
-faithfully audits (PC-indexed predictors, and cache replacement under a
-(near-)stateless reward) from the cautionary
+faithfully audits (cache replacement under a (near-)stateless reward; PC-indexed
+predictors are \emph{expected} set-local but untested) from the cautionary
 boundary case (prefetching, whose benefit is de-localized). Bouncer reduces ``is the learned controller still
 trustworthy?'' to a single scalar---a competence advantage $\Dw$ over the
 fallback---estimated \emph{without counterfactuals} by repurposing the
@@ -152,7 +152,9 @@ dueling set as its decision}---we call such a controller \emph{set-local}. Cache
 \emph{replacement} is the canonical set-local controller: the eviction decision on
 set $s$ is rewarded by the hit/miss outcome \emph{on set $s$}, so the dueling
 estimate $\dhat$ is a clean, localized competence signal. PC-indexed predictors
-(branch, confidence) are likewise local. \emph{Prefetching is the cautionary
+(branch, confidence) are \emph{expected} to be likewise local, but no experiment here
+instantiates one, so their (near-)statelessness is untested (\Cref{tab:instances}).
+\emph{Prefetching is the cautionary
 boundary}: a prefetch triggered on set $s$ fetches a \emph{different} set $s'$, so
 its benefit is de-localized and no per-set reward captures it---a faithful reward
 cannot be dualized, which we confirm in real ChampSim
@@ -503,7 +505,8 @@ Fix a contested domain $R$ (e.g.\ a victim co-tenant's cache footprint) and run
 the dueling pools \emph{within} $R$: draw Leader-L and the follower sets of $R$
 uniformly at random from $R$ each epoch, unobservable to the adversary. Assume the
 within-$R$ set outcomes are exchangeable up to a heterogeneity bias
-$|b_R|\le\beta$ (Sec.\ below). If the adversary holds all aggregate Tier-A
+$|b_R|\le\beta$ (an explicit assumption; the misspecification sweep of
+\Cref{sec:eval} is its empirical proxy). If the adversary holds all aggregate Tier-A
 statistics at their validation values, then any input-only strategy that keeps
 $\dhat_R=\bar r_L-\bar r_F\ge\tau$ forces $\mathbb{E}[\text{reward on the }R\text{
 followers}]\ge r^{\pizero}+\tau-\beta$: \emph{the victim cannot be degraded below
@@ -599,7 +602,8 @@ weakens \Cref{prop:mimicry}.
 
 \begin{table}[t]\centering\footnotesize
 \caption{Per-controller instantiation, ordered by set-locality (whether reward and
-decision share a dueling set).}
+decision share a dueling set). Predictors are set-local by structure; their
+(near-)statelessness is untested (no experiment here instantiates one).}
 \label{tab:instances}
 \begin{tabular}{@{}lclll@{}}
 \toprule
@@ -782,7 +786,11 @@ This is the result the paper is built around (\Cref{fig:p4}). \textbf{(a)} Under
 an adaptive mimicry adversary that holds $S_{in}$ in-distribution while degrading
 $C$, the input-OOD-only baseline detects \emph{none} of the attacks ($0/40$
 episodes at every strength), while full Bouncer detects \emph{all} ($40/40$;
-clean false alarms $0/40$ for both). Over $50$ independent seeds
+clean false alarms $0/40$ for both). The input-OOD baseline's $0/40$ is
+\emph{definitional}: the mimicry adversary holds $S_{in}$ in-distribution by construction
+(the harness sets \texttt{suppress\_features}), so an input-marginal monitor cannot fire; the
+earned measurements are Bouncer's $40/40$ on realized reward and the secrecy ablation below.
+Over $50$ independent seeds
 (\Cref{fig:ci}(a)) this is full-Bouncer TPR $1.0$ (Wilson 95\% $[0.93,1.0]$) vs.\
 input-OOD $0.0$ ($[0,0.07]$), with clean FPR $0.0$ ($[0,0.07]$) for both;
 detection latency is $1.0$ window $[1.0,1.0]$, the steady floor violation
@@ -1154,7 +1162,7 @@ Bouncer turns ``is the learned controller still earning its keep?'' into one
 measurable scalar and bounds the answer's cost---for the controllers a secret
 per-set audit can faithfully measure. Our organizing result is the
 \emph{set-locality} condition (\Cref{def:setlocal}): set-dueling competence
-auditing is faithful exactly when a controller's reward shares a set with its
+auditing requires that a controller's reward share a set with its
 decision, which makes cache \emph{replacement} the \emph{set-local} case and
 characterizes prefetching as the de-localized boundary. Our real-systems study sharpens this into
 a second condition: set-locality is necessary but not sufficient, because a real
@@ -1167,7 +1175,7 @@ expensive confirmer behind cheap tripwires, and proving a three-term safety floo
 $\delta_R^{\min}(B)$ with the secret intact---Bouncer caps the worst-case
 \emph{competence} (in the controller's own reward) at its vetted fallback, under
 benign drift and an adaptive mimicry adversary alike, for $\sim\!336$\,bytes and
-no added datapath latency. The robustness is not free, and
+no added datapath latency (analytical). The robustness is not free, and
 not unconditional: we show it is purchased exactly by the secrecy of the dueling
 sets, quantify the price of losing it, and name the sub-resolution slow-bleed
 adversary outside the audited domain as a real, un-closed vulnerability.

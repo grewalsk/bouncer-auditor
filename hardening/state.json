@@ -36,7 +36,7 @@
   "claims_ledger": [
     {
       "id": "C_setlocal",
-      "text": "Set-locality characterization: secret-set-dueling competence audit is faithful iff decision and reward share a dueling set",
+      "text": "Set-locality characterization: set-dueling competence audit REQUIRES (necessary) that decision and reward share a dueling set; jointly with a (near-)stateless reward it is sufficient in the stateless synthetic harness. NOT stated as iff (conclusion contradiction fixed TMLR-R1). Each necessity direction shown on one real instance (prefetch not set-local; replacement stateful).",
       "asserted_strength": 3,
       "defended_strength": 3,
       "reproduced": true,
@@ -243,7 +243,8 @@
     "TMLR-R1 Phase 0 (G0): reproduced reviewer counterexample to two-term Lemma 1 (measured 11.9 vs bound 2.52, T=1400); pre_r1.sha256 manifest; results match committed.",
     "TMLR-R1 Phase 1: Lemma 1 RESTATED as three-term (audit-exposure phi_P*T_att*r_max) to match the system (Leader-C fixed, simulate.py:82). Proof repaired (bucket i no longer zero; +PROBING bucket). Reframed as strength: exposure term predicts steady floor 0.58-0.65% bracketing measured 0.639%. Edited abstract/contrib4/\u00a73-GATED/P1/theory/conclusion + theory.py & gate_fsm.py docstrings + LEMMA1.md (fixed false 'bouncer.py routes pi0' anchor -> simulate.py:82). New regression exp_floor_longattack.py + results/floor_longattack.json; exp_theory L_att sweep (two-term breaks at L_att=960: 25.8 vs 7.6); exp_p1_floor bound line -> corrected 12.4. Protected 15.1/7.8/5.9 + P1 0.639%/lat1/tax0.99653 survive.",
     "TMLR-R1 Phase 2: E3 numeric truths. Tax range 0.49-0.52% -> 0.16-0.51% (from JSON). Removed '|Delta|=0.015>>sigma_Delta' from all 4 paper sites + exp_e3_sensitivity.py comment+scope. Reframed detection power as DRIFT-SNR (K-Delta>=3.2 sigma for any off-policy gap => TPR~1; latency D=H/(K-Delta) is what varies); flat TPR now consistent, not a retreat. C_detectpower promoted from REDUCED to correctly-characterized.",
-    "TMLR-R1 G1 GREEN: hostile critic verified corrected Lemma 1 (re-derivation, counterexample battery, INV-R4, protected numbers). Phase 1 gate passed."
+    "TMLR-R1 G1 GREEN: hostile critic verified corrected Lemma 1 (re-derivation, counterexample battery, INV-R4, protected numbers). Phase 1 gate passed.",
+    "TMLR-R1 Phase 3 (scope): conclusion iff -> necessity (two-condition, no self-contradiction); PC-indexed predictors scoped to \"expected set-local, statelessness untested\" (abstract/setting/Table1 caption); P4 0/40 marked definitional (suppress_features); Prop 1 (Sec. below) dangling ref fixed + beta framed as explicit assumption w/ sigma_het proxy; conclusion latency +(analytical)."
   ],
   "revised_odds_guess": {
     "TMLR": "55-65% (fixes are load-bearing here: removes the significance/missing-win bar; genuine strength-3 characterization + reproduced mechanism + zero claim/evidence gaps)",
