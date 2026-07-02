@@ -18,7 +18,7 @@ Concentration (Bernoulli/bounded rewards, m decisions/set/window):
 which is the central design dependency: pool size -> estimator variance ->
 CUSUM threshold -> detection delay -> safety-floor slack.
 
-Secrecy is load-bearing (Prop 6.2): an adversary who cannot see the L/F
+Secrecy is load-bearing (Prop 1): an adversary who cannot see the L/F
 assignment cannot degrade the Follower victim while keeping Leader-C clean.
 ``secret_known_frac`` models partial leakage of the assignment for the §8 / P4
 secrecy ablation.

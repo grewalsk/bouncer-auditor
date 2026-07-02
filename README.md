@@ -4,7 +4,7 @@
 > microarchitectural controller** to that of a known-safe heuristic — under
 > **adaptive mimicry** and **benign distribution shift** — with no
 > POMDP/belief-state machinery and no added latency on the cache-access critical
-> path.
+> path (analytical; RTL timing future work).
 >
 > **The organizing insight — *set-locality*.** A secret per-set competence audit
 > is faithful exactly when a controller's *reward shares a dueling set with its
@@ -15,9 +15,9 @@
 > controller's own reward* fixes this). Set-locality is what decides where the
 > mechanism works.
 
-This repository is the full research artifact for an HPCA-style systems-security
+This repository is the full research artifact for a TMLR submission (systems-flavored ML)
 paper: the mechanism, two proven guarantees, a comprehensive simulation harness
-that validates every claim, and a **real ChampSim integration** that runs the
+that validates the mechanism's quantitative claims in the synthetic harness, and a **real ChampSim integration** that runs the
 auditor inside a cycle-level simulator on SPEC CPU2017 traces.
 
 📄 **Paper:** [`paper/bouncer.pdf`](paper/bouncer.pdf) (11 pages, IEEEtran) ·
@@ -187,7 +187,7 @@ All numbers are produced by [`./run_all.sh`](run_all.sh) (deterministic, seeded)
 | Re-trust is *measured*, not timed | recovers 14 windows after attack ends | P1 |
 | Competence detector vs input-OOD | TPR = 1.0 @ FPR ≤ 0.05 on broad **and** mimicry | P2 |
 | §3 chain (pool → σ → H → latency) | latency 0 → 3.4 windows, knee at n ≈ 8 | P2 |
-| Overhead (analytical) | **~336 bytes**, ~0.13% of a 256 KB SRAM, 0 ns on the access path | P2 |
+| Overhead (analytical) | **~336 bytes**, ~0.13% of a 256 KB SRAM, 0 ns on the access path (analytical) | P2 |
 | Generality (3 controller classes) | floor holds ≤ 0.7% across all | P3 |
 | Attack-vs-drift triage | **100% 5-fold CV**, robust to dropping any feature | P3 |
 | **Mimicry survival (headline, N=50)** | full Bouncer **TPR 1.0 [0.93,1.0]** vs input-OOD **0.0 [0,0.07]** | P4 / CI |
@@ -222,7 +222,7 @@ collapses as the assignment leaks.
 
 The auditor is not only a simulation abstraction. It **compiles and runs inside
 ChampSim** as a real L1D **prefetcher module** (and a second **LLC replacement
-module**), with no added latency on the cache-access critical path, on SPEC
+module**), with no added latency on the cache-access critical path (analytical), on SPEC
 CPU2017 traces.
 
 <p align="center"><img src="docs/img/champsim.png" width="92%"></p>

@@ -1,5 +1,5 @@
 """
-Theory validation — the CUSUM ARL constants worked through, and Lemma 6.1's
+Theory validation — the CUSUM ARL constants worked through, and Lemma 1's
 regret bound checked against measured cumulative regret.
 
 (1) ARL validation. For a one-sided lower CUSUM on a Gaussian signal of known
@@ -9,7 +9,7 @@ regret bound checked against measured cumulative regret.
     ARL0 is finite and measurable (margin comparable to sigma).
     -> figures/th_arl.pdf
 (2) Regret bound. Sweep the number of genuine drop episodes N_ep; overlay the
-    Lemma 6.1 bound N_ep*D*r_max + alpha*T*c_sw on the measured worst-case
+    Lemma 1 bound N_ep*D*r_max + alpha*T*c_sw on the measured worst-case
     cumulative regret of the full Bouncer. The bound is a valid (loose) envelope.
     -> figures/th_regret.pdf
 """

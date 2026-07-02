@@ -106,7 +106,7 @@ def performance_recovered(df: pd.DataFrame, df_clean_mean_ipc: float) -> float:
 
 
 def cumulative_regret_vs_fallback(df: pd.DataFrame) -> np.ndarray:
-    """Σ_t (IPC_fallback - IPC_Bouncer) — the quantity Lemma 6.1 bounds.
+    """Σ_t (IPC_fallback - IPC_Bouncer) — the quantity Lemma 1 bounds.
     Positive mass = windows where Bouncer underperforms the floor."""
     return np.cumsum((df["ipc_fallback"] - df["ipc_bouncer"]).values)
 

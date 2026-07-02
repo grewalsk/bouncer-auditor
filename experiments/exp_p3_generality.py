@@ -6,7 +6,7 @@ P3 — Generality + attack-vs-drift triage.
       prefetch (Pythia)       : secret set-dueling on PC-hash buckets
       replacement (Hawkeye)   : secret set-dueling on cache sets (its home turf)
       memory scheduler (RL)   : *model-based* Δ̂ (no clean counterfactual sampling
-                                -> weakens Prop 6.2); banks/channels
+                                -> weakens Prop 1); banks/channels
     The safety floor holds for all three under broad attack and benign drift; the
     scheduler pays for the weaker estimator with longer latency and lost mimicry
     resistance.  -> figures/p3_generality.pdf

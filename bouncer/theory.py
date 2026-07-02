@@ -40,7 +40,7 @@ class FloorBound:
 def regret_bound(*, r_max: float, N_ep: int, T: int, c_sw: float,
                  K: float, H: float, sigma_delta: float,
                  mean_signal_clean: float, delta_true_drop: float) -> FloorBound:
-    """Compose Lemma 6.1's bound from the operating point.
+    """Compose Lemma 1's bound from the operating point.
 
     K, H            : Tier-B lower-CUSUM reference and threshold
     sigma_delta     : std of Δ̂ per window (from set_dueling.sigma_delta(m))

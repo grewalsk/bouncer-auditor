@@ -934,7 +934,10 @@ bound hugging the data. Panel~(b) sweeps the attack length $L_{att}$: because th
 audit-exposure regret grows linearly in $L_{att}$ while the two-term $N_{ep}D\rmax$ is
 constant, the two-term is \emph{violated} for long attacks (measured $25.8$ vs two-term $7.6$
 at $L_{att}{=}960$), whereas the corrected three-term of \Cref{lem:floor} continues to
-envelope. The tight form is thus a corollary of the corrected lemma, not a separate accounting.
+envelope. On a single persistent drop the two-term bound is exceeded nearly five-fold
+(measured $11.9$ vs the two-term $2.52$, itself enveloped by the tight $12.3$;
+\texttt{exp\_floor\_longattack.py}). The tight form is thus a corollary of the corrected
+lemma, not a separate accounting.
 
 \begin{figure}[t]\centering
 \begin{subfigure}{\columnwidth}\includegraphics[width=\linewidth]{th_arl.pdf}\caption{}\end{subfigure}\\
@@ -1012,7 +1015,8 @@ It is tempting to blame the hit-rate proxy and propose the controller's
 \emph{insufficient}. Holding $(\tau,H,\text{window},\text{partition},\text{FSM})$
 fixed and swapping \emph{only} the reward, from per-set cache-hit to the
 prefetcher's own accuracy$\times$timeliness, moves the roms clean tax only
-$11.2\%\!\to\!9.7\%$ and still loses $5\%$ to the attacked-but-ungated prefetcher.
+$11.2\%\!\to\!9.7\%$ and still loses $5\%$ to the attacked-but-ungated prefetcher (single
+trace, single seed; \texttt{hardening/experiments/N1\_reward\_swap/}).
 The reason is a \textbf{fundamental tension in what set-dueling can measure}: the
 cache-hit reward is \emph{set-local} (attributable to the dueling set) but a poor
 utility proxy, whereas the own-accuracy reward is a faithful proxy but \emph{not
@@ -1061,6 +1065,14 @@ transition dynamics consequently live in the synthetic harness (a faithful
 \emph{stateless} set-local model, \Cref{fig:floor}), and the deployment milestone
 is a reseed schedule slow enough to amortize cache-state warmup---a trade-off this
 result makes precise.
+
+\textbf{Disclosure (single trace, one seed).} The fixed-leader per-window $\dhat$ has std
+$0.57$, so the resolution is a \emph{mean-level} effect: the clean mean $0.23$ is about $3$
+standard errors over the $\sim\!50$ fixed-leader windows of one trace ($623$.xalancbmk). The
+gate sat GATED in most clean windows of \emph{both} configurations ($89\%$ reseeded, $80\%$
+fixed-leader), and the two committed logs follow different protocols ($82$ windows including
+the attack for reseeded; $56$ clean-only windows for fixed-leader). A multi-trace replication
+(\Cref{sec:disc}) is future work.
 
 \begin{figure}[t]\centering
 \includegraphics[width=\columnwidth]{e1_replacement.pdf}

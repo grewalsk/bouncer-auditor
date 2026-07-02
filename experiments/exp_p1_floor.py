@@ -1,7 +1,7 @@
 """
-P1 — Gate + safety floor (Lemma 6.1). The "constructive hedge" demonstrated.
+P1 — Gate + safety floor (Lemma 1). The "constructive hedge" demonstrated.
 
-On a poisoning trace (attack on at window 100, off at 220), compare:
+On a poisoning trace (attack on at window 90, off at 200), compare:
   unguarded C  (no auditor)   -> crashes far below the fallback floor
   always-fallback             -> safe but never gains
   Bouncer (full)              -> tracks C when trusted, floors to ~pi0 under
@@ -91,7 +91,7 @@ def main():
                 xytext=((ONSET + OFFSET) / 2, df.ipc_fallback.min() - 0.02),
                 ha="center", fontsize=7.5)
     ax.set_ylabel("IPC"); ax.set_xlim(0, T)
-    ax.set_title("Bouncer bounds the learned controller to the safe-fallback floor (Lemma 6.1)")
+    ax.set_title("Bouncer bounds the learned controller to the safe-fallback floor (Lemma 1)")
     handles, labels = ax.get_legend_handles_labels()
     shade_legend = [Patch(facecolor="#fff4e0", label="SUSPECT"),
                     Patch(facecolor="#e9eef5", label="GATED"),

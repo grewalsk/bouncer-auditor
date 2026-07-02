@@ -1,6 +1,6 @@
 # Bouncer Hardening — Convergence Report
 
-**Project:** `/Users/kabirgrewal/projects/bouncer-hpca`
+**Project:** `$HOME/projects/bouncer-hpca`
 **Role:** SCRIBE (final blackboard emission)
 **Date:** 2026-06-29
 

@@ -1,4 +1,4 @@
-cd /Users/kabirgrewal/projects/bouncer-champsim
+cd $HOME/projects/bouncer-champsim
 TR=traces/619.lbm.champsimtrace.xz
 W=1000000; S=9000000
 run() { # name gate attack

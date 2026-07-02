@@ -39,11 +39,14 @@ python3 experiments/make_diagrams.py
 echo "==> [7/8] ChampSim C++ auditor self-test"
 ( cd champsim_plugin && c++ -std=c++17 -O2 bouncer.cc -o bouncer_selftest && ./bouncer_selftest )
 
-echo "==> [8/8] compile paper"
+echo "==> [8/9] compile paper"
 ( cd paper && pdflatex -interaction=nonstopmode -halt-on-error bouncer.tex >/dev/null \
   && bibtex bouncer >/dev/null \
   && pdflatex -interaction=nonstopmode bouncer.tex >/dev/null \
   && pdflatex -interaction=nonstopmode bouncer.tex >/dev/null )
 echo "    paper/bouncer.pdf ($(cd paper && pdfinfo bouncer.pdf 2>/dev/null | awk '/Pages/{print $2" pages"}'))"
+
+echo "==> [9/9] number audit (INV-R1: paper numerals vs released JSON)"
+python3 scripts/check_paper_numbers.py
 
 echo "DONE. Results in results/, figures in figures/, paper at paper/bouncer.pdf"

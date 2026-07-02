@@ -3,9 +3,9 @@
 # champsim operating point; run the 4-config safety-floor study on roms, swapping
 # ONLY the reward signal (BOUNCER_REWARD=cachehit|ownpf|ownpf_peraccess).
 set -u
-CS=/Users/kabirgrewal/projects/bouncer-champsim
+CS=$HOME/projects/bouncer-champsim
 TR=$CS/traces/654.roms.champsimtrace.xz
-OUT=/Users/kabirgrewal/projects/bouncer-hpca/hardening/experiments/N1_reward_swap
+OUT=$HOME/projects/bouncer-hpca/hardening/experiments/N1_reward_swap
 BIN=$CS/bin/champsim_bouncer
 W=1000000; S=9000000
 REWARD="${1:-cachehit}"

@@ -27,5 +27,5 @@ point (the knee of the §4 latency/overhead Pareto). They map directly to
   only binds for short windows / subtle regressions (`p2_latency_pool.pdf`).
 * Total auditor storage ≈ **336 bytes** (`p2.json`): RP matrix + quantile sketch
   (S_in), 16-weight forward model (S_res), 4 CUSUM register pairs, and the
-  dueling counters (reused). ~0.13% of a 256 KB SRAM, **0 ns added datapath
-  latency**.
+  dueling counters (reused). ~0.13% of a 256 KB SRAM, **no added critical-path
+  latency by construction** (analytical; RTL timing future work).

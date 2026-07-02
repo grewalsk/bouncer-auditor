@@ -197,5 +197,6 @@
       "Unusually candid scoping is a real asset: the synthetic harness carries the controlled quantitative claims, ChampSim is explicitly 'a proof of deployment, not a sweep,' the overhead budget is flagged analytical, and online weight-poisoning is explicitly out of scope. This honesty is stated consistently across abstract, intro, methodology, and discussion.",
       "The ChampSim integration is real and reproducible: a built champsim_bouncer binary with the bouncer_pref module wired in runs an actual 619.lbm SPEC trace with live IPC and per-window logs. The deployment plumbing genuinely exists, which is exactly what makes the must-fix reframing tractable rather than fatal \u2014 the experiment is sound, only its interpretation is overstated."
     ]
-  }
+  },
+  "_STALE": "SUPERSEDED pre-hardening review. It VALIDATED the OLD two-term Lemma 1 that TMLR-R1 proved FALSE, and predates the current framing. Retained for history only; NOT a review of the current paper. See hardening/TMLR_R1_RESPONSE.md for the live review response."
 }

@@ -8,7 +8,7 @@ P4 — Adaptive adversary (the headline). Two results:
     competence (S_res + Tier-B), not input distribution.
     -> figures/p4_mimicry_survival.pdf
 
-(B) Randomized-secret ablation (empirical Prop 6.2). The strongest adversary also
+(B) Randomized-secret ablation (empirical Prop 1). The strongest adversary also
     spoofs aggregate Tier-A and mounts a redistributive covert attack on a victim
     region; only the SECRET per-region set-dueling remains. Detection power vs the
     leaked fraction f of the secret assignment: high at f=0, collapsing as f->1.
@@ -127,7 +127,7 @@ def main():
     ax2.set_ylabel("detection latency (windows)", color=C.PALETTE["bouncer"])
     ax2.tick_params(axis="y", labelcolor=C.PALETTE["bouncer"])
     ax2.grid(False)
-    ax.set_title("Prop 6.2: secrecy is load-bearing")
+    ax.set_title("Prop 1: secrecy is load-bearing")
     ax.axvspan(0.0, 0.0, color="none")
     C.savefig(fig, "p4_secrecy_ablation.pdf")
 
