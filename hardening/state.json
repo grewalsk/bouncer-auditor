@@ -29,7 +29,8 @@
     "T_thesis": "PASS (T-char committed; exceeds=false, underclaims=false)",
     "C_overclaim": "PASS (17 confirmed overclaims reduced + 3 missed fixed; 3 already-scoped left; INV-1 green)",
     "E_evidence": "PASS (all thesis-required claims reproduced at needed strength; R-latency queued OPTIONAL, thesis does not need it)",
-    "FOCUSED_adjudication": "GREEN (2 independent critics): overclaim-residual critic found 1 missed bald '0 ns added' @711 -> FIXED -> INV1 green; thesis-coherence critic -> THESIS_COHERENT_GREEN (INV-3/4/5)"
+    "FOCUSED_adjudication": "GREEN (2 independent critics): overclaim-residual critic found 1 missed bald '0 ns added' @711 -> FIXED -> INV1 green; thesis-coherence critic -> THESIS_COHERENT_GREEN (INV-3/4/5)",
+    "G1_lemma1": "GREEN (independent hostile critic): corrected 3-term bound re-derives from code; no counterexample survives ~45 attack configs (probing-exploit 54.9<tight117<loose386); regressions pass; INV-R4 5-site consistent; protected numbers intact."
   },
   "gap": 0,
   "claims_ledger": [
@@ -133,14 +134,13 @@
     },
     {
       "id": "C_detectpower_rolloff",
-      "text": "[REDUCED] Detection power rolls off near the crossing exactly as sigma_Delta predicts",
-      "asserted_strength": 0,
-      "defended_strength": 0,
-      "reproduced": false,
+      "text": "Detection power vs gap: CORRECTLY framed (TMLR-R1) as drift-SNR, not estimator resolution. For any off-policy gap Delta<tau the CUSUM drift K-Delta >= gamma/2 = 3.2*sigma_Delta, so TPR~1 at fixed (K,H) across the off-policy range (flat sweep is CONSISTENT with theory); what grows toward tau is LATENCY D=H/(K-Delta) up to ~16 windows. The old 'roll-off as |Delta|->sigma_Delta' AND the interim '0.015>>sigma_Delta' were both conflations, now removed from paper + generator.",
+      "asserted_strength": 2,
+      "defended_strength": 2,
+      "reproduced": true,
       "sentence_refs": [
-        "bouncer.tex:603 (reduced)",
-        "bouncer.tex:815 (reduced)",
-        "bouncer.tex:828 fig:e3 (d) (reduced)"
+        "bouncer.tex methodology + sec:eval-e3 + fig:e3(d) (drift-SNR)",
+        "results/e3_sensitivity.json detectability (flat TPR, consistent)"
       ],
       "overclaim": false,
       "thesis_required_strength": 0
@@ -241,7 +241,9 @@
     "flagged for human: (i) 3 family-B bib entries need metadata verification; (ii) results/adversarial_review.json is a STALE review of a superseded draft -> delete/date; (iii) e3_sensitivity.json internal 'scope' string still self-contradicts its flat data (paper does NOT inherit it) -> optional cleanup; (iv) R-latency queued optional",
     "odds corrected: DISAGGREGATED per user - TMLR 55-65% (significance bar removed), MLSys ~30% (systems missing-win bar persists, groups with HPCA), HPCA/ISCA 20-25%. Prior report wrongly lumped MLSys up with TMLR.",
     "TMLR-R1 Phase 0 (G0): reproduced reviewer counterexample to two-term Lemma 1 (measured 11.9 vs bound 2.52, T=1400); pre_r1.sha256 manifest; results match committed.",
-    "TMLR-R1 Phase 1: Lemma 1 RESTATED as three-term (audit-exposure phi_P*T_att*r_max) to match the system (Leader-C fixed, simulate.py:82). Proof repaired (bucket i no longer zero; +PROBING bucket). Reframed as strength: exposure term predicts steady floor 0.58-0.65% bracketing measured 0.639%. Edited abstract/contrib4/\u00a73-GATED/P1/theory/conclusion + theory.py & gate_fsm.py docstrings + LEMMA1.md (fixed false 'bouncer.py routes pi0' anchor -> simulate.py:82). New regression exp_floor_longattack.py + results/floor_longattack.json; exp_theory L_att sweep (two-term breaks at L_att=960: 25.8 vs 7.6); exp_p1_floor bound line -> corrected 12.4. Protected 15.1/7.8/5.9 + P1 0.639%/lat1/tax0.99653 survive."
+    "TMLR-R1 Phase 1: Lemma 1 RESTATED as three-term (audit-exposure phi_P*T_att*r_max) to match the system (Leader-C fixed, simulate.py:82). Proof repaired (bucket i no longer zero; +PROBING bucket). Reframed as strength: exposure term predicts steady floor 0.58-0.65% bracketing measured 0.639%. Edited abstract/contrib4/\u00a73-GATED/P1/theory/conclusion + theory.py & gate_fsm.py docstrings + LEMMA1.md (fixed false 'bouncer.py routes pi0' anchor -> simulate.py:82). New regression exp_floor_longattack.py + results/floor_longattack.json; exp_theory L_att sweep (two-term breaks at L_att=960: 25.8 vs 7.6); exp_p1_floor bound line -> corrected 12.4. Protected 15.1/7.8/5.9 + P1 0.639%/lat1/tax0.99653 survive.",
+    "TMLR-R1 Phase 2: E3 numeric truths. Tax range 0.49-0.52% -> 0.16-0.51% (from JSON). Removed '|Delta|=0.015>>sigma_Delta' from all 4 paper sites + exp_e3_sensitivity.py comment+scope. Reframed detection power as DRIFT-SNR (K-Delta>=3.2 sigma for any off-policy gap => TPR~1; latency D=H/(K-Delta) is what varies); flat TPR now consistent, not a retreat. C_detectpower promoted from REDUCED to correctly-characterized.",
+    "TMLR-R1 G1 GREEN: hostile critic verified corrected Lemma 1 (re-derivation, counterexample battery, INV-R4, protected numbers). Phase 1 gate passed."
   ],
   "revised_odds_guess": {
     "TMLR": "55-65% (fixes are load-bearing here: removes the significance/missing-win bar; genuine strength-3 characterization + reproduced mechanism + zero claim/evidence gaps)",
