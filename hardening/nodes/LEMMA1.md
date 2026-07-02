@@ -1,12 +1,16 @@
 # NODE LEMMA1 — Safety floor / bounded-regret envelope (Lemma `lem:floor`)
 
-**Verdict: DONE at defended=2.** The four-bucket accounting proof is a valid
-upper envelope on regret-vs-fallback *in the controller's own reward metric r*,
-and the two slack constants (D, α) are tied to Siegmund at the realized
-operating point with empirical corroboration (ARL ratio 0.998; loose/tight/
-measured = 15.1/7.8/5.9 IPC·win at N_ep=6, ordering `measured ≤ tight ≤ loose`
-holds at every N_ep ∈ {1..6}). **Scope caveat (binding):** the floor is in r,
-not end utility — the r≈utility gap is N1's territory and is NOT certified here.
+**Verdict: RESTATED (TMLR R1).** The original two-term bound was FALSE for the
+released system: the n_L Leader-C sets run C in *every* gate state (simulate.py:82),
+so a persistent drop bleeds an audit-exposure regret the two-term proof omitted
+(reviewer counterexample: measured positive regret 11.9 vs two-term 2.52 at T=1400;
+regression in exp_floor_longattack.py). The CORRECTED bound is three-term, adding
+phi_P*T_att*r_max. The tight form (already exposure-aware) and the corrected loose
+envelope the data at every cell (measured <= tight <= corrected-loose); the short-attack
+triple 15.1/7.8/5.9 at N_ep=6 survives (the two-term is still valid there, and the
+L_att sweep shows it breaking: measured 25.8 vs two-term 7.6 at L_att=960). **Scope
+caveat (binding):** the floor is in r, not end utility; the r-vs-utility gap is N1's
+territory and is NOT certified here.
 
 ---
 
@@ -14,26 +18,29 @@ not end utility — the r≈utility gap is N1's territory and is NOT certified h
 
 Lemma `lem:floor` (eq:floor): under assumptions A1–A5, w.p. ≥ 1−δN_ep,
 ```
-Σ_t (r_t^π0 − r_t^Bouncer)  ≤  N_ep · D · r_max  +  α · T · c_sw
+Σ_t (r_t^π0 − r_t^Bouncer)  ≤  N_ep·D·r_max  +  phi_P·T_att·r_max  +  α·T·c_sw
+   phi_G = n_L/n_sets = 1.56%,  phi_P = phi_G + rho_aud(1−(n_L+n_F)/n_sets) = 6.4%
 ```
-Proof partitions the T windows into four disjoint buckets and bounds the
-positive regret contribution of each:
+Proof partitions the T windows into disjoint buckets and bounds the positive
+regret contribution of each:
 
 | Bucket | Windows | Per-window regret vs π0 | Total | Code anchor |
 |---|---|---|---|---|
-| (i) GATED | runs π0 | **0** (modulo switch transient, counted in iv) | 0 | `gate_fsm.py` GATED→action=fallback; `bouncer.py` routes π0 when gated |
+| (i) GATED | π0 on followers+Leader-F, **n_L Leader-C keep running C** | **≤ phi_G·(q0−μ_C^att)** | **phi_G·gap·#GATED** | `simulate.py:82` deployed[leaderC]=rC always; followers→π0 `:91` |
+| (i') PROBING | Leader-C + rho_aud audited followers run C | ≤ phi_P·(q0−μ_C^att) | phi_P·gap·#PROBING | `simulate.py:87-90` audited region runs C |
 | (ii) pre-detection | ≤ D per episode, N_ep episodes | ≤ r_max (A1) | **N_ep·D·r_max** | D = `cusum.detection_delay_approx(K,H,Δ_true)` = H/(K−Δ_true) |
 | (iii) false alarm | ≤ αT (A3) | ≤ c_sw (A4) | **α·T·c_sw** | α = `cusum.false_alarm_rate_per_window` = 1/ARL0 |
 | (iv) trusted-and-better | C ≥ π0, gate open | **≤ 0** (non-positive) | drops out | `set_dueling` Δ̂≥τ ⇒ trust C; these windows can only *help* |
 
-Only buckets (ii)+(iii) carry strictly positive regret; (i) is exactly zero and
-(iv) is non-positive (controller, when trusted, is at least as good as π0 by the
-trust condition Δ̂≥τ — windows where it is strictly better make regret negative,
-which is why measured cumulative regret goes negative in P1, tex:496–498). The
-per-episode δ failure probabilities union-bound to δN_ep. **This is a textbook
-disjoint-bucket upper bound: each bucket's contribution is independently capped
-and summed, so the sum is a valid envelope** — no double-counting (switch
-transient is attributed once, to iii), no missing positive bucket (i=0, iv≤0).
+Buckets (i)+(i')+(ii)+(iii) carry positive regret; (iv) is non-positive. Bucket (i)
+is NOT zero (the original error): the fixed Leader-C sets keep running the degraded
+C, so each GATED window costs phi_G·gap and each PROBING window phi_P·gap; over the
+T_att drop-episode windows this exposure sums to ≤ phi_P·T_att·r_max. (iv) is
+non-positive (controller, when trusted, is at least as good as π0 by Δ̂≥τ), which is
+why measured cumulative regret goes negative in P1. The per-episode δ failure
+probabilities union-bound to δN_ep. Each bucket is independently capped and summed:
+a valid envelope, now with the audit-exposure bucket restored (the two-term omission
+was the reviewer's counterexample).
 
 ## 2. D and α tied to Siegmund at the REALIZED params
 

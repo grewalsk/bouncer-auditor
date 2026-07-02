@@ -64,8 +64,10 @@ run-fallback set assignment is drawn from a hardware secret and reseeded each
 epoch. Cheap always-on tripwires gate an expensive competence confirmer whose
 one-sided CUSUM feeds a four-state trust FSM. We prove a bounded-regret safety
 floor (over the union of audited declared domains, in the controller's own
-reward, Bouncer is never more than $N_{ep}\!\cdot\!D\!\cdot\!\rmax + \alpha T
-c_{sw}$ worse than the fallback) and a \emph{per-domain} mimicry-resistance
+reward, Bouncer is never more than $N_{ep}\!\cdot\!D\!\cdot\!\rmax + \phi_P T_{att}\rmax +
+\alpha T c_{sw}$ worse than the fallback: a per-episode detection transient, an
+audit-exposure term that grows only at the dueling fraction of attack duration,
+and a false-alarm term) and a \emph{per-domain} mimicry-resistance
 property that follows exactly from the secrecy of the sampler---scoped to a
 declared region at finite resolution with the secret intact, not general
 any-region security. In a faithful, fully-released
@@ -178,8 +180,9 @@ free estimator $\dhat=\bar r_L-\bar r_F$ that repurposes the DIP/DRRIP
 sampling substrate~\cite{qureshi2007dip,jaleel2010rrip} from policy
 \emph{selection} to policy \emph{trust}, with the set assignment kept secret.
 \item \textbf{Two guarantees with worked constants} (\Cref{sec:guarantees}): a
-bounded-regret safety floor (\Cref{lem:floor}, over the union of audited declared
-domains in the controller's own reward) tied directly to the CUSUM
+three-term bounded-regret safety floor (\Cref{lem:floor}: detection, audit-exposure,
+and false-alarm terms, over the union of audited declared domains in the
+controller's own reward) tied directly to the CUSUM
 average-run-length theory~\cite{page1954cusum,siegmund1985sequential,
 lorden1971reacting}, and a \emph{per-domain} mimicry-resistance proposition
 (\Cref{prop:mimicry})---scoped to a declared region audited at resolution
@@ -328,7 +331,8 @@ Tier-B on a slow background duty cycle. Any Tier-A CUSUM firing $\to$
 \emph{SUSPECT}. \emph{SUSPECT}: $C$ still active, Tier-B duty cycle raised (more
 dueling sets, shorter window); the Tier-B $\dhat$ CUSUM firing $\to$
 \emph{GATED}; Tier-A clearing for $T_{clear}$ $\to$ TRUSTED. \emph{GATED}:
-$\pizero$ active everywhere, online learning frozen, optional attribute/throttle;
+$\pizero$ active everywhere \emph{except the $n_L$ Leader-L sets, which keep running
+$C$ so $\dhat$ stays measurable}, online learning frozen, optional attribute/throttle;
 after a dwell $T_{dwell}$ $\to$ \emph{PROBING}. \emph{PROBING}: $C$ re-enabled on
 a small audited region only, Tier-B measures $\dhat$ there; $\dhat\ge\tau+\Delta_{hys}$
 for $T_{reprobe}$ $\to$ TRUSTED, else $\to$ GATED with exponential backoff on
@@ -433,29 +437,48 @@ c_{sw}$; \textup{(A5)} there are $N_{ep}$ drop episodes over a horizon of $T$
 windows.
 \end{assumption}
 
+\textbf{Audit exposure (from the construction).} The $n_L$ Leader-L sets run $C$ in
+\emph{every} gate state (they must, so $\dhat$ stays measurable and PROBING re-trust is
+\emph{measured} rather than timed; \Cref{sec:tierb}), and PROBING additionally re-enables
+$C$ on a fraction $\rho_{aud}$ of the followers. So the share of the resource still running
+$C$ during a drop is $\phi_G=n_L/n_{sets}$ while GATED and
+$\phi_P=\phi_G+\rho_{aud}\!\left(1-\tfrac{n_L+n_F}{n_{sets}}\right)$ while PROBING
+($\phi_G{=}1.56\%$, $\phi_P{=}6.4\%$ at the pinned operating point). Let $T_{att}$ be the
+number of windows inside drop episodes.
+
 \begin{lemma}[Safety floor]\label{lem:floor}
 Under \Cref{asm}, with probability $\ge 1-\delta N_{ep}$,
 \begin{equation}\label{eq:floor}
 \sum_t\!\big(r_t^{\pizero}-r_t^{\mathrm{Bouncer}}\big)
-\;\le\; N_{ep}\,D\,\rmax \;+\; \alpha\,T\,c_{sw}.
+\;\le\; \underbrace{N_{ep}\,D\,\rmax}_{\text{detection}}
+\;+\; \underbrace{\phi_P\,T_{att}\,\rmax}_{\text{audit exposure}}
+\;+\; \underbrace{\alpha\,T\,c_{sw}}_{\text{false alarm}}.
 \end{equation}
-Equivalently $R_{\mathrm{Bouncer}}\ge R_{\pizero}-[N_{ep}D\rmax+\alpha T c_{sw}]$,
-and on any window where $C$ is genuinely better and the gate is open
-$\mathrm{Bouncer}=C$, so
-$R_{\mathrm{Bouncer}}\ge\max(R_{\pizero},R_{C\text{-trusted}})-O(N_{ep}D+\alpha T).$
+Equivalently $R_{\mathrm{Bouncer}}\ge R_{\pizero}-[N_{ep}D\rmax+\phi_P T_{att}\rmax+\alpha T c_{sw}]$.
+The middle term is the price of continuous, \emph{measured} auditability: it grows only at
+the dueling fraction $\phi_P$ of the attack duration, not at full resource. On any window
+where $C$ is genuinely better and the gate is open $\mathrm{Bouncer}=C$, so
+$R_{\mathrm{Bouncer}}\ge\max(R_{\pizero},R_{C\text{-trusted}})-O(N_{ep}D+\phi_P T_{att}+\alpha T).$
 \end{lemma}
 \begin{proof}[Proof sketch]
-Partition windows. (i) GATED windows run $\pizero$, contributing zero regret vs
-$\pizero$ except a switch transient counted in (iii). (ii) The $\le D$ windows
-after each genuine drop, before the gate engages, each contribute $\le D\rmax$;
-there are $N_{ep}$ of them, giving $N_{ep}D\rmax$. (iii) False-alarm windows: at
-most $\alpha T$ of them, each costing $\le c_{sw}$, giving $\alpha T c_{sw}$. (iv)
-Trusted windows where $C\ge\pizero$ contribute non-positive regret. Summing the
-only positive contributions (ii)+(iii) yields \cref{eq:floor}; the per-episode
-$\delta$ failure probability unions to $\delta N_{ep}$.
+Partition windows. (i) \emph{GATED} windows run $\pizero$ on the followers and Leader-F, but
+the $n_L$ Leader-L sets keep running $C$ (they are fixed, \Cref{sec:tierb}); each contributes
+at most $\phi_G\rmax$ regret vs $\pizero$. (i$'$) \emph{PROBING} windows re-enable $C$ on
+Leader-L plus the $\rho_{aud}$ audited followers, contributing at most $\phi_P\rmax$ each.
+Over the $T_{att}$ drop-episode windows these sum to at most $\phi_P T_{att}\rmax$ (bounding
+each by the larger $\phi_P$). (ii) The $\le D$ windows after each genuine drop, before the
+gate engages, run $C$ everywhere and contribute $\le\rmax$ each; there are $N_{ep}$ of them,
+giving $N_{ep}D\rmax$. (iii) False-alarm windows: at most $\alpha T$, each costing $\le
+c_{sw}$, giving $\alpha T c_{sw}$. (iv) Trusted windows where $C\ge\pizero$ contribute
+non-positive regret. Summing the positive contributions (i,\,i$'$)+(ii)+(iii) yields
+\cref{eq:floor}; the per-episode $\delta$ failure probability unions to $\delta N_{ep}$. The
+\emph{tight} form charges the realized gap $(q_0-\mu_C^{att})$ in place of $\rmax$ and the
+realized GATED/PROBING occupancy ($\phi_G$ per GATED, $\phi_P$ per PROBING window) in place of
+$\phi_P T_{att}$.
 \end{proof}
 
-\textbf{The slack terms are the \Cref{sec:tierb} knobs.} The detection delay is
+\textbf{The detection and false-alarm slack are the \Cref{sec:tierb} knobs} (the
+audit-exposure term is instead fixed by the design constant $\phi_P$). The detection delay is
 $D\approx H/(K-\Delta_{true})$ and the false-alarm rate is
 $\alpha=1/\mathrm{ARL}_0$, with $\mathrm{ARL}_0$ from Siegmund's corrected-
 boundary approximation~\cite{siegmund1985sequential}: for a one-sided CUSUM
@@ -678,16 +701,21 @@ the fallback floor; Bouncer detects in \textbf{one window} here (the worked mean
 delay is $D\!\approx\!1.8$ windows; one window is the best case at this high SNR),
 floors to $\pizero$, and---crucially---\emph{re-trusts} 14 windows after the
 attack ends via PROBING, not a fixed timer. The \emph{steady-state} floor
-violation is $0.63\%$ (Bouncer sits at the floor, paying only the Leader-L
-dueling cost under attack); the only larger excursion is the lone pre-detection
-window, which dips $36\%$ below the floor---exactly the bounded $\le D\rmax$ term
-of \Cref{lem:floor}, and the price of a one-window detection delay. Performance
-recovered is $0.55$ (Bouncer recovers to the \emph{fallback} floor, not to
-clean---the attack genuinely removed $C$'s value), the clean tax is $0.9965$
-(above the $0.99$ target; the tax is exactly the $n_F$ Leader-F sets that
-permanently run $\pizero$), and the bottom panel shows cumulative regret going
-\emph{negative} (Bouncer beats the floor by capturing $C$'s upside when trusted)
-while never approaching the \Cref{lem:floor} ceiling.
+violation is $0.63\%$, and \Cref{lem:floor} now \emph{predicts} it: the audit-exposure
+term is exactly the Leader-L sets that keep running $C$ under attack, so the floor sits at
+$\phi_G(q_0-\mu_C^{att})\,\mathrm{slope}/\mathrm{IPC}_{\pizero}=0.58\%$, rising to $0.65\%$
+once the GATED/PROBING duty is blended (a $1.76\%$ effective exposure), bracketing the
+measured $0.639\%$. The only larger excursion is the lone pre-detection window, which dips
+$36\%$ below the floor: exactly the bounded $\le D\rmax$ term of \Cref{lem:floor}, and the
+price of a one-window detection delay. Performance recovered is $0.55$ (Bouncer recovers to
+the \emph{fallback} floor, not to clean, since the attack genuinely removed $C$'s value), the
+clean tax is $0.9965$ (above the $0.99$ target; the tax is exactly the $n_F$ Leader-F sets
+that permanently run $\pizero$), and the bottom panel shows cumulative regret going
+\emph{negative} (Bouncer beats the floor by capturing $C$'s upside when trusted), the measured
+worst-case positive excursion staying under the corrected three-term loose bound of
+\Cref{lem:floor} ($12.4$ IPC$\cdot$win). Parking the Leader-L sets on $\pizero$ during GATED
+would zero the exposure term but blind the \emph{measured} re-trust PROBING relies on; we keep
+the auditable design and pay the predicted $0.63\%$.
 
 \begin{figure}[t]\centering
 \includegraphics[width=\columnwidth]{p1_safety_floor.pdf}
@@ -885,14 +913,16 @@ covering the small-drift, heavy-overshoot regime where the $1.166$ correction
 matters; the deployed detector runs in the opposite, strong-drift regime
 ($(K-\Delta)/\sigd\!\approx\!28$ at $n_L{=}32$), where the delay collapses to the
 deterministic limit $D\!\approx\!H/(K-\Delta)$ and $\mathrm{ARL}_0$ is
-astronomically large (so $\alpha\!\approx\!0$). \Cref{fig:theory}(b) overlays both the
-\emph{loose} \Cref{lem:floor} bound $N_{ep}D\rmax$ and a \emph{tight} version that
-charges the realized gap $q_0-\mu_C^{\text{att}}$---for $D$ pre-detection windows
-of full-resource degradation plus the steady-state $n_L/n_{sets}$ Leader-L cost
-over the rest of the attack---on the measured worst-case cumulative regret
-($\alpha T c_{sw}\!\approx\!0$ here). Both envelope the measurement at
-$N_{ep}{=}6$: loose $15.1$, tight $7.8$, measured $5.9$ IPC$\cdot$win; the tight
-bound hugs the data while remaining an upper bound.
+astronomically large (so $\alpha\!\approx\!0$). \Cref{fig:theory}(b) has two panels. Panel~(a) sweeps $N_{ep}$ at short attacks
+($L_{att}{=}60$): the old two-term $N_{ep}D\rmax$, the corrected three-term loose, and the
+\emph{tight} form (realized gap $q_0-\mu_C^{att}$ with $\phi_G$/$\phi_P$ occupancy) all
+envelope the measured worst-case positive regret ($\alpha T c_{sw}\!\approx\!0$ here); at
+$N_{ep}{=}6$ the two-term reads $15.1$, tight $7.8$, measured $5.9$ IPC$\cdot$win, the tight
+bound hugging the data. Panel~(b) sweeps the attack length $L_{att}$: because the
+audit-exposure regret grows linearly in $L_{att}$ while the two-term $N_{ep}D\rmax$ is
+constant, the two-term is \emph{violated} for long attacks (measured $25.8$ vs two-term $7.6$
+at $L_{att}{=}960$), whereas the corrected three-term of \Cref{lem:floor} continues to
+envelope. The tight form is thus a corollary of the corrected lemma, not a separate accounting.
 
 \begin{figure}[t]\centering
 \begin{subfigure}{\columnwidth}\includegraphics[width=\linewidth]{th_arl.pdf}\caption{}\end{subfigure}\\
@@ -1128,8 +1158,8 @@ cache is set-local yet \emph{stateful}, so the secret reseed that buys mimicry
 resistance confounds its per-window measurement---a secrecy/measurability tension a
 (near-)\emph{stateless} reward resolves (\Cref{rem:stateless}). For the set-local class: by repurposing
 the set-dueling substrate into a \emph{secret} competence audit, gating an
-expensive confirmer behind cheap tripwires, and proving a safety floor tied
-directly to the CUSUM constants, then---for declared domains audited at resolution
+expensive confirmer behind cheap tripwires, and proving a three-term safety floor
+(detection, audit-exposure, and false-alarm) tied to the CUSUM constants, then---for declared domains audited at resolution
 $\delta_R^{\min}(B)$ with the secret intact---Bouncer caps the worst-case
 \emph{competence} (in the controller's own reward) at its vetted fallback, under
 benign drift and an adaptive mimicry adversary alike, for $\sim\!336$\,bytes and

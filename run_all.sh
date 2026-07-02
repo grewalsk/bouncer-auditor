@@ -17,6 +17,8 @@ echo "==> [5/8] P4  mimicry survival + secrecy ablation (headline)"
 python3 experiments/exp_p4_mimicry.py
 echo "==> [6/8] Theory  ARL + regret-bound validation"
 python3 experiments/exp_theory.py
+echo "==> [6-floor] Lemma 1 long-attack regression (corrected three-term bound)"
+python3 experiments/exp_floor_longattack.py
 
 echo "==> [6a] multi-seed confidence intervals"
 python3 experiments/exp_ci.py

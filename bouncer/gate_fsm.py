@@ -8,7 +8,9 @@ TRUSTED : C active everywhere. Tier-A on; Tier-B on slow background duty cycle.
 SUSPECT : C still active. Tier-B duty cycle UP (more dueling sets / shorter W).
             Tier-B Δ̂ CUSUM fires (Δ̂<τ)       -> GATED
             Tier-A clears for T_clear         -> TRUSTED
-GATED   : pi0 active everywhere. Online learning FROZEN. Optional throttle.
+GATED   : pi0 on followers + Leader-F; the n_L Leader-C sets KEEP running C so Δ̂
+            stays measurable (fixed leaders, simulate.py:82). Online learning FROZEN.
+            This audit exposure is the phi_G term of the Lemma 1 safety floor.
             after dwell T_dwell               -> PROBING
 PROBING : C re-enabled on a small audited region; Tier-B measures Δ̂ there.
             Δ̂ >= τ + Δ_hys for T_reprobe      -> TRUSTED

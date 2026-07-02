@@ -7,7 +7,11 @@
   "floor_violation_steady": 0.006327516479130348,
   "retrust_latency": 14.0,
   "cumulative_regret_final": -70.30955047607421,
-  "lemma_bound_ipc": 2.5225225225225225,
+  "lemma_bound_ipc": 12.388147522522523,
+  "lemma_two_term_ipc": 2.5225225225225225,
+  "T_att": 110,
+  "phi_G": 0.015625,
+  "phi_P": 0.0640625,
   "D": 1.801801801801802,
   "alpha": 1e-18,
   "sigma_delta": 0.015625

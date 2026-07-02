@@ -63,14 +63,16 @@
     },
     {
       "id": "C_floor",
-      "text": "Bounded-regret safety floor (Lemma 1), tied to CUSUM ARL constants",
+      "text": "Three-term bounded-regret safety floor (Lemma 1, RESTATED TMLR-R1: detection + audit-exposure phi_P*T_att*r_max + false-alarm). The old two-term bound was FALSE for the released system (Leader-C runs C in every gate state); corrected bound envelopes and PREDICTS the 0.63% floor.",
       "asserted_strength": 2,
       "defended_strength": 2,
       "reproduced": true,
       "sentence_refs": [
-        "bouncer.tex:425 (lem:floor)",
-        "results/p1.json",
-        "results/theory.json (loose15.1/tight7.8/measured5.9)"
+        "bouncer.tex:lem:floor (three-term)",
+        "results/p1.json (corrected loose 12.4)",
+        "results/theory.json (short 15.1/7.8/5.9 + L_att sweep)",
+        "results/floor_longattack.json (regression: measured 11.9 <= tight 12.3 <= loose 123.6)",
+        "experiments/exp_floor_longattack.py"
       ],
       "overclaim": false,
       "thesis_required_strength": 2
@@ -237,7 +239,9 @@
     "sweep2 (verify): thesis-coherence critic -> THESIS_COHERENT_GREEN (thesis consistent across abstract/intro/conclusion; INV-4 discharge table honest; INV-5 no retreat; abstract split exact)",
     "FIXPOINT: thesis_fingerprint stable; Gate R green; INV-1..5 green; FOCUS_SHEET.md on disk -> focused=true. HALT.",
     "flagged for human: (i) 3 family-B bib entries need metadata verification; (ii) results/adversarial_review.json is a STALE review of a superseded draft -> delete/date; (iii) e3_sensitivity.json internal 'scope' string still self-contradicts its flat data (paper does NOT inherit it) -> optional cleanup; (iv) R-latency queued optional",
-    "odds corrected: DISAGGREGATED per user - TMLR 55-65% (significance bar removed), MLSys ~30% (systems missing-win bar persists, groups with HPCA), HPCA/ISCA 20-25%. Prior report wrongly lumped MLSys up with TMLR."
+    "odds corrected: DISAGGREGATED per user - TMLR 55-65% (significance bar removed), MLSys ~30% (systems missing-win bar persists, groups with HPCA), HPCA/ISCA 20-25%. Prior report wrongly lumped MLSys up with TMLR.",
+    "TMLR-R1 Phase 0 (G0): reproduced reviewer counterexample to two-term Lemma 1 (measured 11.9 vs bound 2.52, T=1400); pre_r1.sha256 manifest; results match committed.",
+    "TMLR-R1 Phase 1: Lemma 1 RESTATED as three-term (audit-exposure phi_P*T_att*r_max) to match the system (Leader-C fixed, simulate.py:82). Proof repaired (bucket i no longer zero; +PROBING bucket). Reframed as strength: exposure term predicts steady floor 0.58-0.65% bracketing measured 0.639%. Edited abstract/contrib4/\u00a73-GATED/P1/theory/conclusion + theory.py & gate_fsm.py docstrings + LEMMA1.md (fixed false 'bouncer.py routes pi0' anchor -> simulate.py:82). New regression exp_floor_longattack.py + results/floor_longattack.json; exp_theory L_att sweep (two-term breaks at L_att=960: 25.8 vs 7.6); exp_p1_floor bound line -> corrected 12.4. Protected 15.1/7.8/5.9 + P1 0.639%/lat1/tax0.99653 survive."
   ],
   "revised_odds_guess": {
     "TMLR": "55-65% (fixes are load-bearing here: removes the significance/missing-win bar; genuine strength-3 characterization + reproduced mechanism + zero claim/evidence gaps)",
