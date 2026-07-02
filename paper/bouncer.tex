@@ -1,4 +1,5 @@
-\documentclass[conference,10pt]{IEEEtran}
+\documentclass{article}
+\usepackage{tmlr}
 \usepackage[utf8]{inputenc}
 \usepackage{amsmath,amssymb,amsthm}
 \usepackage{graphicx}
@@ -7,7 +8,6 @@
 \usepackage{algorithm}
 \usepackage{algpseudocode}
 \usepackage{xcolor}
-\usepackage{balance}
 \usepackage[hidelinks]{hyperref}
 \usepackage{cleveref}
 
@@ -29,8 +29,7 @@
 
 \title{Bouncer: Competence Auditing for\\ Set-Local Learned Microarchitectural Controllers}
 
-\author{\IEEEauthorblockN{Anonymous Submission}
-\IEEEauthorblockA{Paper \#---\quad MLSys Submission}}
+\author{Anonymous authors}
 
 \maketitle
 
@@ -1192,6 +1191,32 @@ not unconditional: we show it is purchased exactly by the secrecy of the dueling
 sets, quantify the price of losing it, and name the sub-resolution slow-bleed
 adversary outside the audited domain as a real, un-closed vulnerability.
 
+\section*{Broader Impact}
+Bouncer is a defensive runtime monitor: it caps the worst-case competence cost of a learned
+microarchitectural controller at a vetted fallback, which serves a co-tenant denial-of-service
+defense role in shared clouds. Two dual-use considerations. First, the secrecy of the reseeded
+dueling assignment is what defeats input mimicry; the same primitive could gate a shared
+controller for censorship-style control, but the mimicry analysis (\Cref{prop:mimicry}) also
+bounds what such gating can hide, since a global $\dhat$ cannot conceal a redistributive harm
+from a per-domain audit. Second, we publish the sub-resolution slow-bleed coverage hole
+(\Cref{fig:hole}) rather than hide it: naming the resolution floor
+$\delta_R^{\min}(B)\propto 1/\sqrt{B}$ lets defenders budget leader counts against a target harm
+rate, which we judge net beneficial because the attack is derivable from the public
+concentration bound regardless. Online-weight poisoning is out of scope and stated as such
+(\Cref{sec:threat}).
+
+\section*{Reproducibility Statement}
+All synthetic results, figures, and this PDF regenerate deterministically via
+\texttt{./run\_all.sh} (Python 3.12, seeded RNG); \texttt{scripts/check\_paper\_numbers.py}
+(\texttt{run\_all} stage 9) asserts every headline numeral against the released
+\texttt{results/*.json}, and \texttt{hardening/manifests/} pins pre and post sha256 manifests
+for byte-identical regeneration. The real ChampSim studies reproduce via
+\texttt{champsim\_plugin/setup\_champsim.sh} (prefetcher floor) and
+\texttt{champsim\_plugin/run\_e1\_replacement.sh} (replacement boundary). The corrected
+\Cref{lem:floor} bound has a standalone regression,
+\texttt{experiments/exp\_floor\_longattack.py}, that reproduces the audit-exposure
+counterexample and verifies the three-term envelope.
+
 \section*{Artifact Appendix}
 The full artifact is released: the auditor and environment
 (\texttt{bouncer/}), one script per evaluation phase (\texttt{experiments/}),
@@ -1209,8 +1234,7 @@ reproduces the \Cref{sec:eval-champsim} replacement boundary study
 (\Cref{fig:e1repl}) on \texttt{623.xalancbmk} (C++17 toolchain + vcpkg). The standalone auditor additionally builds with
 \texttt{c++ -std=c++17 bouncer.cc -o bouncer\_selftest}.
 
-\balance
-\bibliographystyle{IEEEtran}
+\bibliographystyle{tmlr}
 \bibliography{references}
 
 \end{document}
