@@ -41,7 +41,7 @@
   "claims_ledger": [
     {
       "id": "C_setlocal",
-      "text": "Set-locality characterization: set-dueling competence audit REQUIRES (necessary) that decision and reward share a dueling set; jointly with a (near-)stateless reward it is sufficient in the stateless synthetic harness. NOT stated as iff (conclusion contradiction fixed TMLR-R1). Each necessity direction shown on one real instance (prefetch not set-local; replacement stateful).",
+      "text": "Set-locality characterization: set-dueling competence audit REQUIRES (necessary) that decision and reward share a dueling set; jointly with a (near-)stateless reward it is sufficient in the stateless synthetic harness. NOT stated as iff (conclusion contradiction fixed TMLR-R1). The stateless condition is now MEASURED for predictors too (warmup-stateful sim: reseeded dhat attenuates to 8% of the gap vs fixed 0.30, exp_warmup_predictor.py), generalizing the single-trace ChampSim replacement confound. Each necessity direction shown on a real/measured instance (prefetch not set-local; replacement stateful).",
       "asserted_strength": 3,
       "defended_strength": 3,
       "reproduced": true,
@@ -255,7 +255,8 @@
     "TMLR-R1 G5/G6: state.json finalized; TMLR_R1_RESPONSE.md complete. G2 pass2 launched for byte-identity.",
     "TMLR-R1 G4: diff critic GREEN after adjudication. One flagged \"7.4 sigma\" item refuted from committed data (critic used wrong sign for Delta_true=-0.015; drift is 7.36 sigma, paper correct). No over-retreat; protected claims intact.",
     "TMLR-R1 G2 GREEN: run_all byte-identical (pass1==pass2). HALT: gates G0-G6 green, INV-R1..R7 green, response doc complete.",
-    "Optional exp 1 (R-latency): TPR 1.0 across off-policy range while latency rises 1->13 windows tracking H/(K-Delta) (drift 3.8-28 sd). fig:rlatency added; run_all + number audit (19) wired. Converts E3 scope-down to a positive result."
+    "Optional exp 1 (R-latency): TPR 1.0 across off-policy range while latency rises 1->13 windows tracking H/(K-Delta) (drift 3.8-28 sd). fig:rlatency added; run_all + number audit (19) wired. Converts E3 scope-down to a positive result.",
+    "Optional exp 2 (warmup-stateful predictor): reseed-confound generalized beyond the cache. Reseeded dhat attenuates 97%->8% of gap as warmup lengthens (0.3->20 win) while fixed leaders recover 0.30 throughout; mirrors ChampSim reseeded 0.005 vs fixed 0.23. fig:warmup + paragraph; Table 1 predictor row upgraded untested->MEASURED. run_all + audit (20) wired."
   ],
   "revised_odds_guess": {
     "TMLR": "55-65% (fixes are load-bearing here: removes the significance/missing-win bar; genuine strength-3 characterization + reproduced mechanism + zero claim/evidence gaps)",

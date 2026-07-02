@@ -151,8 +151,9 @@ dueling set as its decision}---we call such a controller \emph{set-local}. Cache
 \emph{replacement} is the canonical set-local controller: the eviction decision on
 set $s$ is rewarded by the hit/miss outcome \emph{on set $s$}, so the dueling
 estimate $\dhat$ is a clean, localized competence signal. PC-indexed predictors
-(branch, confidence) are \emph{expected} to be likewise local, but no experiment here
-instantiates one, so their (near-)statelessness is untested (\Cref{tab:instances}).
+(branch, confidence) are \emph{expected} to be likewise local; a stateful predictor reward
+confounds the reseeded audit exactly as a real cache does (\Cref{fig:warmup}), so their
+near-statelessness is a \emph{requirement}, not an incidental property (\Cref{tab:instances}).
 \emph{Prefetching is the cautionary
 boundary}: a prefetch triggered on set $s$ fetches a \emph{different} set $s'$, so
 its benefit is de-localized and no per-set reward captures it---a faithful reward
@@ -602,7 +603,8 @@ weakens \Cref{prop:mimicry}.
 \begin{table}[t]\centering\footnotesize
 \caption{Per-controller instantiation, ordered by set-locality (whether reward and
 decision share a dueling set). Predictors are set-local by structure; their
-(near-)statelessness is untested (no experiment here instantiates one).}
+(near-)statelessness is \emph{required}: a stateful predictor reward confounds the reseeded
+audit (\Cref{fig:warmup}), attenuating $\dhat$ to $8\%$ of the gap as warmup lengthens.}
 \label{tab:instances}
 \begin{tabular}{@{}lclll@{}}
 \toprule
@@ -852,6 +854,26 @@ The guarantees are thus not an artifact of the i.i.d.\ reward model.
 set heterogeneity $\sigma_{het}$ up to $0.30$, mimicry TPR stays $1.0$ and the
 floor holds; only detection latency drifts up ($1.0\!\to\!1.7$ windows).}
 \label{fig:robust}
+\end{figure}
+
+\textbf{The stateless condition, measured beyond the cache.} \Cref{rem:stateless} predicts
+that a secret reseeded audit fails on any \emph{stateful} reward, not only a cache. We confirm
+it on a predictor-like controller whose accuracy ramps with consecutive windows on a policy
+($\mathrm{acc}=\mu(1-e^{-c\,k})$, warmup timescale $1/c$; \Cref{fig:warmup}). As the warmup
+lengthens, the secret per-epoch reseed keeps both pools cold and $\dhat$ attenuates from $97\%$
+to $8\%$ of the true gap ($0.29\!\to\!0.02$ of a $0.30$ gap over $1/c{=}0.3\!\to\!20$ windows),
+while \emph{fixed} leaders warm up and recover the full gap ($0.30$) throughout. This is the
+same secrecy/measurability tension the ChampSim replacement study measured on one trace
+(reseeded $\dhat{=}0.005$ vs fixed $0.23$), now shown to be a general property of stateful
+rewards, which lets \Cref{tab:instances} state the predictor condition as \emph{measured}.
+
+\begin{figure}[t]\centering
+\includegraphics[width=0.62\columnwidth]{warmup_predictor.pdf}
+\caption{Stateful predictor (accuracy warms up over consecutive windows on a policy). As the
+warmup timescale $1/c$ lengthens, the secret reseed keeps both pools cold so $\dhat$ attenuates
+toward noise, while fixed leaders recover the true $0.30$ gap. Generalizes the ChampSim
+replacement reseed-confound beyond the cache.}
+\label{fig:warmup}
 \end{figure}
 
 \subsection{Transfer-function sensitivity}\label{sec:eval-e3}

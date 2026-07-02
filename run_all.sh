@@ -32,6 +32,8 @@ echo "==> [6c3] E3 transfer-function sensitivity sweep"
 python3 experiments/exp_e3_sensitivity.py
 echo "==> [6c4] R-latency (detection latency vs gap; positive form of E3)"
 python3 experiments/exp_rlatency.py
+echo "==> [6c5] warmup-stateful predictor (generalizes the reseed-confound)"
+python3 experiments/exp_warmup_predictor.py
 echo "==> [6d] ChampSim real-systems figures (prefetcher suite + replacement boundary)"
 python3 experiments/exp_champsim_fig.py
 python3 experiments/exp_e1_fig.py   # reads committed results/champsim_e1/ logs

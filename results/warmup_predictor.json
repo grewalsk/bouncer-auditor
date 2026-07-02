@@ -1,0 +1,66 @@
+{
+  "note": "Stateful predictor-like reward (accuracy ramps with consecutive windows on a policy). As the warmup timescale 1/c lengthens, the secret per-epoch reseed keeps both pools cold so reseeded Delta-hat attenuates toward noise, while FIXED leaders warm up and recover the true gap. Generalizes the ChampSim replacement reseed-confound (single trace) to PC-indexed predictors: set-locality is necessary but not sufficient; a near-stateless reward is also required.",
+  "mu_C": 0.8,
+  "mu_F": 0.5,
+  "gap": 0.30000000000000004,
+  "cells": [
+    {
+      "c": 3.0,
+      "warmup_windows": 0.3,
+      "reseeded_dhat": 0.2906635284423828,
+      "reseeded_std": 0.0010816845010113664,
+      "fixed_dhat": 0.2996177673339844,
+      "fixed_std": 0.0009106669154752563,
+      "attenuation": 0.9701144595953808
+    },
+    {
+      "c": 1.0,
+      "warmup_windows": 1.0,
+      "reseeded_dhat": 0.22201919555664062,
+      "reseeded_std": 0.002014565715996101,
+      "fixed_dhat": 0.3000335693359375,
+      "fixed_std": 0.0009657306764547144,
+      "attenuation": 0.7399811829324111
+    },
+    {
+      "c": 0.5,
+      "warmup_windows": 2.0,
+      "reseeded_dhat": 0.15512466430664062,
+      "reseeded_std": 0.0031077017006258863,
+      "fixed_dhat": 0.29985809326171875,
+      "fixed_std": 0.0010933036830220366,
+      "attenuation": 0.5173269216090375
+    },
+    {
+      "c": 0.2,
+      "warmup_windows": 5.0,
+      "reseeded_dhat": 0.07942237854003906,
+      "reseeded_std": 0.0014007804698238507,
+      "fixed_dhat": 0.3000175476074219,
+      "fixed_std": 0.0011202463704939498,
+      "attenuation": 0.2647257774534062
+    },
+    {
+      "c": 0.1,
+      "warmup_windows": 10.0,
+      "reseeded_dhat": 0.044105148315429686,
+      "reseeded_std": 0.0007655897836407553,
+      "fixed_dhat": 0.30048828125000004,
+      "fixed_std": 0.0005880160023772747,
+      "attenuation": 0.14677826413714654
+    },
+    {
+      "c": 0.05,
+      "warmup_windows": 20.0,
+      "reseeded_dhat": 0.023183059692382817,
+      "reseeded_std": 0.000505137222419806,
+      "fixed_dhat": 0.29876861572265623,
+      "fixed_std": 0.0007086832836369554,
+      "attenuation": 0.07759536468148785
+    }
+  ],
+  "invariants": {
+    "fixed_recovers_gap_at_slow_warmup": true,
+    "reseeded_attenuates_at_slow_warmup": true
+  }
+}

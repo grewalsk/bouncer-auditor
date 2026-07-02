@@ -35,6 +35,7 @@ def main():
     e1, e3, cs = load("e1_keystone.json"), load("e3_sensitivity.json"), load("champsim.json")
     fla = load("floor_longattack.json")
     rl = load("rlatency.json")
+    wp = load("warmup_predictor.json")
 
     # each check: (label, list of literal strings that MUST appear in the tex, provenance)
     checks = []
@@ -69,6 +70,8 @@ def main():
     chk("E3 clean-tax range 0.16-0.51%", [f"{tax_lo:.2f}", f"{tax_hi:.2f}"], f"e3_sensitivity.json tax {tax_lo:.2f}-{tax_hi:.2f}%")
     rl_drift = [c["drift_sigma"] for c in rl["cells"]]
     chk("R-latency drift range 3.8-28sd", [f"{min(rl_drift):.1f}"], f"rlatency.json drift {min(rl_drift):.1f}-{max(rl_drift):.0f} sd, TPR all 1.0")
+    att = [round(c["attenuation"] * 100) for c in wp["cells"]]
+    chk("warmup reseed confound 97->8pct", [str(max(att)), str(min(att))], f"warmup_predictor.json reseeded attenuation {max(att)}%->{min(att)}% of gap; fixed recovers 0.30")
 
     # --- E1 keystone (means are PROTECTED) ---
     chk("E1 whole-cache 33.6% vs 4.8%",
