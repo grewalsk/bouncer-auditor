@@ -1,5 +1,5 @@
 {
-  "loop": "FOCUS",
+  "loop": "TMLR-R1",
   "focused": true,
   "thesis": "Set-locality --- a learned microarchitectural controller's reward being attributable to the same dueling set as its decision --- is the condition under which secret reseeded set-dueling gives a counterfactual-free, label-free realized-competence audit that caps the controller to its vetted fallback under benign drift and adaptive mimicry; we prove this, prove and validate in a stateless synthetic runtime-assurance harness that the resulting bounded-regret floor and secrecy-purchased mimicry resistance hold (floor within 0.63%, clean tax 0.35%, mimicry TPR 1.0 vs input-OOD 0.0), and show on real ChampSim/SPEC that set-locality is necessary but not sufficient because the two canonical controllers each break one condition --- prefetching is not set-local (its de-localized benefit over-gates a helpful prefetcher, and the controller's own reward does not fix it) and cache replacement is set-local but stateful (the secret per-epoch reseed that buys mimicry resistance confounds its per-window estimate) --- so a faithful audit additionally requires a near-stateless reward.",
   "thesis_fingerprint": "8c36d05576833603",
@@ -30,7 +30,12 @@
     "C_overclaim": "PASS (17 confirmed overclaims reduced + 3 missed fixed; 3 already-scoped left; INV-1 green)",
     "E_evidence": "PASS (all thesis-required claims reproduced at needed strength; R-latency queued OPTIONAL, thesis does not need it)",
     "FOCUSED_adjudication": "GREEN (2 independent critics): overclaim-residual critic found 1 missed bald '0 ns added' @711 -> FIXED -> INV1 green; thesis-coherence critic -> THESIS_COHERENT_GREEN (INV-3/4/5)",
-    "G1_lemma1": "GREEN (independent hostile critic): corrected 3-term bound re-derives from code; no counterexample survives ~45 attack configs (probing-exploit 54.9<tight117<loose386); regressions pass; INV-R4 5-site consistent; protected numbers intact."
+    "G1_lemma1": "GREEN (independent hostile critic; corrected 3-term bound; no counterexample survives)",
+    "G0_reproduce": "GREEN (counterexample reproduced 11.9 vs 2.52; pre_r1 manifest matches committed)",
+    "G2_determinism": "GREEN: run_all byte-identical across pass1/pass2 for all 20 regenerated artifacts (only diff = the intended final_review.json deletion). pre_r1/post_r1 manifests committed.",
+    "G3_greps": "GREEN (0.49--0.52, MLSys, 'exactly when', gg-sigd/>>sigma, '0 ns' artifact, kabir all empty)",
+    "G6_response": "GREEN (hardening/TMLR_R1_RESPONSE.md maps every Critical+Minor to commit+edit+evidence)",
+    "G4_diff_critic": "GREEN (adjudicated): the single flagged item (drift 7.4 vs 5.44 at the smallest E3 gap) is a CRITIC SIGN ERROR, not a paper defect: the smallest tested Delta_true=-0.015 (a drop below zero), so drift =(K-Delta)/sigma=(0.10+0.015)/0.015625=7.36~=7.4 sigma (verified from e3_sensitivity.json). Paper 7.4 is CORRECT (NOT changed). G4 confirmed no over-retreat, all PROTECTED claims intact, and every new Lemma/E3 claim sound."
   },
   "gap": 0,
   "claims_ledger": [
@@ -244,12 +249,35 @@
     "TMLR-R1 Phase 1: Lemma 1 RESTATED as three-term (audit-exposure phi_P*T_att*r_max) to match the system (Leader-C fixed, simulate.py:82). Proof repaired (bucket i no longer zero; +PROBING bucket). Reframed as strength: exposure term predicts steady floor 0.58-0.65% bracketing measured 0.639%. Edited abstract/contrib4/\u00a73-GATED/P1/theory/conclusion + theory.py & gate_fsm.py docstrings + LEMMA1.md (fixed false 'bouncer.py routes pi0' anchor -> simulate.py:82). New regression exp_floor_longattack.py + results/floor_longattack.json; exp_theory L_att sweep (two-term breaks at L_att=960: 25.8 vs 7.6); exp_p1_floor bound line -> corrected 12.4. Protected 15.1/7.8/5.9 + P1 0.639%/lat1/tax0.99653 survive.",
     "TMLR-R1 Phase 2: E3 numeric truths. Tax range 0.49-0.52% -> 0.16-0.51% (from JSON). Removed '|Delta|=0.015>>sigma_Delta' from all 4 paper sites + exp_e3_sensitivity.py comment+scope. Reframed detection power as DRIFT-SNR (K-Delta>=3.2 sigma for any off-policy gap => TPR~1; latency D=H/(K-Delta) is what varies); flat TPR now consistent, not a retreat. C_detectpower promoted from REDUCED to correctly-characterized.",
     "TMLR-R1 G1 GREEN: hostile critic verified corrected Lemma 1 (re-derivation, counterexample battery, INV-R4, protected numbers). Phase 1 gate passed.",
-    "TMLR-R1 Phase 3 (scope): conclusion iff -> necessity (two-condition, no self-contradiction); PC-indexed predictors scoped to \"expected set-local, statelessness untested\" (abstract/setting/Table1 caption); P4 0/40 marked definitional (suppress_features); Prop 1 (Sec. below) dangling ref fixed + beta framed as explicit assumption w/ sigma_het proxy; conclusion latency +(analytical)."
+    "TMLR-R1 Phase 3 (scope): conclusion iff -> necessity (two-condition, no self-contradiction); PC-indexed predictors scoped to \"expected set-local, statelessness untested\" (abstract/setting/Table1 caption); P4 0/40 marked definitional (suppress_features); Prop 1 (Sec. below) dangling ref fixed + beta framed as explicit assumption w/ sigma_het proxy; conclusion latency +(analytical).",
+    "TMLR-R1 Phase 5: format -> TMLR (article+tmlr.sty, natbib, anonymous, Broader Impact + Reproducibility). Compiles 28pp, 0 undefined.",
+    "TMLR-R1 G3 GREEN: all grep assertions empty. final_review.json deleted (stale, validated false Lemma).",
+    "TMLR-R1 G5/G6: state.json finalized; TMLR_R1_RESPONSE.md complete. G2 pass2 launched for byte-identity.",
+    "TMLR-R1 G4: diff critic GREEN after adjudication. One flagged \"7.4 sigma\" item refuted from committed data (critic used wrong sign for Delta_true=-0.015; drift is 7.36 sigma, paper correct). No over-retreat; protected claims intact.",
+    "TMLR-R1 G2 GREEN: run_all byte-identical (pass1==pass2). HALT: gates G0-G6 green, INV-R1..R7 green, response doc complete."
   ],
   "revised_odds_guess": {
     "TMLR": "55-65% (fixes are load-bearing here: removes the significance/missing-win bar; genuine strength-3 characterization + reproduced mechanism + zero claim/evidence gaps)",
     "MLSys": "~30% (fixes help the claim/evidence story but the systems-venue missing-real-win objection persists; FOCUS forced no RUN, KEYSTONE_REAL still false)",
     "HPCA_ISCA": "20-25% unchanged (needs a real-silicon upside win that KEYSTONE_REAL=false denies)",
     "caveat": "subjective estimate; MLSys must NOT be lumped with TMLR - it carries the systems missing-win bar"
-  }
+  },
+  "invariants_R": {
+    "INV-R1_no_overclaim": "GREEN (scripts/check_paper_numbers.py 18/18, run_all stage 9)",
+    "INV-R2_byte_identical": "GREEN (pass1==pass2 for regenerated artifacts)",
+    "INV-R3_no_over_retreat": "GREEN (all PROTECTED CLAIMS intact, G1-verified)",
+    "INV-R4_gated_semantics": "GREEN (5 sites consistent, G1-verified)",
+    "INV-R5_anonymity": "GREEN (grep -i kabir over tracked = empty; repo URL flagged for mirror)",
+    "INV-R6_format": "GREEN (compiles under tmlr.sty, 28pp, 0 undefined)",
+    "INV-R7_no_em_dash": "GREEN (all new/rewritten prose em-dash-free)"
+  },
+  "criticals_resolved": {
+    "C1_lemma1_false": "391d2a1 (three-term restatement, G1 GREEN)",
+    "C2_e3_tax_range": "573a7bb (0.49-0.52% -> 0.16-0.51%)",
+    "C3_e3_sigma_conflation": "573a7bb (drift-SNR reframe)",
+    "C4_conclusion_iff": "c8a9acc (iff -> necessity)",
+    "C5_pc_predictors": "c8a9acc (expected set-local, statelessness untested)"
+  },
+  "revised_odds_tmlr_r1": "TMLR ~75-85% post-fix (a guess): the one reject-grade defect (Lemma 1) is corrected and independently verified, all four smaller claim/evidence defects scoped to evidence, number audit + byte-identical repro institutionalized, format valid. Claims-and-Evidence should flip No->Yes; Audience already Yes. Residual: single-trace real boundary and the named coverage hole remain honest limitations (TMLR does not grade on the missing real win). Explicitly a subjective estimate.",
+  "halted": true
 }
