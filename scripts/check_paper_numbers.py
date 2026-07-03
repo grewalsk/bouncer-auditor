@@ -54,7 +54,7 @@ def main():
     chk("exposure fraction phi_G=1.56%", "1.56", "phi_G=n_L/n_sets")
     chk("exposure fraction phi_P=6.4%", "6.4", "phi_P")
     chk("P1 corrected 3-term loose 12.4", "12.4", f"p1.json lemma_bound_ipc={p1['lemma_bound_ipc']:.2f}")
-    chk("floor prediction 0.58% / 0.65% / 1.76%", ["0.58", "0.65", "1.76"], "phi_G/blended exposure predicts 0.639%")
+    chk("floor prediction mean 0.579 vs 0.581", ["0.579", "0.581"], "phi_G design constant predicts the MEAN attacked-GATED floor (0.63% is the worst window)")
 
     # --- Theory (protected) ---
     chk("theory loose/tight/measured 15.1/7.8/5.9",

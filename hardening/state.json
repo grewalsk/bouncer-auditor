@@ -33,7 +33,7 @@
     "G1_lemma1": "GREEN (independent hostile critic; corrected 3-term bound; no counterexample survives)",
     "G0_reproduce": "GREEN (counterexample reproduced 11.9 vs 2.52; pre_r1 manifest matches committed)",
     "G2_determinism": "GREEN: run_all byte-identical across pass1/pass2 for all 20 regenerated artifacts (only diff = the intended final_review.json deletion). pre_r1/post_r1 manifests committed.",
-    "G3_greps": "GREEN (0.49--0.52, MLSys, 'exactly when', gg-sigd/>>sigma, '0 ns' artifact, kabir all empty)",
+    "G3_greps": "GREEN (0.49--0.52, MLSys, 'exactly when', gg-sigd/>>sigma, '0 ns' artifact, author-name grep all empty)",
     "G6_response": "GREEN (hardening/TMLR_R1_RESPONSE.md maps every Critical+Minor to commit+edit+evidence)",
     "G4_diff_critic": "GREEN (adjudicated): the single flagged item (drift 7.4 vs 5.44 at the smallest E3 gap) is a CRITIC SIGN ERROR, not a paper defect: the smallest tested Delta_true=-0.015 (a drop below zero), so drift =(K-Delta)/sigma=(0.10+0.015)/0.015625=7.36~=7.4 sigma (verified from e3_sensitivity.json). Paper 7.4 is CORRECT (NOT changed). G4 confirmed no over-retreat, all PROTECTED claims intact, and every new Lemma/E3 claim sound."
   },
@@ -41,7 +41,7 @@
   "claims_ledger": [
     {
       "id": "C_setlocal",
-      "text": "Set-locality characterization: set-dueling competence audit REQUIRES (necessary) that decision and reward share a dueling set; jointly with a (near-)stateless reward it is sufficient in the stateless synthetic harness. NOT stated as iff (conclusion contradiction fixed TMLR-R1). The stateless condition is now MEASURED for predictors too (warmup-stateful sim: reseeded dhat attenuates to 8% of the gap vs fixed 0.30, exp_warmup_predictor.py), generalizing the single-trace ChampSim replacement confound. Each necessity direction shown on a real/measured instance (prefetch not set-local; replacement stateful).",
+      "text": "Set-locality characterization: set-dueling competence audit REQUIRES (necessary) that decision and reward share a dueling set; jointly with a (near-)stateless reward it is sufficient in the stateless synthetic harness. NOT stated as iff (conclusion contradiction fixed TMLR-R1). The stateless condition is demonstrated for a SYNTHETIC stateful-predictor model (reseeded dhat attenuates to 8% of gap vs fixed 0.30, exp_warmup_predictor.py); real PC-indexed predictor statelessness remains untested. Each necessity direction shown on a real/measured instance (prefetch not set-local; replacement stateful).",
       "asserted_strength": 3,
       "defended_strength": 3,
       "reproduced": true,
@@ -250,13 +250,14 @@
     "TMLR-R1 Phase 2: E3 numeric truths. Tax range 0.49-0.52% -> 0.16-0.51% (from JSON). Removed '|Delta|=0.015>>sigma_Delta' from all 4 paper sites + exp_e3_sensitivity.py comment+scope. Reframed detection power as DRIFT-SNR (K-Delta>=3.2 sigma for any off-policy gap => TPR~1; latency D=H/(K-Delta) is what varies); flat TPR now consistent, not a retreat. C_detectpower promoted from REDUCED to correctly-characterized.",
     "TMLR-R1 G1 GREEN: hostile critic verified corrected Lemma 1 (re-derivation, counterexample battery, INV-R4, protected numbers). Phase 1 gate passed.",
     "TMLR-R1 Phase 3 (scope): conclusion iff -> necessity (two-condition, no self-contradiction); PC-indexed predictors scoped to \"expected set-local, statelessness untested\" (abstract/setting/Table1 caption); P4 0/40 marked definitional (suppress_features); Prop 1 (Sec. below) dangling ref fixed + beta framed as explicit assumption w/ sigma_het proxy; conclusion latency +(analytical).",
-    "TMLR-R1 Phase 5: format -> TMLR (article+tmlr.sty, natbib, anonymous, Broader Impact + Reproducibility). Compiles 28pp, 0 undefined.",
+    "TMLR-R1 Phase 5: format -> TMLR (article+tmlr.sty, natbib, anonymous, Broader Impact + Reproducibility). Compiles 29pp, 0 undefined.",
     "TMLR-R1 G3 GREEN: all grep assertions empty. final_review.json deleted (stale, validated false Lemma).",
     "TMLR-R1 G5/G6: state.json finalized; TMLR_R1_RESPONSE.md complete. G2 pass2 launched for byte-identity.",
     "TMLR-R1 G4: diff critic GREEN after adjudication. One flagged \"7.4 sigma\" item refuted from committed data (critic used wrong sign for Delta_true=-0.015; drift is 7.36 sigma, paper correct). No over-retreat; protected claims intact.",
     "TMLR-R1 G2 GREEN: run_all byte-identical (pass1==pass2). HALT: gates G0-G6 green, INV-R1..R7 green, response doc complete.",
     "Optional exp 1 (R-latency): TPR 1.0 across off-policy range while latency rises 1->13 windows tracking H/(K-Delta) (drift 3.8-28 sd). fig:rlatency added; run_all + number audit (19) wired. Converts E3 scope-down to a positive result.",
-    "Optional exp 2 (warmup-stateful predictor): reseed-confound generalized beyond the cache. Reseeded dhat attenuates 97%->8% of gap as warmup lengthens (0.3->20 win) while fixed leaders recover 0.30 throughout; mirrors ChampSim reseeded 0.005 vs fixed 0.23. fig:warmup + paragraph; Table 1 predictor row upgraded untested->MEASURED. run_all + audit (20) wired."
+    "Optional exp 2 (warmup-stateful predictor): reseed-confound generalized beyond the cache. Reseeded dhat attenuates 97%->8% of gap as warmup lengthens (0.3->20 win) while fixed leaders recover 0.30 throughout; mirrors ChampSim reseeded 0.005 vs fixed 0.23. fig:warmup + paragraph; Table 1 predictor row upgraded untested->MEASURED. run_all + audit (20) wired.",
+    "TMLR R2 (reviewer: Accept-with-minor-revision): fixed 3 sentence-level overstatements. (1) tight-form -> high-probability/mean-level envelope; DETERMINISTIC guarantee = loose bound (reviewer reproduced 3/20 weak-stress tight_mean grazes; verified). (2) floor prediction -> MEAN attacked-GATED 0.579% vs measured 0.581% (design-constant, exact); 0.63% relabeled worst single window; dropped bracketing/0.65% blend. (3) predictor -> SYNTHETIC demonstration, real untested (abstract-consistent). Tightened A2/A5 (episode=maximal run; named delta; D per-episode). Fixed self-report: INV-R5 wording (no author name; grep clean), stale counts 18->20 / 28->29pp, G1 clarified (verified LOOSE bound)."
   ],
   "revised_odds_guess": {
     "TMLR": "55-65% (fixes are load-bearing here: removes the significance/missing-win bar; genuine strength-3 characterization + reproduced mechanism + zero claim/evidence gaps)",
@@ -265,12 +266,12 @@
     "caveat": "subjective estimate; MLSys must NOT be lumped with TMLR - it carries the systems missing-win bar"
   },
   "invariants_R": {
-    "INV-R1_no_overclaim": "GREEN (scripts/check_paper_numbers.py 18/18, run_all stage 9)",
+    "INV-R1_no_overclaim": "GREEN (scripts/check_paper_numbers.py 20/20, run_all stage 9)",
     "INV-R2_byte_identical": "GREEN (pass1==pass2 for regenerated artifacts)",
     "INV-R3_no_over_retreat": "GREEN (all PROTECTED CLAIMS intact, G1-verified)",
     "INV-R4_gated_semantics": "GREEN (5 sites consistent, G1-verified)",
-    "INV-R5_anonymity": "GREEN (grep -i kabir over tracked = empty; repo URL flagged for mirror)",
-    "INV-R6_format": "GREEN (compiles under tmlr.sty, 28pp, 0 undefined)",
+    "INV-R5_anonymity": "GREEN (author-name grep over tracked source returns empty; repo URL flagged for mirror)",
+    "INV-R6_format": "GREEN (compiles under tmlr.sty, 29pp, 0 undefined)",
     "INV-R7_no_em_dash": "GREEN (all new/rewritten prose em-dash-free)"
   },
   "criticals_resolved": {

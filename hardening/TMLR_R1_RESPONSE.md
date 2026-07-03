@@ -11,7 +11,7 @@ reject-grade defect (Lemma 1) was independently re-adjudicated by a hostile crit
 | # | Review defect | Fix | Commit | Verification |
 |---|---|---|---|---|
 | **C1** | **Lemma 1 is false as stated**: the two-term bound `N_ep·D·r_max + α·T·c_sw` omits the regret from the n_L Leader-C sets that keep running C in every gate state (reviewer's numerical counterexample). | Restated Lemma 1 as **three-term**, adding an audit-exposure term `φ_P·T_att·r_max` (φ_G=1.56%, φ_P=6.4%). Proof repaired (bucket (i) GATED is φ_G·gap, not 0; +PROBING bucket (i′)). Reframed as a **strength**: the exposure term *predicts* the measured 0.63% floor (φ_G→0.58%, blended 1.76%→0.65%, bracketing 0.639%). New regression `exp_floor_longattack.py` + `results/floor_longattack.json`; `exp_theory.py` L_att sweep; `exp_p1_floor.py` bound line → corrected 12.4. | `391d2a1` | **G1 GREEN** (independent critic): re-derived the bound from `simulate.py:82` alone; no counterexample survived ~45 attack configs (probing-exploit 54.9 < tight 117 < loose 386); regression asserts `measured ≤ tight ≤ corrected-loose`; two-term violated at L_att=960 (25.8 > 7.6). Protected 15.1/7.8/5.9 + P1 0.639%/lat1/tax0.99653 intact. |
-| **C2** | E3 clean-tax range **"0.49–0.52%"** disagrees with `e3_sensitivity.json` (actual 0.16–0.51%). | Replaced with **0.16–0.51%** (overall from the JSON invariants). | `573a7bb` | `scripts/check_paper_numbers.py` recomputes the range from JSON and asserts the tex literal; 18/18. |
+| **C2** | E3 clean-tax range **"0.49–0.52%"** disagrees with `e3_sensitivity.json` (actual 0.16–0.51%). | Replaced with **0.16–0.51%** (overall from the JSON invariants). | `573a7bb` | `scripts/check_paper_numbers.py` recomputes the range from JSON and asserts the tex literal; 20/20. |
 | **C3** | E3 **"|Δ_W|=0.015 ≫ σ_Δ"** is false (σ_Δ=0.015625 > 0.015) and conflates estimator resolution with drift SNR. | Removed from all 4 paper sites + the generator. Reframed: for any off-policy gap (Δ<τ) the CUSUM **drift** K−Δ ≥ γ/2 = 3.2σ_Δ, so TPR≈1 across the off-policy range (flat sweep is **consistent** with theory); what grows toward τ is **latency** D≈H/(K−Δ), up to ~16 windows. | `573a7bb` | Regenerated `e3_sensitivity.json` scope string; G3 grep `\gg\sigd`/`>> sigma` empty. |
 | **C4** | Conclusion **"faithful exactly when reward shares a set"** (iff) is contradicted one sentence later. | Changed to **necessity** ("requires that reward share a set"), with the (near-)stateless second condition following. `state.json` C_setlocal iff removed. | `c8a9acc` | G3 grep "faithful exactly when" empty; conclusion now internally consistent with Remark 1. |
 | **C5** | **PC-indexed predictors** claimed "faithfully audited" (set-local) but the statelessness condition was never checked for them; no experiment instantiates one. | Scoped to **"expected set-local; statelessness untested"** at the abstract, formal setting, and Table 1 caption. | `c8a9acc` | Predictors no longer asserted as audited; Table 1 caption carries the caveat. |
@@ -34,20 +34,20 @@ cost) or correcting the theorem to match the built system (C1). No claim was str
 | Prop 1 hygiene | Dangling "(Sec. below)" → explicit β assumption + σ_het empirical proxy. | `c8a9acc` |
 | Bibliography | Suitability Filter (ICML'25), Sequential Harmful Shift (NeurIPS'24), D3M (NeurIPS'25) verified; shojaei author verified (Alireza Shojaei). | `888b28b` (+prior) |
 | Lemma 6.1 / Prop 6.2 legacy numbering; docstring window 100/220 vs 90/200 | Normalized to Lemma 1 / Prop 1; docstring fixed to 90/200. | `888b28b` |
-| Anonymity | `/Users/kabirgrewal` → `$HOME`; `grep -i kabir` over tracked = empty. | `888b28b` |
-| INV-R1 number audit | `scripts/check_paper_numbers.py` (18 numerals vs JSON) wired as run_all stage 9. | `888b28b` |
+| Anonymity | author-name absolute paths -> $HOME; a case-insensitive author-name grep over tracked source returns empty. | `888b28b` |
+| INV-R1 number audit | `scripts/check_paper_numbers.py` (20 numerals vs JSON) wired as run_all stage 9. | `888b28b` |
 
 ## Invariants at HALT
-INV-R1 (no overclaim, number audit 18/18), INV-R2 (byte-identical `run_all`, manifests in
+INV-R1 (no overclaim, number audit 20/20), INV-R2 (byte-identical `run_all`, manifests in
 `hardening/manifests/`), INV-R3 (no over-retreat: every PROTECTED CLAIM intact, G1-verified),
-INV-R4 (GATED semantics consistent across 5 sites, G1-verified), INV-R5 (anonymity: no `kabir`),
+INV-R4 (GATED semantics consistent across 5 sites, G1-verified), INV-R5 (anonymity: author-name grep empty),
 INV-R7 (new prose em-dash-free).
 
 ## FLAG_FOR_HUMAN (not faked)
 - **Anonymized artifact mirror** for double-blind submission (the public repo URL de-anonymizes).
 - **≥3-trace replication** of the replacement reseed-confound (needs the ChampSim build + traces):
   the single biggest optional evidentiary upgrade.
-- **Optional R-latency sweep** (2.4) to render the E3 latency-vs-Δ curve as a positive panel.
-- **Optional warmup-stateful predictor** experiment (3.2) to give Table 1 a measured statement for predictors.
+- ~~Optional R-latency sweep (2.4)~~ DONE (commit 8047bef): fig:rlatency, latency 1->13 tracking H/(K-Delta).
+- ~~Optional warmup-stateful predictor (3.2)~~ DONE (commit 160779b): fig:warmup, synthetic demonstration.
 - Full **TMLR .sty conversion** status: see `hardening/state.json` gates (tmlr.sty fetched; conversion
   scope recorded there).

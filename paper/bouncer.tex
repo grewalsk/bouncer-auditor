@@ -152,8 +152,9 @@ dueling set as its decision}---we call such a controller \emph{set-local}. Cache
 set $s$ is rewarded by the hit/miss outcome \emph{on set $s$}, so the dueling
 estimate $\dhat$ is a clean, localized competence signal. PC-indexed predictors
 (branch, confidence) are \emph{expected} to be likewise local; a stateful predictor reward
-confounds the reseeded audit exactly as a real cache does (\Cref{fig:warmup}), so their
-near-statelessness is a \emph{requirement}, not an incidental property (\Cref{tab:instances}).
+would confound the reseeded audit in the same way (demonstrated in a \emph{synthetic}
+stateful-predictor model, \Cref{fig:warmup}); whether real predictor rewards are near-stateless
+is untested (\Cref{tab:instances}).
 \emph{Prefetching is the cautionary
 boundary}: a prefetch triggered on set $s$ fetches a \emph{different} set $s'$, so
 its benefit is de-localized and no per-set reward captures it---a faithful reward
@@ -429,14 +430,16 @@ from an input-only one.
 \subsection{Safety floor / bounded regret}
 \begin{assumption}\label{asm}
 \textup{(A1)} per-decision reward $\in[0,\rmax]$; \textup{(A2)} a \emph{drop
-episode} is a window where the true competence $\Delta_t<\tau$ (the off-policy
-condition, consistent with the CUSUM reference $K=\tau+\gamma/2$); once one
-begins, Tier-B raises GATED within $D$ windows w.p.\ $\ge 1-\delta$, where $D$ is
-a high-probability bound (the mean delay $H/(K-\Delta_t)$ plus a tail term that
-shrinks with $\sigd$); \textup{(A3)} the per-window false-alarm probability is
+episode} is a \emph{maximal run} of consecutive windows with true competence
+$\Delta_t<\tau$ (the off-policy condition, consistent with the CUSUM reference
+$K=\tau+\gamma/2$); once an episode begins, Tier-B raises GATED within $D$ windows
+w.p.\ $\ge 1-\delta$ for a fixed per-episode failure probability $\delta\in(0,1)$,
+where $D$ is the corresponding high-probability delay: the mean $H/(K-\Delta_t)$ plus a
+tail term that shrinks with $\sigd$ (a weaker drop, $\Delta_t$ nearer $\tau$, gives a
+larger $D$); \textup{(A3)} the per-window false-alarm probability is
 $\le\alpha=1/\mathrm{ARL}_0$; \textup{(A4)} a gate switch transient costs $\le
-c_{sw}$; \textup{(A5)} there are $N_{ep}$ drop episodes over a horizon of $T$
-windows.
+c_{sw}$; \textup{(A5)} there are $N_{ep}$ drop episodes spanning $T_{att}\le T$ windows
+total over a horizon of $T$ windows.
 \end{assumption}
 
 \textbf{Audit exposure (from the construction).} The $n_L$ Leader-L sets run $C$ in
@@ -603,8 +606,9 @@ weakens \Cref{prop:mimicry}.
 \begin{table}[t]\centering\footnotesize
 \caption{Per-controller instantiation, ordered by set-locality (whether reward and
 decision share a dueling set). Predictors are set-local by structure; their
-(near-)statelessness is \emph{required}: a stateful predictor reward confounds the reseeded
-audit (\Cref{fig:warmup}), attenuating $\dhat$ to $8\%$ of the gap as warmup lengthens.}
+(near-)statelessness is untested for real predictors; a \emph{synthetic} stateful-predictor
+model shows a stateful reward would confound the reseeded audit (\Cref{fig:warmup}), attenuating
+$\dhat$ to $8\%$ of the gap as warmup lengthens.}
 \label{tab:instances}
 \begin{tabular}{@{}lclll@{}}
 \toprule
@@ -708,11 +712,13 @@ the fallback floor; Bouncer detects in \textbf{one window} here (the worked mean
 delay is $D\!\approx\!1.8$ windows; one window is the best case at this high SNR),
 floors to $\pizero$, and---crucially---\emph{re-trusts} 14 windows after the
 attack ends via PROBING, not a fixed timer. The \emph{steady-state} floor
-violation is $0.63\%$, and \Cref{lem:floor} now \emph{predicts} it: the audit-exposure
-term is exactly the Leader-L sets that keep running $C$ under attack, so the floor sits at
-$\phi_G(q_0-\mu_C^{att})\,\mathrm{slope}/\mathrm{IPC}_{\pizero}=0.58\%$, rising to $0.65\%$
-once the GATED/PROBING duty is blended (a $1.76\%$ effective exposure), bracketing the
-measured $0.639\%$. The only larger excursion is the lone pre-detection window, which dips
+violation reported is $0.63\%$ (the worst single GATED window; \Cref{fig:floor}), and
+\Cref{lem:floor} \emph{predicts} its mechanism: the audit-exposure term is exactly the
+Leader-L sets that keep running $C$ under attack, so the \emph{mean} floor violation over the
+attacked GATED windows is
+$\phi_G(q_0-\mu_C^{att})\,\mathrm{slope}/\mathrm{IPC}_{\pizero}=0.579\%$, matching the measured
+$0.581\%$ to three digits (a design constant forward-predicting the measurement); the reported
+$0.63\%$ is the worst single window, $\sim\!2.4\sigma$ of per-window noise above that mean. The only larger excursion is the lone pre-detection window, which dips
 $36\%$ below the floor: exactly the bounded $\le D\rmax$ term of \Cref{lem:floor}, and the
 price of a one-window detection delay. Performance recovered is $0.55$ (Bouncer recovers to
 the \emph{fallback} floor, not to clean, since the attack genuinely removed $C$'s value), the
@@ -856,7 +862,7 @@ floor holds; only detection latency drifts up ($1.0\!\to\!1.7$ windows).}
 \label{fig:robust}
 \end{figure}
 
-\textbf{The stateless condition, measured beyond the cache.} \Cref{rem:stateless} predicts
+\textbf{The stateless condition, reproduced in a synthetic predictor model.} \Cref{rem:stateless} predicts
 that a secret reseeded audit fails on any \emph{stateful} reward, not only a cache. We confirm
 it on a predictor-like controller whose accuracy ramps with consecutive windows on a policy
 ($\mathrm{acc}=\mu(1-e^{-c\,k})$, warmup timescale $1/c$; \Cref{fig:warmup}). As the warmup
@@ -864,8 +870,10 @@ lengthens, the secret per-epoch reseed keeps both pools cold and $\dhat$ attenua
 to $8\%$ of the true gap ($0.29\!\to\!0.02$ of a $0.30$ gap over $1/c{=}0.3\!\to\!20$ windows),
 while \emph{fixed} leaders warm up and recover the full gap ($0.30$) throughout. This is the
 same secrecy/measurability tension the ChampSim replacement study measured on one trace
-(reseeded $\dhat{=}0.005$ vs fixed $0.23$), now shown to be a general property of stateful
-rewards, which lets \Cref{tab:instances} state the predictor condition as \emph{measured}.
+(reseeded $\dhat{=}0.005$ vs fixed $0.23$), consistent with a general dependence on reward
+statefulness. This is a \emph{synthetic} demonstration of the mechanism, not a real predictor:
+whether real PC-indexed rewards are near-stateless at window grain remains untested
+(\Cref{tab:instances}).
 
 \begin{figure}[t]\centering
 \includegraphics[width=0.62\columnwidth]{warmup_predictor.pdf}
@@ -965,11 +973,14 @@ $N_{ep}{=}6$ the two-term reads $15.1$, tight $7.8$, measured $5.9$ IPC$\cdot$wi
 bound hugging the data. Panel~(b) sweeps the attack length $L_{att}$: because the
 audit-exposure regret grows linearly in $L_{att}$ while the two-term $N_{ep}D\rmax$ is
 constant, the two-term is \emph{violated} for long attacks (measured $25.8$ vs two-term $7.6$
-at $L_{att}{=}960$), whereas the corrected three-term of \Cref{lem:floor} continues to
-envelope. On a single persistent drop the two-term bound is exceeded nearly five-fold
-(measured $11.9$ vs the two-term $2.52$, itself enveloped by the tight $12.3$;
-\texttt{exp\_floor\_longattack.py}). The tight form is thus a corollary of the corrected
-lemma, not a separate accounting.
+at $L_{att}{=}960$), whereas the corrected three-term \emph{loose} bound of \Cref{lem:floor}
+continues to envelope; this loose bound is the \emph{deterministic} guarantee. On a single
+persistent drop the two-term is exceeded nearly five-fold (measured $11.9$ vs $2.52$;
+\texttt{exp\_floor\_longattack.py}), while the loose three-term ($123.6$) still dominates. The
+\emph{tight} form (realized gap and GATED/PROBING occupancy) hugs the measurement at the mean
+level ($12.3$ vs $11.9$ here); because it uses the \emph{mean} detection delay it is a
+high-probability envelope, exact only when $D$ carries the \Cref{asm} tail term, so weak-drop
+configurations can exceed it by one to two windows.
 
 \begin{figure}[t]\centering
 \begin{subfigure}{\columnwidth}\includegraphics[width=\linewidth]{th_arl.pdf}\caption{}\end{subfigure}\\
