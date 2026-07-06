@@ -37,8 +37,9 @@ python3 experiments/exp_warmup_predictor.py
 echo "==> [6d] ChampSim real-systems figures (prefetcher suite + replacement boundary)"
 python3 experiments/exp_champsim_fig.py
 python3 experiments/exp_e1_fig.py   # reads committed results/champsim_e1/ logs
-echo "==> [6e] paper diagrams (architecture + gate FSM)"
+echo "==> [6e] paper diagrams (architecture + gate FSM + concept)"
 python3 experiments/make_diagrams.py
+python3 experiments/make_concept.py
 
 echo "==> [7/8] ChampSim C++ auditor self-test"
 ( cd champsim_plugin && c++ -std=c++17 -O2 bouncer.cc -o bouncer_selftest && ./bouncer_selftest )
