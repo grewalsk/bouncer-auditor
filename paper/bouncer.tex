@@ -764,7 +764,7 @@ triage (acc $1.0$).}
 \end{figure}
 
 \subsection{P4: mimicry survival and the secrecy ablation}\label{sec:eval-p4}
-This is the result the paper is built around (\Cref{fig:p4}). \Cref{fig:p4}(a) plots detection rate under mimicry: full Bouncer catches every attack while the input-only monitor catches none. \textbf{(a)} Under
+This is the result the paper is built around (\Cref{fig:p4}). \textbf{(a)} Under
 an adaptive mimicry adversary that holds $S_{in}$ (the controller's input features) in-distribution while degrading
 $C$ (its realized competence), the input-OOD-only baseline (a monitor that only watches whether inputs look out-of-distribution) detects \emph{none} of the attacks ($0/40$
 episodes at every strength), while full Bouncer detects \emph{all} ($40/40$;
@@ -1158,10 +1158,11 @@ competence drop beyond a fixed margin, against which we measure latency.
 \textbf{Overhead vs.\ sensitivity.} The auditor dies if the Tier-B duty cycle is
 too high; the minimal-overhead operating point---the knee of \Cref{fig:p2}(a)---is
 reported as the result, not a footnote. \textbf{From simulation to silicon.} The
-controlled quantitative claims are validated on a faithful harness; the real
-ChampSim (a cycle-accurate CPU simulator) L1D (first-level data cache) module (\Cref{sec:eval-champsim}) shows the mechanism survives a real
-simulator and bounds a corrupted prefetcher to the safe floor across a 3-trace SPEC suite---a full SPEC/GAP sweep with a timeliness-aware reward (and the
-production controllers of \Cref{tab:instances}) is the natural next step.
+controlled quantitative claims are validated on a faithful harness. The real
+ChampSim L1D module (\Cref{sec:eval-champsim}) shows the mechanism survives a
+cycle-accurate simulator and bounds a corrupted prefetcher to the safe floor
+across a 3-trace SPEC suite; a full SPEC/GAP sweep with a timeliness-aware reward,
+and the production controllers of \Cref{tab:instances}, is the natural next step.
 \textbf{Reward \emph{localizability}, not just fidelity, is decisive.} A reward whose credit lands in the same cache set as the decision is what makes auditing faithful. The per-set
 cache-hit reward over-gates a genuinely helpful prefetcher on roms
 (\Cref{sec:eval-champsim}, $11\%$ tax); swapping to the controller's \emph{own}
@@ -1174,26 +1175,28 @@ sharply scopes where set-dueling competence auditing is faithful.
 
 \section{Conclusion}
 Bouncer turns ``is the learned controller still earning its keep?'' into one
-measurable scalar and bounds the answer's cost---for the controllers a secret
-per-set audit can faithfully measure. Our organizing result is the
-\emph{set-locality} condition (\Cref{def:setlocal}): set-dueling (a hidden A/B comparison of controller vs.\ fallback on random sets) competence
-auditing requires that a controller's reward share a set with its
-decision, which makes cache \emph{replacement} the \emph{set-local} case and
-characterizes prefetching as the de-localized boundary. Our real-systems study sharpens this into
-a second condition: set-locality is necessary but not sufficient, because a real
-cache is set-local yet \emph{stateful}, so the secret reseed that buys mimicry
-resistance confounds its per-window measurement---a secrecy/measurability tension a
-(near-)\emph{stateless} reward resolves (\Cref{rem:stateless}). For the set-local class: by repurposing
-the set-dueling substrate into a \emph{secret} competence audit, gating an
-expensive confirmer behind cheap tripwires, and proving a three-term safety floor
-(detection, audit-exposure, and false-alarm) tied to the constants of the CUSUM change-detector (a running cumulative-sum drift test). Then---for declared domains audited at resolution
-$\delta_R^{\min}(B)$ with the secret intact---Bouncer caps the worst-case
-\emph{competence} (in the controller's own reward) at its vetted fallback, under
-benign drift and an adaptive mimicry adversary alike, for $\sim\!336$\,bytes and
-no added latency on the datapath (the hardware path data flows through) (analytical). The robustness is not free, and
-not unconditional: we show it is purchased exactly by the secrecy of the dueling
-sets, quantify the price of losing it, and name the sub-resolution slow-bleed
-adversary outside the audited domain as a real, un-closed vulnerability.
+measurable scalar and bounds the cost of the answer. Its organizing result is the
+\emph{set-locality} condition (\Cref{def:setlocal}): a secret per-set competence
+audit can attribute reward to the policy that earned it only when a controller's
+reward shares a set with its decision. That makes cache \emph{replacement} the
+clean set-local case and prefetching the de-localized boundary. The real-systems
+study adds a second condition: set-locality is necessary but not sufficient,
+because a real cache is set-local yet \emph{stateful}, so the secret reseed that
+buys mimicry resistance confounds its per-window measurement---a tension that a
+(near-)\emph{stateless} reward resolves (\Cref{rem:stateless}).
+
+For a controller in that class, Bouncer repurposes the set-dueling substrate into
+a secret competence audit, gates an expensive confirmer behind cheap tripwires,
+and proves a three-term safety floor---detection, audit-exposure, and
+false-alarm---tied to the constants of the CUSUM detector. The payoff: for
+declared domains audited at resolution $\delta_R^{\min}(B)$ with the secret intact,
+Bouncer caps the worst-case competence, in the controller's own reward, at its
+vetted fallback, under benign drift and an adaptive mimicry adversary alike, for
+$\sim\!336$\,bytes and no added datapath latency (analytical). The robustness is
+neither free nor unconditional: it is purchased exactly by the secrecy of the
+dueling sets, we quantify the price of losing it, and we name the sub-resolution
+slow-bleed adversary outside the audited domain as a real, un-closed
+vulnerability.
 
 \section*{Broader Impact}
 Bouncer is a defensive runtime monitor: it caps the worst-case competence cost of a learned
