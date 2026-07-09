@@ -136,7 +136,7 @@ class MimicryAttack:
 # *input marginals* (S_in) in-distribution and sparing the sets it believes are
 # Leader-C. Detection rests entirely on the SECRET per-region set-dueling, and
 # only while the assignment is secret. ``known_frac`` = leaked fraction of the
-# secret (the §8/P4 secrecy ablation; empirical Prop 6.2).
+# secret (the §8/P4 secrecy ablation; empirical Prop 1).
 #
 # NOTE on faithfulness: this models an adversary that suppresses the *input*
 # tripwire (S_in) and spares guessed leaders. It does NOT fully preserve the

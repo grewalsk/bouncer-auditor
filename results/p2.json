@@ -314,6 +314,6 @@
     ],
     "area_pct_est": 0.1282,
     "energy_pct_target": "<1%",
-    "added_latency_ns": 0
+    "added_latency_analytical_ns": 0
   }
 }

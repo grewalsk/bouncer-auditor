@@ -4,7 +4,7 @@ for validating the Bouncer competence auditor.
 
 Design philosophy
 -----------------
-Bouncer's guarantees (Lemma 6.1 safety floor; Prop 6.2 mimicry resistance) are
+Bouncer's guarantees (Lemma 1 safety floor; Prop 1 mimicry resistance) are
 *environment-agnostic*: they rest only on (i) bounded per-decision reward and
 (ii) the ability to randomly partition a shared resource into dueling pools.
 Therefore a faithful abstract model of a learned microarchitectural controller

@@ -137,7 +137,8 @@ def overhead_budget():
     return dict(total_bits=total_bits, total_bytes=total_bits / 8.0,
                 table=table,
                 area_pct_est=round(total_bits / 8.0 / (1024.0 * 256) * 100, 4),  # vs 256KB SRAM budget
-                energy_pct_target="<1%", added_latency_ns=0)
+                energy_pct_target="<1%",
+                added_latency_analytical_ns=0)  # analytical only; RTL timing is future work
 
 
 def main():
@@ -210,7 +211,7 @@ def main():
                  sin_mim=[fpr_im.tolist(), tpr_im.tolist()]),
         latency_vs_pool=rows, delta_drop=delta_drop,
         overhead=budget))
-    print(f"  overhead: {budget['total_bytes']:.0f} bytes total, ~{budget['area_pct_est']}% of a 256KB SRAM, 0 ns added")
+    print(f"  overhead: {budget['total_bytes']:.0f} bytes total, ~{budget['area_pct_est']}% of a 256KB SRAM, no added critical-path latency (analytical)")
 
 
 if __name__ == "__main__":

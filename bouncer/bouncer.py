@@ -40,7 +40,7 @@ class BouncerConfig:
     gate: GateConfig = field(default_factory=GateConfig)
     region: Optional[np.ndarray] = None  # restrict Tier-B to a region (covert attack)
     # model-based Δ̂ for non-sampling-friendly controllers (memory scheduler §13):
-    # no Leader-F sets; r̄_F replaced by a model estimate -> weakens Prop 6.2.
+    # no Leader-F sets; r̄_F replaced by a model estimate -> weakens Prop 1.
     model_based: bool = False
     model_q0: float = 0.5
     model_bias: float = 0.0

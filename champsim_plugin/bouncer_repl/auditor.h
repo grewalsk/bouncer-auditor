@@ -73,9 +73,16 @@ class SetDueling {
   double delta_hat(bool model_based, double model_q0) {
     double rL = cntL_ ? sumL_ / cntL_ : 0.0;
     double rF = model_based ? model_q0 : (cntF_ ? sumF_ / cntF_ : 0.0);
+    last_rL_ = rL; last_rF_ = rF; last_cntL_ = cntL_; last_cntF_ = cntF_;
     sumL_ = sumF_ = 0.0; cntL_ = cntF_ = 0;
     return rL - rF;
   }
+  // realized per-arm sample counts/means of the window just closed (for the
+  // empirical resolution sigma_dhat = sqrt(rL(1-rL)/cntL + rF(1-rF)/cntF)).
+  double last_rL() const { return last_rL_; }
+  double last_rF() const { return last_rF_; }
+  uint64_t last_cntL() const { return last_cntL_; }
+  uint64_t last_cntF() const { return last_cntF_; }
   static double sigma_delta(double r_max, uint32_t m, uint32_t n_L, uint32_t n_F) {
     return std::sqrt((r_max * r_max / (4.0 * m)) * (1.0 / n_L + 1.0 / n_F));
   }
@@ -84,6 +91,7 @@ class SetDueling {
   std::mt19937_64 rng_;
   std::vector<uint8_t> tag_;
   double sumL_ = 0, sumF_ = 0; uint64_t cntL_ = 0, cntF_ = 0;
+  double last_rL_ = 0, last_rF_ = 0; uint64_t last_cntL_ = 0, last_cntF_ = 0;
 };
 
 // ---- gate FSM -------------------------------------------------------------
@@ -138,6 +146,8 @@ struct BouncerConfig {
   double tau = 0.05, gamma_detect = 0.10, tierb_H = 0.8, r_max = 1.0;
   bool model_based = false; double model_q0 = 0.5;
   uint64_t hw_seed = 0xB0FFEEULL;
+  double delta_hys = 0.05;   // PROBING re-trust band: re-trust when dhat >= tau+delta_hys
+  bool reseed_enabled = true; // secret reseed each epoch; OFF == fixed leaders (DRRIP-style)
 };
 
 class Bouncer {
@@ -146,7 +156,7 @@ class Bouncer {
       : c_(c),
         dueling_(c.n_sets, c.n_L, c.n_F, c.hw_seed),
         tierb_(c.tau + c.gamma_detect / 2.0, c.tierb_H),
-        gate_(GateConfig{c.tau}) {}
+        gate_(GateConfig{c.tau, c.delta_hys}) {}
 
   // per-access hot path (off the datapath): O(1), a couple of adds.
   inline uint8_t pool_tag(uint32_t set) const { return dueling_.tag(set); }
@@ -158,7 +168,7 @@ class Bouncer {
     bool fired = tierb_.update(dh);
     last_delta_hat_ = dh;
     Gate g = gate_.step(tierA_escalate, tierA_clear, fired, dh);
-    dueling_.reseed();                 // secret reseed each epoch
+    if (c_.reseed_enabled) dueling_.reseed();   // secret reseed each epoch (OFF -> fixed leaders)
     return g;
   }
   bool use_learned(uint32_t set) const {
@@ -169,6 +179,16 @@ class Bouncer {
     return gate_.C_active_everywhere();
   }
   double last_delta_hat() const { return last_delta_hat_; }
+  double last_rL() const { return dueling_.last_rL(); }
+  double last_rF() const { return dueling_.last_rF(); }
+  uint64_t last_cntL() const { return dueling_.last_cntL(); }
+  uint64_t last_cntF() const { return dueling_.last_cntF(); }
+  // empirical per-window resolution of the dueling estimate (binomial s.e.).
+  double sigma_dhat() const {
+    double vL = dueling_.last_cntL() ? dueling_.last_rL() * (1.0 - dueling_.last_rL()) / dueling_.last_cntL() : 0.0;
+    double vF = dueling_.last_cntF() ? dueling_.last_rF() * (1.0 - dueling_.last_rF()) / dueling_.last_cntF() : 0.0;
+    return std::sqrt(vL + vF);
+  }
   Gate state() const { return gate_.state(); }
 
  private:

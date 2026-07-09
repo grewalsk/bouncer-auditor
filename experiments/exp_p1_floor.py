@@ -1,7 +1,7 @@
 """
-P1 — Gate + safety floor (Lemma 6.1). The "constructive hedge" demonstrated.
+P1 — Gate + safety floor (Lemma 1). The "constructive hedge" demonstrated.
 
-On a poisoning trace (attack on at window 100, off at 220), compare:
+On a poisoning trace (attack on at window 90, off at 200), compare:
   unguarded C  (no auditor)   -> crashes far below the fallback floor
   always-fallback             -> safe but never gains
   Bouncer (full)              -> tracks C when trusted, floors to ~pi0 under
@@ -16,7 +16,7 @@ from matplotlib.patches import Patch
 
 import common as C
 from bouncer.adversary import Clean, BroadAttack
-from bouncer.simulate import run_episode
+from bouncer.simulate import run_episode, SimConfig
 from bouncer import metrics as M
 from bouncer.theory import regret_bound
 
@@ -91,7 +91,7 @@ def main():
                 xytext=((ONSET + OFFSET) / 2, df.ipc_fallback.min() - 0.02),
                 ha="center", fontsize=7.5)
     ax.set_ylabel("IPC"); ax.set_xlim(0, T)
-    ax.set_title("Bouncer bounds the learned controller to the safe-fallback floor (Lemma 6.1)")
+    ax.set_title("Bouncer bounds the learned controller to the safe-fallback floor (Lemma 1)")
     handles, labels = ax.get_legend_handles_labels()
     shade_legend = [Patch(facecolor="#fff4e0", label="SUSPECT"),
                     Patch(facecolor="#e9eef5", label="GATED"),
@@ -104,18 +104,23 @@ def main():
     reg_o = M.cumulative_regret_vs_fallback(dfo)
     ax.plot(t, reg, color=C.PALETTE["bouncer"], lw=1.5, label="Bouncer cumulative regret vs floor")
     ax.plot(t, reg_o, color=C.PALETTE["oracle"], lw=1.0, ls=":", label="oracle")
-    # Lemma 6.1 bound (N_ep=1 genuine episode): N_ep*D*r_max scaled to IPC units
+    # Corrected Lemma 1 loose bound (N_ep=1 genuine episode), three terms in IPC units:
+    #   N_ep*D*r_max  +  phi_P*T_att*r_max  +  alpha*T*c_sw
+    # The middle audit-exposure term is REQUIRED: the n_L Leader-C sets keep running C
+    # in every gate state (simulate.py:82), so a drop of T_att windows bleeds at the
+    # dueling fraction. The old two-term bound (no exposure) is shown for contrast.
     sigma = b.dueling.sigma_delta(C.STD["m"])
     K = tau + b.cfg.gamma_detect / 2
     fb = regret_bound(r_max=1.0, N_ep=1, T=T, c_sw=env.ipc_slope * 0.1,
                       K=K, H=b.cfg.tierb_H, sigma_delta=sigma,
                       mean_signal_clean=0.265, delta_true_drop=float(comp.delta_true(0.92)))
-    # Lemma 1 bound in IPC units: N_ep*D*r_max scaled by the IPC-per-reward slope
-    # (r_max=1). This is the LOOSE bound of Eq.(floor) — it caps the per-window
-    # gap at r_max rather than the realized gap (q0 - mu_C^attacked); alpha~0.
-    bound_ipc = fb.detection_term * env.ipc_slope + fb.false_alarm_term
+    phi_G = C.STD["n_L"] / C.STD["n_sets"]
+    phi_P = phi_G + SimConfig.audited_region_frac * (1 - (C.STD["n_L"] + C.STD["n_F"]) / C.STD["n_sets"])
+    T_att = int(df["label_attack"].sum())
+    two_term_ipc = fb.detection_term * env.ipc_slope + fb.false_alarm_term
+    bound_ipc = two_term_ipc + env.ipc_slope * phi_P * T_att * 1.0        # corrected loose
     ax.axhline(bound_ipc, color="k", lw=0.9, ls="--",
-               label=f"Lemma 6.1 bound = {bound_ipc:.2f} IPC$\\cdot$win")
+               label=f"Lemma 1 loose (3-term) = {bound_ipc:.2f} IPC$\\cdot$win")
     ax.set_xlabel("window $t$"); ax.set_ylabel("cum. regret\n(IPC$\\cdot$win)")
     ax.set_xlim(0, T); ax.legend(loc="upper left")
     C.savefig(fig, "p1_safety_floor.pdf")
@@ -125,8 +130,9 @@ def main():
                floor_violation_transient=fv_trans, floor_violation_steady=fv_steady,
                retrust_latency=float(retrust),
                cumulative_regret_final=float(reg[-1]),
-               lemma_bound_ipc=float(bound_ipc), D=float(fb.D), alpha=float(fb.alpha),
-               sigma_delta=float(sigma))
+               lemma_bound_ipc=float(bound_ipc), lemma_two_term_ipc=float(two_term_ipc),
+               T_att=int(T_att), phi_G=float(phi_G), phi_P=float(phi_P),
+               D=float(fb.D), alpha=float(fb.alpha), sigma_delta=float(sigma))
     C.save_json("p1.json", res)
     print(f"  detection latency  = {lat} windows  (oracle {lat_o})")
     print(f"  perf recovered     = {rec:.3f}")

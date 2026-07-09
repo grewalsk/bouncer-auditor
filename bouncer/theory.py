@@ -1,18 +1,24 @@
 """
 theory.py — Numerical evaluation of the Bouncer guarantees.
 
-Lemma 6.1 (Safety floor / bounded regret vs. fallback). With per-decision reward
-in [0, r_max], detection delay <= D w.p. >= 1-delta once true competence drops
-below -gamma, false-alarm rate <= alpha per window, switching transient <= c_sw,
-and N_ep genuine drop episodes over horizon T windows, then w.p. >= 1 - delta*N_ep:
+Lemma 1 (Safety floor / bounded regret vs. fallback). The n_L Leader-C sets run C in
+EVERY gate state (they must, so Delta-hat stays measurable), so the bound is THREE-term,
+not two. With audit-exposure fractions phi_G = n_L/n_sets (GATED) and
+phi_P = phi_G + rho_aud*(1 - (n_L+n_F)/n_sets) (PROBING), T_att drop-episode windows,
+detection delay <= D w.p. >= 1-delta, false-alarm rate <= alpha, switch transient <= c_sw,
+and N_ep drop episodes over horizon T, then w.p. >= 1 - delta*N_ep:
 
-    Σ_t (r^{pi0}_t - r^{Bouncer}_t)  <=  N_ep * D * r_max  +  alpha * T * c_sw
+    Σ_t (r^{pi0}_t - r^{Bouncer}_t)  <=  N_ep*D*r_max  +  phi_P*T_att*r_max  +  alpha*T*c_sw
+                                        (detection)     (audit exposure)     (false alarm)
 
-i.e. R_Bouncer >= R_{pi0} - [ N_ep*D*r_max + alpha*T*c_sw ].
+i.e. R_Bouncer >= R_{pi0} - [ N_ep*D*r_max + phi_P*T_att*r_max + alpha*T*c_sw ].
 
-Both slack terms are exactly the §4 estimator/CUSUM knobs: D and alpha are
-functions of (pool size n, decisions/window m, CUSUM H) through sigma_Δ and the
-Siegmund ARL. regret_bound() composes them.
+The detection and false-alarm terms are the §4 CUSUM knobs (D, alpha are functions of pool
+size n, decisions/window m, CUSUM H through sigma_Δ and the Siegmund ARL); the audit-exposure
+term is a design constant (phi_P), linear in attack duration. regret_bound() composes the
+detection and false-alarm terms; the exposure term is added by the caller (exp_theory,
+exp_p1_floor, exp_floor_longattack). WARNING: the old two-term bound (no exposure) is FALSE
+for long attacks; see exp_floor_longattack.py for the regression that caught it.
 """
 from __future__ import annotations
 
@@ -34,7 +40,7 @@ class FloorBound:
 def regret_bound(*, r_max: float, N_ep: int, T: int, c_sw: float,
                  K: float, H: float, sigma_delta: float,
                  mean_signal_clean: float, delta_true_drop: float) -> FloorBound:
-    """Compose Lemma 6.1's bound from the operating point.
+    """Compose Lemma 1's bound from the operating point.
 
     K, H            : Tier-B lower-CUSUM reference and threshold
     sigma_delta     : std of Δ̂ per window (from set_dueling.sigma_delta(m))

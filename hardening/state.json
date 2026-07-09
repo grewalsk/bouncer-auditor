@@ -1,66 +1,286 @@
 {
-  "fixpoint_reached": false,
-  "gap_trace": [3, 3, 3, 3, 2],
-  "claims_ledger": {
-    "C_floor": {
-      "text": "bounded-regret safety floor vs fallback",
-      "asserted": 3,
-      "defended": 2
-    },
-    "C_secure": {
-      "text": "mimicry resistance vs adversarial steering",
-      "asserted": 2,
-      "defended": 2
-    },
-    "C_general": {
-      "text": "generality across learned controller classes",
-      "asserted": 2,
-      "defended": 1
-    },
-    "C_deploy": {
-      "text": "real-systems deployability (ChampSim)",
-      "asserted": 2,
-      "defended": 2
+  "loop": "TMLR-R1",
+  "focused": true,
+  "thesis": "Set-locality --- a learned microarchitectural controller's reward being attributable to the same dueling set as its decision --- is the condition under which secret reseeded set-dueling gives a counterfactual-free, label-free realized-competence audit that caps the controller to its vetted fallback under benign drift and adaptive mimicry; we prove this, prove and validate in a stateless synthetic runtime-assurance harness that the resulting bounded-regret floor and secrecy-purchased mimicry resistance hold (floor within 0.63%, clean tax 0.35%, mimicry TPR 1.0 vs input-OOD 0.0), and show on real ChampSim/SPEC that set-locality is necessary but not sufficient because the two canonical controllers each break one condition --- prefetching is not set-local (its de-localized benefit over-gates a helpful prefetcher, and the controller's own reward does not fix it) and cache replacement is set-local but stateful (the secret per-epoch reseed that buys mimicry resistance confounds its per-window estimate) --- so a faithful audit additionally requires a near-stateless reward.",
+  "thesis_fingerprint": "8c36d05576833603",
+  "reference_class": "RTA + label-free deterioration monitoring (family A: Simplex/shielding/BlackBoxSimplex/conformal; family B: Suitability Filter/Sequential Harmful Shift Detection/D3M)",
+  "reference_bar_clearable": true,
+  "venue_class": "TMLR (claim/evidence-graded journal, NO significance/missing-win bar) is the venue whose bar the FOCUS overclaim fixes actually clear. MLSys is a SYSTEMS venue and keeps the same missing-real-win bar as HPCA/ISCA, so it groups DOWN with them, not up with TMLR. Consequence of thesis+class, NOT chosen here.",
+  "run_orders": [
+    {
+      "id": "R-latency",
+      "status": "QUEUED_OPTIONAL",
+      "need": "NOT required by committed thesis (T-char); optional to convert the E3 detection-power retreat into a positive latency-vs-Delta curve",
+      "success": "detection LATENCY rises as |Delta|->sigma_Delta (exhibits the sigma_Delta roll-off the flat-TPR sweep could not)",
+      "abort": "if latency stays flat within tested range",
+      "budget": "cheap synthetic"
     }
-  },
-  "event_log": [
-    "sweep 1: frontier = N6; Gap=3",
-    "N6: GREEN (defended[C_general]=1)",
-    "sweep 2: frontier = N1; Gap=3",
-    "N1: GREEN (defended[C_general]=1)",
-    "sweep 3: frontier = N2; Gap=3",
-    "N2: gate FAILED (undefined) attempt 1: Substantive (not arithmetic) violation: N2 is a violation node for C_secure. It derives and empirically corroborates the",
-    "sweep 4: frontier = N2; Gap=3",
-    "N2: escape valve after 2 attempts -> C_secure settled at defended=2"
   ],
-  "nodes": {
-    "N6": {
-      "status": "SETTLED",
-      "gate": "GREEN",
-      "attempts": 0,
-      "summary": "N6 Scout / prior art: VERDICT CLEAR. Surveyed the 6 closest prior clusters to 'secret set-dueling competence auditor with a regret floor for a learned microarchitectural controller' and built a related-work table with one accepted differentiator per prior. Every neighbor differs on at least one of Bouncer's three load-bearing pillars: (1) secret set-dueling substrate (vs DIP/DRRIP public selection counters), (2) realized-competence/reward-deficit audit (vs mimickable input-side OOD/drift), (3) bounded-regret floor + secrecy-based mimicry resistance on a learned microarch controller (vs Simplex's verified reachability envelope, SPI's offline/batch model, per-deployment guardrails). No prior unifies the full conjunction, so no contribution rewrite is forced. Two NEWER neighbors not currently cited are near in framing but cleanly differentiated and should be ADDED as one-line cites (hardening, not rewrite): 'Conformal Recovery-Deadline Certificates for Runtime Assurance of Adapting Controllers' (arXiv 2606.25371, 2026 - CPS recovery-time conformal cert, no dueling/secrecy/reward) and the Black-Box Simplex line (relaxes Simplex's model need differently, via recovery region not relative floor). The secret-sampling principle is independently corroborated by LLM-inference verification (arXiv 2511.02620) in a different domain, which supports rather than scoops the mimicry proposition. Honest caveat: 'first to' must be scoped to the conjunction, not any single ingredient - the current tex already does this correctly with 'repurposes/borrows the substrate' framing; keep it.",
-      "note": ""
+  "invariants": {
+    "INV-1_no_overclaim": true,
+    "INV-2_reproduced": true,
+    "INV-3_synthetic_real_wall": true,
+    "INV-4_assumptions_discharged": true,
+    "INV-5_thesis_evidence_coherence": true
+  },
+  "gates": {
+    "M_methods": "PASS (sigma_Delta/Siegmund/floor constants coherent; adversarial probe: mimicry headline survives; one DEFECT=E3 caption, FIXED in Phase C)",
+    "R_reference": "PASS (bar clearable; family-B neighbors now cited + positioned)",
+    "T_thesis": "PASS (T-char committed; exceeds=false, underclaims=false)",
+    "C_overclaim": "PASS (17 confirmed overclaims reduced + 3 missed fixed; 3 already-scoped left; INV-1 green)",
+    "E_evidence": "PASS (all thesis-required claims reproduced at needed strength; R-latency queued OPTIONAL, thesis does not need it)",
+    "FOCUSED_adjudication": "GREEN (2 independent critics): overclaim-residual critic found 1 missed bald '0 ns added' @711 -> FIXED -> INV1 green; thesis-coherence critic -> THESIS_COHERENT_GREEN (INV-3/4/5)",
+    "G1_lemma1": "GREEN (independent hostile critic; corrected 3-term bound; no counterexample survives)",
+    "G0_reproduce": "GREEN (counterexample reproduced 11.9 vs 2.52; pre_r1 manifest matches committed)",
+    "G2_determinism": "GREEN: run_all byte-identical across pass1/pass2 for all 20 regenerated artifacts (only diff = the intended final_review.json deletion). pre_r1/post_r1 manifests committed.",
+    "G3_greps": "GREEN (0.49--0.52, MLSys, 'exactly when', gg-sigd/>>sigma, '0 ns' artifact, author-name grep all empty)",
+    "G6_response": "GREEN (hardening/TMLR_R1_RESPONSE.md maps every Critical+Minor to commit+edit+evidence)",
+    "G4_diff_critic": "GREEN (adjudicated): the single flagged item (drift 7.4 vs 5.44 at the smallest E3 gap) is a CRITIC SIGN ERROR, not a paper defect: the smallest tested Delta_true=-0.015 (a drop below zero), so drift =(K-Delta)/sigma=(0.10+0.015)/0.015625=7.36~=7.4 sigma (verified from e3_sensitivity.json). Paper 7.4 is CORRECT (NOT changed). G4 confirmed no over-retreat, all PROTECTED claims intact, and every new Lemma/E3 claim sound."
+  },
+  "gap": 0,
+  "claims_ledger": [
+    {
+      "id": "C_setlocal",
+      "text": "Set-locality characterization: set-dueling competence audit REQUIRES (necessary) that decision and reward share a dueling set; jointly with a (near-)stateless reward it is sufficient in the stateless synthetic harness. NOT stated as iff (conclusion contradiction fixed TMLR-R1). The stateless condition is demonstrated for a SYNTHETIC stateful-predictor model (reseeded dhat attenuates to 8% of gap vs fixed 0.30, exp_warmup_predictor.py); real PC-indexed predictor statelessness remains untested. Each necessity direction shown on a real/measured instance (prefetch not set-local; replacement stateful).",
+      "asserted_strength": 3,
+      "defended_strength": 3,
+      "reproduced": true,
+      "sentence_refs": [
+        "bouncer.tex:161 (contribution 1)",
+        "bouncer.tex:230 (def:setlocal)",
+        "bouncer.tex:sec:eval-champsim (real prefetch de-localization, champsim.json)"
+      ],
+      "overclaim": false,
+      "thesis_required_strength": 3
     },
-    "N1": {
-      "status": "SETTLED",
-      "gate": "GREEN",
-      "attempts": 0,
-      "summary": "N1 (proxy: what the audit certifies): DONE, claim defensible at current scope, no strengthening. Bouncer's gate acts on Delta-hat_W = r-bar_L - r-bar_F (set_dueling.py:109-111), a measured (non-counterfactual) estimate of the competence advantage Delta_W = mean(r^C - r^pi0) over a window (bouncer.tex:158-161). PRECISELY: Delta-hat certifies a high-probability bound (>=1-delta N_ep, under A1 bounded reward + A3-A5 partitionable/secret/reseeded resource) on the realized advantage of controller C over fallback pi0 IN THE CONTROLLER'S OWN REWARD METRIC r, plus a bounded-regret-in-r safety floor (Lemma floor, bouncer.tex:320-339) and mimicry resistance in the reward channel (Prop mimicry). Delta-hat does NOT certify any bound on true end utility (IPC/latency/MLP) - the certificate is exactly conditional on the fidelity of the map r approx utility, an assumption the audit never observes and cannot test from inside. Over-gating falls out as a falsifiable PREDICTION: when the surrogate under-credits a utility-helpful action, Bouncer floors to pi0 and loses utility with no attacker. CONFIRMED on roms (results/champsim.json): per-set L1D cache-hit proxy misses the memory-bound prefetcher's real IPC benefit (unguarded_clean 1.139, best of any cell), so Delta-hat reads low, gate floors, 11.2% clean tax, and bouncer_attack 1.009 even LOSES to ungated unguarded_attack 1.08 (-6.57%). lbm (proxy and utility agree on pollution) and perlbench (prefetch ~neutral) behave as expected; only the memory-bound case where sign(Delta^reward)!=sign(Delta^utility) over-gates. Honest scoping: the failure is CONSERVATIVE (over-gate costs utility but preserves the safety floor); the dangerous over-crediting case (proxy too generous, utility-harm slips through while reward looks clean) is NOT demonstrated and is the open hole the sec.8 own-reward design must close. Paper already states this correctly (bouncer.tex:140-141); keep it, do not claim utility safety.",
-      "note": ""
+    {
+      "id": "C_stateless",
+      "text": "Necessary-but-not-sufficient: a secret reseeded audit also needs a (near-)stateless reward (Remark 1)",
+      "asserted_strength": 3,
+      "defended_strength": 3,
+      "reproduced": true,
+      "sentence_refs": [
+        "bouncer.tex:248 (rem:stateless)",
+        "bouncer.tex:tab:discharge A1-stateless",
+        "results/e1_keystone.json (reseeded dhat 0.005 vs fixed 0.233, KEYSTONE_REAL=false)"
+      ],
+      "overclaim": false,
+      "thesis_required_strength": 3
     },
-    "N2": {
-      "status": "SETTLED",
-      "gate": "WEAKENED",
-      "attempts": 2,
-      "summary": "N2 (per-domain budget) is a VIOLATION node for C_secure; honest defended=0 for the GENERAL mimicry-resistance claim. The math is correct and reproduces against the code, but its central content is a closed-form derivation of the COVERAGE HOLE / slow-bleed attack that BREAKS general (any-region) security - so a prior defended=2 was an overclaim, as the gate found. DERIVATION (all from the one identity Var(Delta-hat_R) <= (r_max^2/4m)(1/n_{L,R}+1/n_{F,R}), set_dueling.py:116-121 = bouncer.tex eq.var): at global leader density rho=n_L/n_sets, sigma_R <= (r_max/sqrt(2m))*1/sqrt(rho|R|) prop |R|^(-1/2). Within-region resolvable gap delta_R = k*sigma_R = k*r_max/sqrt(2m rho|R|) (k approx 3). False-alarm alpha_R = 1/ARL0 with ARL0 (Siegmund, cusum.py:95-116) growing exp(Theta(rho|R|)) - super-exponential in |R|, so alpha_R blows up super-exponentially as |R| shrinks. FEASIBILITY: n_{L,R} >= k^2 r_max^2/(2m delta_R^2), INDEPENDENT of |R| - resolution fixes the absolute leader count; |R| only sets whether that many sets physically fit at density rho. COVERAGE HOLE (adversary best response): with affordable budget B, delta_R^min(B)=k*r_max/sqrt(2mB); the adversary picks the smallest region (or trickles harm) so that (1-f)*g < delta_R^min(B) and stays under the resolution floor indefinitely. The safety-floor Lemma (bouncer.tex:320-339) does NOT cover this: it bounds regret only over the UNION of AUDITED domains; a sub-resolution/undeclared region is outside that union. CORROBORATION: P4 (results/p4.json) is exactly the n_{L,R}=4 (|R|=32) victim region eaten as secret leaks - TPR 1.0 (f<=0.4) -> 0.075 (f=0.8) -> 0 (f=1.0, latency->inf); f and |R| are interchangeable axes of the same hole, and (FEAS) shows the |R|-axis the paper omits. SELF-CONSISTENCY: the |R|=32 row's n_{L,R}=4 exactly reproduces the paper's measured 'effective in-region pool of ~4 Leader-L sets' (bouncer.tex:571). NUMERIC-DRIFT FIX: the gate's |R|=64 row 1.16e12/8.6e-13 used the 4-dp-rounded sigma=0.0312; the EXACT sigma_R=1/sqrt(2*64*8)=0.03125 gives cusum.siegmund_arl -> 1.069e12 / 9.35e-13, which is what the table now reports; all other rows reproduce exactly. POSITIVE DEFENSE that IS supported: only the narrow declared-region-with-intact-secret case (Bouncer audits a DECLARED domain at resolution FEAS) - N2 does not and should not claim general security. Recommend the paper state (COVERAGE HOLE) explicitly alongside the f->1 secrecy-leak axis.",
-      "note": "Node self-classifies as VIOLATION (lines 10-11, 36-37): proves the slow-bleed/coverage-hole attack that defeats general mimicry resistance, so it cannot defend C_secure at level 2.; Proposed evidence is [] (empty); with no cited evidence the maximum defensible level is 0, not the prior 2.; P4 (results/p4.json) shows the attack SUCCEEDING (TPR 1.0 -> 0.075 at f=0.8 -> 0 at f=1.0), corroborating the violation rather than any defense.; The set-dueling bound (star) and floor lemma only cover the union of audited declared domains; the redistributive adversary's per-window harm sits under delta_R^min(B), outside that union (lines 18-30, sec.5) - general (any-region) security is not established.; Only the narrow declared-region-with-intact-secret case is positively supported, which the node explicitly does not advertise as general C_secure; that does not sustain defended>=1 for the general claim."
+    {
+      "id": "C_floor",
+      "text": "Three-term bounded-regret safety floor (Lemma 1, RESTATED TMLR-R1: detection + audit-exposure phi_P*T_att*r_max + false-alarm). The old two-term bound was FALSE for the released system (Leader-C runs C in every gate state); corrected bound envelopes and PREDICTS the 0.63% floor.",
+      "asserted_strength": 2,
+      "defended_strength": 2,
+      "reproduced": true,
+      "sentence_refs": [
+        "bouncer.tex:lem:floor (three-term)",
+        "results/p1.json (corrected loose 12.4)",
+        "results/theory.json (short 15.1/7.8/5.9 + L_att sweep)",
+        "results/floor_longattack.json (regression: measured 11.9 <= tight 12.3 <= loose 123.6)",
+        "experiments/exp_floor_longattack.py"
+      ],
+      "overclaim": false,
+      "thesis_required_strength": 2
     },
-    "N3": {"status": "UNSETTLED", "gate": "PENDING", "attempts": 0, "summary": "", "note": ""},
-    "CONC": {"status": "UNSETTLED", "gate": "PENDING", "attempts": 0, "summary": "", "note": ""},
-    "LEMMA1": {"status": "UNSETTLED", "gate": "PENDING", "attempts": 0, "summary": "", "note": ""},
-    "PROP1": {"status": "UNSETTLED", "gate": "PENDING", "attempts": 0, "summary": "", "note": ""},
-    "N4": {"status": "UNSETTLED", "gate": "PENDING", "attempts": 0, "summary": "", "note": ""},
-    "N5": {"status": "UNSETTLED", "gate": "PENDING", "attempts": 0, "summary": "", "note": ""},
-    "WRITEUP": {"status": "UNSETTLED", "gate": "PENDING", "attempts": 0, "summary": "", "note": ""}
-  }
+    {
+      "id": "C_mimicry",
+      "text": "Per-domain mimicry resistance from secrecy (Prop 1), scoped: declared domain, finite resolution, intact secret; coverage hole named",
+      "asserted_strength": 2,
+      "defended_strength": 2,
+      "reproduced": true,
+      "sentence_refs": [
+        "bouncer.tex:467 (prop:mimicry)",
+        "bouncer.tex:481 (f-boundary, now empirical cliff)",
+        "results/p4.json (secrecy ablation TPR 1.0->0)"
+      ],
+      "overclaim": false,
+      "thesis_required_strength": 2
+    },
+    {
+      "id": "C_estimator",
+      "text": "Estimator tracks ground truth R2=0.997 (controlled synthetic harness; real is noisier, stated)",
+      "asserted_strength": 2,
+      "defended_strength": 2,
+      "reproduced": true,
+      "sentence_refs": [
+        "bouncer.tex:643 (already scoped 644-646)",
+        "results/p0.json"
+      ],
+      "overclaim": false,
+      "thesis_required_strength": 1
+    },
+    {
+      "id": "C_mimicry_vs_input",
+      "text": "Competence monitor beats input-OOD under mimicry (TPR 1 vs 0); 0/50 definitional, earned measurement is secrecy ablation",
+      "asserted_strength": 2,
+      "defended_strength": 2,
+      "reproduced": true,
+      "sentence_refs": [
+        "bouncer.tex:76 (abstract, already attributes to secrecy)",
+        "bouncer.tex:sec:eval-p4",
+        "results/p4.json"
+      ],
+      "overclaim": false,
+      "thesis_required_strength": 2
+    },
+    {
+      "id": "C_maprobust",
+      "text": "Qualitative guarantees invariant across transfer functions (E3): floor holds, mimicry>input, secrecy shape, over mu_C/IPC/q0",
+      "asserted_strength": 2,
+      "defended_strength": 2,
+      "reproduced": true,
+      "sentence_refs": [
+        "bouncer.tex:804 (sec:eval-e3)",
+        "results/e3_sensitivity.json (floor_holds_all_mu, all_ipc, all_q0)"
+      ],
+      "overclaim": false,
+      "thesis_required_strength": 1
+    },
+    {
+      "id": "C_detectpower_rolloff",
+      "text": "Detection power vs gap: MEASURED positive result (R-latency, exp_rlatency.py). TPR stays 1.0 across the off-policy range (drift 3.8-28 sigma_Delta); detection LATENCY rises 1->13 windows toward tau, tracking D=H/(K-Delta). Promoted from REDUCED: the flat-TPR sweep is now shown CONSISTENT with theory, with the varying quantity (latency) measured directly (fig:rlatency).",
+      "asserted_strength": 2,
+      "defended_strength": 2,
+      "reproduced": true,
+      "sentence_refs": [
+        "bouncer.tex sec:eval-e3 + fig:rlatency",
+        "results/rlatency.json"
+      ],
+      "overclaim": false,
+      "thesis_required_strength": 0
+    },
+    {
+      "id": "C_overhead",
+      "text": "Overhead ~336 bytes; no added latency on cache-access critical path BY CONSTRUCTION (analytical; RTL future work)",
+      "asserted_strength": 3,
+      "defended_strength": 3,
+      "reproduced": true,
+      "sentence_refs": [
+        "bouncer.tex:50 (reduced)",
+        "bouncer.tex:188 (reduced)",
+        "bouncer.tex:900 (reduced)",
+        "bouncer.tex:1028 (reduced)",
+        "bouncer.tex:sec:overhead"
+      ],
+      "overclaim": false,
+      "thesis_required_strength": 0
+    },
+    {
+      "id": "C_realdeploy_prefetch",
+      "text": "Real ChampSim L1D prefetcher: reliable floor DOWNSIDE cap on 3-trace SPEC; over-gates helpful prefetcher (11% tax); own-reward does not fix",
+      "asserted_strength": 2,
+      "defended_strength": 2,
+      "reproduced": true,
+      "sentence_refs": [
+        "bouncer.tex:sec:eval-champsim",
+        "results/champsim.json"
+      ],
+      "overclaim": false,
+      "thesis_required_strength": 2
+    },
+    {
+      "id": "C_coverage_hole",
+      "text": "Named open vulnerability: sub-resolution slow-bleed, delta_R^min ~ 1/sqrt(B); math-forbidden to fully close",
+      "asserted_strength": 2,
+      "defended_strength": 2,
+      "reproduced": true,
+      "sentence_refs": [
+        "bouncer.tex:507 (coverage hole)",
+        "bouncer.tex:fig:hole",
+        "results/coverage_hole.json"
+      ],
+      "overclaim": false,
+      "thesis_required_strength": 0
+    },
+    {
+      "id": "C_cusum_optimal",
+      "text": "[REDUCED] CUSUM delay-optimal -> near-optimal / well-motivated (optimality exact only for known post-change law)",
+      "asserted_strength": 1,
+      "defended_strength": 1,
+      "reproduced": true,
+      "sentence_refs": [
+        "bouncer.tex:383 (reduced)"
+      ],
+      "overclaim": false,
+      "thesis_required_strength": 0
+    },
+    {
+      "id": "C_triage",
+      "text": "Attack-vs-drift triage 100% 5-fold CV accuracy on auditor-observable features; drop-one-feature robust (synthetic)",
+      "asserted_strength": 2,
+      "defended_strength": 2,
+      "reproduced": true,
+      "sentence_refs": [
+        "bouncer.tex:712 (P3)",
+        "results/p3.json"
+      ],
+      "overclaim": false,
+      "thesis_required_strength": 0
+    },
+    {
+      "id": "C_adaptive",
+      "text": "Adaptive timing adversaries bounded: boiling-frog gated (CUSUM integrates level), PROBING-exploit -> 8.6% harmed windows (synthetic)",
+      "asserted_strength": 2,
+      "defended_strength": 2,
+      "reproduced": true,
+      "sentence_refs": [
+        "bouncer.tex:833 (sec:eval-adaptive)",
+        "results/adaptive.json"
+      ],
+      "overclaim": false,
+      "thesis_required_strength": 0
+    }
+  ],
+  "event_log": [
+    "sweep1 M: methods coherence PASS (independent critic); E3 detectability caption = DEFECT",
+    "sweep1 R: reference_class=RTA+label-free-monitoring committed; bar_clearable=true; family-B (Suitability Filter/Amoukou/D3M) were uncited -> added",
+    "sweep1 T: T-char committed (thesis critic: strongest fully-supported sentence; T-monitor exceeds evidence, T-hybrid vaguer)",
+    "sweep1 C: 20 candidates adjudicated by hostile critic -> 17 CONFIRMED reduced, 3 ALREADY_SCOPED, +3 producer-missed fixed",
+    "sweep1 E: REDUCE-biased; no RUN forced (INV-5 holds: defended>=thesis_required for all)",
+    "sweep1 edits applied to bouncer.tex + related_work.tex; paper recompiles clean (15pp, 0 undefined); INV-2 PASS (bit-identical regen)",
+    "PENDING: final independent FOCUSED-adjudication critic on the edited paper",
+    "sweep2 (verify): final overclaim-residual critic -> 1 surviving overclaim (line 711 bald '0 ns added') -> FIXED; else INV-1 green, no over-retreat, no new overclaims",
+    "sweep2 (verify): thesis-coherence critic -> THESIS_COHERENT_GREEN (thesis consistent across abstract/intro/conclusion; INV-4 discharge table honest; INV-5 no retreat; abstract split exact)",
+    "FIXPOINT: thesis_fingerprint stable; Gate R green; INV-1..5 green; FOCUS_SHEET.md on disk -> focused=true. HALT.",
+    "flagged for human: (i) 3 family-B bib entries need metadata verification; (ii) results/adversarial_review.json is a STALE review of a superseded draft -> delete/date; (iii) e3_sensitivity.json internal 'scope' string still self-contradicts its flat data (paper does NOT inherit it) -> optional cleanup; (iv) R-latency queued optional",
+    "odds corrected: DISAGGREGATED per user - TMLR 55-65% (significance bar removed), MLSys ~30% (systems missing-win bar persists, groups with HPCA), HPCA/ISCA 20-25%. Prior report wrongly lumped MLSys up with TMLR.",
+    "TMLR-R1 Phase 0 (G0): reproduced reviewer counterexample to two-term Lemma 1 (measured 11.9 vs bound 2.52, T=1400); pre_r1.sha256 manifest; results match committed.",
+    "TMLR-R1 Phase 1: Lemma 1 RESTATED as three-term (audit-exposure phi_P*T_att*r_max) to match the system (Leader-C fixed, simulate.py:82). Proof repaired (bucket i no longer zero; +PROBING bucket). Reframed as strength: exposure term predicts steady floor 0.58-0.65% bracketing measured 0.639%. Edited abstract/contrib4/\u00a73-GATED/P1/theory/conclusion + theory.py & gate_fsm.py docstrings + LEMMA1.md (fixed false 'bouncer.py routes pi0' anchor -> simulate.py:82). New regression exp_floor_longattack.py + results/floor_longattack.json; exp_theory L_att sweep (two-term breaks at L_att=960: 25.8 vs 7.6); exp_p1_floor bound line -> corrected 12.4. Protected 15.1/7.8/5.9 + P1 0.639%/lat1/tax0.99653 survive.",
+    "TMLR-R1 Phase 2: E3 numeric truths. Tax range 0.49-0.52% -> 0.16-0.51% (from JSON). Removed '|Delta|=0.015>>sigma_Delta' from all 4 paper sites + exp_e3_sensitivity.py comment+scope. Reframed detection power as DRIFT-SNR (K-Delta>=3.2 sigma for any off-policy gap => TPR~1; latency D=H/(K-Delta) is what varies); flat TPR now consistent, not a retreat. C_detectpower promoted from REDUCED to correctly-characterized.",
+    "TMLR-R1 G1 GREEN: hostile critic verified corrected Lemma 1 (re-derivation, counterexample battery, INV-R4, protected numbers). Phase 1 gate passed.",
+    "TMLR-R1 Phase 3 (scope): conclusion iff -> necessity (two-condition, no self-contradiction); PC-indexed predictors scoped to \"expected set-local, statelessness untested\" (abstract/setting/Table1 caption); P4 0/40 marked definitional (suppress_features); Prop 1 (Sec. below) dangling ref fixed + beta framed as explicit assumption w/ sigma_het proxy; conclusion latency +(analytical).",
+    "TMLR-R1 Phase 5: format -> TMLR (article+tmlr.sty, natbib, anonymous, Broader Impact + Reproducibility). Compiles 29pp, 0 undefined.",
+    "TMLR-R1 G3 GREEN: all grep assertions empty. final_review.json deleted (stale, validated false Lemma).",
+    "TMLR-R1 G5/G6: state.json finalized; TMLR_R1_RESPONSE.md complete. G2 pass2 launched for byte-identity.",
+    "TMLR-R1 G4: diff critic GREEN after adjudication. One flagged \"7.4 sigma\" item refuted from committed data (critic used wrong sign for Delta_true=-0.015; drift is 7.36 sigma, paper correct). No over-retreat; protected claims intact.",
+    "TMLR-R1 G2 GREEN: run_all byte-identical (pass1==pass2). HALT: gates G0-G6 green, INV-R1..R7 green, response doc complete.",
+    "Optional exp 1 (R-latency): TPR 1.0 across off-policy range while latency rises 1->13 windows tracking H/(K-Delta) (drift 3.8-28 sd). fig:rlatency added; run_all + number audit (19) wired. Converts E3 scope-down to a positive result.",
+    "Optional exp 2 (warmup-stateful predictor): reseed-confound generalized beyond the cache. Reseeded dhat attenuates 97%->8% of gap as warmup lengthens (0.3->20 win) while fixed leaders recover 0.30 throughout; mirrors ChampSim reseeded 0.005 vs fixed 0.23. fig:warmup + paragraph; Table 1 predictor row upgraded untested->MEASURED. run_all + audit (20) wired.",
+    "TMLR R2 (reviewer: Accept-with-minor-revision): fixed 3 sentence-level overstatements. (1) tight-form -> high-probability/mean-level envelope; DETERMINISTIC guarantee = loose bound (reviewer reproduced 3/20 weak-stress tight_mean grazes; verified). (2) floor prediction -> MEAN attacked-GATED 0.579% vs measured 0.581% (design-constant, exact); 0.63% relabeled worst single window; dropped bracketing/0.65% blend. (3) predictor -> SYNTHETIC demonstration, real untested (abstract-consistent). Tightened A2/A5 (episode=maximal run; named delta; D per-episode). Fixed self-report: INV-R5 wording (no author name; grep clean), stale counts 18->20 / 28->29pp, G1 clarified (verified LOOSE bound)."
+  ],
+  "revised_odds_guess": {
+    "TMLR": "55-65% (fixes are load-bearing here: removes the significance/missing-win bar; genuine strength-3 characterization + reproduced mechanism + zero claim/evidence gaps)",
+    "MLSys": "~30% (fixes help the claim/evidence story but the systems-venue missing-real-win objection persists; FOCUS forced no RUN, KEYSTONE_REAL still false)",
+    "HPCA_ISCA": "20-25% unchanged (needs a real-silicon upside win that KEYSTONE_REAL=false denies)",
+    "caveat": "subjective estimate; MLSys must NOT be lumped with TMLR - it carries the systems missing-win bar"
+  },
+  "invariants_R": {
+    "INV-R1_no_overclaim": "GREEN (scripts/check_paper_numbers.py 20/20, run_all stage 9)",
+    "INV-R2_byte_identical": "GREEN (pass1==pass2 for regenerated artifacts)",
+    "INV-R3_no_over_retreat": "GREEN (all PROTECTED CLAIMS intact, G1-verified)",
+    "INV-R4_gated_semantics": "GREEN (5 sites consistent, G1-verified)",
+    "INV-R5_anonymity": "GREEN (author-name grep over tracked source returns empty; repo URL flagged for mirror)",
+    "INV-R6_format": "GREEN (compiles under tmlr.sty, 29pp, 0 undefined)",
+    "INV-R7_no_em_dash": "GREEN (all new/rewritten prose em-dash-free)"
+  },
+  "criticals_resolved": {
+    "C1_lemma1_false": "391d2a1 (three-term restatement, G1 GREEN)",
+    "C2_e3_tax_range": "573a7bb (0.49-0.52% -> 0.16-0.51%)",
+    "C3_e3_sigma_conflation": "573a7bb (drift-SNR reframe)",
+    "C4_conclusion_iff": "c8a9acc (iff -> necessity)",
+    "C5_pc_predictors": "c8a9acc (expected set-local, statelessness untested)"
+  },
+  "revised_odds_tmlr_r1": "TMLR ~75-85% post-fix (a guess): the one reject-grade defect (Lemma 1) is corrected and independently verified, all four smaller claim/evidence defects scoped to evidence, number audit + byte-identical repro institutionalized, format valid. Claims-and-Evidence should flip No->Yes; Audience already Yes. Residual: single-trace real boundary and the named coverage hole remain honest limitations (TMLR does not grade on the missing real win). Explicitly a subjective estimate.",
+  "halted": true
 }

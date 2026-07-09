@@ -120,7 +120,7 @@ def detection_delay_approx(K: float, H: float, delta_true: float) -> float:
     """Deterministic-drift detection delay D ≈ H / (K - Δ_true) for Δ_true < K.
 
     This is the limit of the Siegmund formula for strong positive drift and the
-    quantity that enters Lemma 6.1's regret bound (each true drop contributes
+    quantity that enters Lemma 1's regret bound (each true drop contributes
     <= D * r_max regret)."""
     margin = K - delta_true
     if margin <= 0:

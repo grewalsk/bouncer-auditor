@@ -1,0 +1,8 @@
+{
+  "trace": "623.xalancbmk_s-202B",
+  "note": "whole-cache hit rate, FORCE mode (all sets one policy), 1M warmup + 4M sim",
+  "learned_LIP_insert3": 0.3363,
+  "fallback_SRRIP_HP_insert2": 0.0477,
+  "corrupted_MRU_insert0": 0.0487,
+  "finding": "whole-cache competence gap LIP-vs-SRRIP is real and large (0.336 vs 0.048); the cache_fill API fix makes dhat nonzero (was identically 0 with the hit-only reward)."
+}

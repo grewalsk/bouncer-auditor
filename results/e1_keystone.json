@@ -1,0 +1,17 @@
+{
+  "KEYSTONE_REAL": false,
+  "finding": "Real-ChampSim replacement: (1) cache_fill API fix makes dhat nonzero (was ==0); (2) whole-cache competence gap is real (LIP 0.336 vs SRRIP-HP 0.048); (3) secret per-epoch reseed CONFOUNDS the per-window dueling signal for the STATEFUL replacement reward (reseeded mean dhat=0.0054 ~ noise; fixed-leader mean dhat=0.2334 resolves). Set-locality is necessary but not sufficient: reward must be (near-)stateless or leaders stable.",
+  "reseeded_clean_mean_dhat": 0.005361235658536586,
+  "reseeded_clean_std": 0.04078455387980695,
+  "fixed_leader_clean_mean_dhat": 0.23343717777777775,
+  "fixed_leader_clean_std": 0.5657981946654576,
+  "whole_cache_baselines": {
+    "trace": "623.xalancbmk_s-202B",
+    "note": "whole-cache hit rate, FORCE mode (all sets one policy), 1M warmup + 4M sim",
+    "learned_LIP_insert3": 0.3363,
+    "fallback_SRRIP_HP_insert2": 0.0477,
+    "corrupted_MRU_insert0": 0.0487,
+    "finding": "whole-cache competence gap LIP-vs-SRRIP is real and large (0.336 vs 0.048); the cache_fill API fix makes dhat nonzero (was identically 0 with the hit-only reward)."
+  },
+  "scope": "Clean-case upside-capture DYNAMICS remain in the synthetic harness (P1); the real replacement integration is a boundary/limitation result, not a clean-case validation."
+}

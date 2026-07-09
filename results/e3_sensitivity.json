@@ -1,0 +1,277 @@
+{
+  "mu_results": {
+    "baseline": {
+      "p1": {
+        "detection_latency": 1.0,
+        "floor_violation_steady": 0.006327516479130348,
+        "floor_violation_transient": 0.3642271347420027,
+        "clean_tax": 0.9965292719591738,
+        "u_crossing": 0.42857142857142866,
+        "delta_drop": -0.344
+      },
+      "mimicry": {
+        "strength": [
+          0.65,
+          0.95
+        ],
+        "full_tpr": [
+          1.0,
+          1.0
+        ],
+        "sin_tpr": [
+          0.0,
+          0.0
+        ]
+      },
+      "secrecy": {
+        "frac": [
+          0.0,
+          1.0
+        ],
+        "tpr": [
+          1.0,
+          0.0
+        ]
+      }
+    },
+    "linear": {
+      "p1": {
+        "detection_latency": 1.0,
+        "floor_violation_steady": 0.007593019774956452,
+        "floor_violation_transient": 0.44483976160497724,
+        "clean_tax": 0.9948959607421924,
+        "u_crossing": 0.5,
+        "delta_drop": -0.42000000000000004
+      },
+      "mimicry": {
+        "strength": [
+          0.65,
+          0.95
+        ],
+        "full_tpr": [
+          1.0,
+          1.0
+        ],
+        "sin_tpr": [
+          0.0,
+          0.0
+        ]
+      },
+      "secrecy": {
+        "frac": [
+          0.0,
+          1.0
+        ],
+        "tpr": [
+          1.0,
+          0.0
+        ]
+      }
+    },
+    "sigmoid_s": {
+      "p1": {
+        "detection_latency": 1.0,
+        "floor_violation_steady": 0.006927397911567449,
+        "floor_violation_transient": 0.4035641909929488,
+        "clean_tax": 0.9963959724205388,
+        "u_crossing": 0.39961307386767425,
+        "delta_drop": -0.3813373196434948
+      },
+      "mimicry": {
+        "strength": [
+          0.65,
+          0.95
+        ],
+        "full_tpr": [
+          1.0,
+          1.0
+        ],
+        "sin_tpr": [
+          0.0,
+          0.0
+        ]
+      },
+      "secrecy": {
+        "frac": [
+          0.0,
+          1.0
+        ],
+        "tpr": [
+          1.0,
+          0.0
+        ]
+      }
+    },
+    "sigmoid_k": {
+      "p1": {
+        "detection_latency": 1.0,
+        "floor_violation_steady": 0.007543714451742483,
+        "floor_violation_transient": 0.44416621000494017,
+        "clean_tax": 0.9957546995401942,
+        "u_crossing": 0.41697703165757466,
+        "delta_drop": -0.4191931825539369
+      },
+      "mimicry": {
+        "strength": [
+          0.65,
+          0.95
+        ],
+        "full_tpr": [
+          1.0,
+          1.0
+        ],
+        "sin_tpr": [
+          0.0,
+          0.0
+        ]
+      },
+      "secrecy": {
+        "frac": [
+          0.0,
+          1.0
+        ],
+        "tpr": [
+          1.0,
+          0.0
+        ]
+      }
+    }
+  },
+  "ipc_results": {
+    "baseline": {
+      "detection_latency": 1.0,
+      "floor_violation_steady": 0.006327516479130348,
+      "floor_violation_transient": 0.3642271347420027,
+      "clean_tax": 0.9965292719591738,
+      "u_crossing": 0.42857142857142866,
+      "delta_drop": -0.344
+    },
+    "steep": {
+      "detection_latency": 1.0,
+      "floor_violation_steady": 0.009039914156035962,
+      "floor_violation_transient": 0.5202640391036938,
+      "clean_tax": 0.9954725891118151,
+      "u_crossing": 0.42857142857142866,
+      "delta_drop": -0.344
+    },
+    "concave": {
+      "detection_latency": 1.0,
+      "floor_violation_steady": 0.0032403044640710796,
+      "floor_violation_transient": 0.23701453435973766,
+      "clean_tax": 0.9983686135572678,
+      "u_crossing": 0.42857142857142866,
+      "delta_drop": -0.344
+    }
+  },
+  "q0_results": {
+    "0.40": {
+      "detection_latency": 2.0,
+      "floor_violation_steady": 0.005248197658435721,
+      "floor_violation_transient": 0.293420903575258,
+      "clean_tax": 0.9952298217967092,
+      "u_crossing": 0.5714285714285715,
+      "delta_drop": -0.244
+    },
+    "0.50": {
+      "detection_latency": 1.0,
+      "floor_violation_steady": 0.006327516479130348,
+      "floor_violation_transient": 0.3642271347420027,
+      "clean_tax": 0.9965292719591738,
+      "u_crossing": 0.42857142857142866,
+      "delta_drop": -0.344
+    },
+    "0.60": {
+      "detection_latency": 1.0,
+      "floor_violation_steady": 0.0074305260105452485,
+      "floor_violation_transient": 0.4264610227954092,
+      "clean_tax": 0.9978216802790959,
+      "u_crossing": 0.2857142857142858,
+      "delta_drop": -0.44399999999999995
+    }
+  },
+  "joint": {
+    "p1": {
+      "detection_latency": 1.0,
+      "floor_violation_steady": 0.0038906733730093438,
+      "floor_violation_transient": 0.3204719086451581,
+      "clean_tax": 0.9976723668291124,
+      "u_crossing": 0.5,
+      "delta_drop": -0.42000000000000004
+    },
+    "mimicry": {
+      "strength": [
+        0.65,
+        0.95
+      ],
+      "full_tpr": [
+        1.0,
+        1.0
+      ],
+      "sin_tpr": [
+        0.0,
+        0.0
+      ]
+    }
+  },
+  "detectability": {
+    "stress": [
+      0.45,
+      0.5,
+      0.55,
+      0.62,
+      0.7,
+      0.8,
+      0.92
+    ],
+    "delta_drop": [
+      -0.014999999999999958,
+      -0.04999999999999993,
+      -0.08499999999999996,
+      -0.13399999999999995,
+      -0.1899999999999999,
+      -0.2599999999999999,
+      -0.344
+    ],
+    "full_tpr": [
+      1.0,
+      1.0,
+      1.0,
+      1.0,
+      1.0,
+      1.0,
+      1.0
+    ],
+    "sin_tpr": [
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0
+    ]
+  },
+  "invariants": {
+    "floor_holds_all_mu": true,
+    "floor_holds_all_ipc": true,
+    "competence_beats_input_all_mu": true,
+    "secrecy_shape_all_mu": true,
+    "clean_tax_range_mu": [
+      0.9948959607421924,
+      0.9965292719591738
+    ],
+    "clean_tax_range_ipc": [
+      0.9954725891118151,
+      0.9983686135572678
+    ],
+    "floor_holds_all_q0": true,
+    "joint_floor_and_mimicry": true,
+    "detectability_monotone_in_delta": true,
+    "sin_blind_everywhere": true,
+    "PASS_shape_and_ipc": true,
+    "scope": "Robust to collapse-curve SHAPE (clip/logistic, soft/sharp knee), the reward->IPC map, the fallback floor q0 in [0.4,0.6], and a JOINT mu_C x IPC change. Detection power is set by the CUSUM drift SNR, not estimator resolution: for any off-policy gap Delta<tau the drift K-Delta >= gamma/2 = 3.2*sigma_Delta, so full_tpr stays flat at 1.0 at fixed (K,H) for every tested drop (the smallest, |Delta|=0.015, already has 7.4*sigma_Delta drift); the quantity that grows toward tau is the detection LATENCY D=H/(K-Delta), not the miss rate. Tier-A feature/confidence maps are NOT swept; the headline competence>input result is a Tier-B property."
+  },
+  "n_episodes": 20,
+  "n_episodes_detectability": 40,
+  "note": "reduced-episode sweep; same machinery as P1/P4"
+}
