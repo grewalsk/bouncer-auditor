@@ -1,0 +1,76 @@
+{
+  "note": "Audit exposure must be traffic-weighted. Under concentrated traffic the per-window regret can reach r_max (violating the old per-window phi*r_max bound by ~1/phi_P), but because the secret assignment is a fresh uniform draw each epoch, E[exposure]=phi_G*r_max for ANY traffic, and over T_att independently-reseeded windows the total concentrates under phi_P*T_att*r_max + r_max*sqrt(T_att*ln(1/delta')/2) w.p. >= 1-delta'.",
+  "phi_G": 0.015625,
+  "phi_P": 0.0640625,
+  "r_max": 1.0,
+  "counterexample": {
+    "worst_window_regret": 1.0,
+    "naive_phiP_allowance": 0.0640625,
+    "violation_factor": 15.609756097560977,
+    "prob_hot_is_leaderC": 0.015625,
+    "measured_mean": 0.016
+  },
+  "expectation": {
+    "concentrated": 0.016,
+    "uniform": 0.015625,
+    "target_phiG": 0.015625
+  },
+  "high_prob_delta": 0.01,
+  "high_prob_cells": [
+    {
+      "T_att": 30,
+      "mean_total": 0.44,
+      "p99": 3.0,
+      "envelope_phiG": 8.78004068134555,
+      "coverage_phiG": 1.0,
+      "envelope_phiP": 10.23316568134555,
+      "coverage_phiP": 1.0,
+      "expectation_target": 0.46875
+    },
+    {
+      "T_att": 60,
+      "mean_total": 0.95725,
+      "p99": 4.0,
+      "envelope_phiG": 12.691440002383999,
+      "coverage_phiG": 1.0,
+      "envelope_phiP": 15.597690002383999,
+      "coverage_phiP": 1.0,
+      "expectation_target": 0.9375
+    },
+    {
+      "T_att": 120,
+      "mean_total": 1.8675,
+      "p99": 6.0,
+      "envelope_phiG": 18.4975813626911,
+      "coverage_phiG": 1.0,
+      "envelope_phiP": 24.3100813626911,
+      "coverage_phiP": 1.0,
+      "expectation_target": 1.875
+    },
+    {
+      "T_att": 240,
+      "mean_total": 3.76575,
+      "p99": 9.0,
+      "envelope_phiG": 27.257880004767998,
+      "coverage_phiG": 1.0,
+      "envelope_phiP": 38.882880004768,
+      "coverage_phiP": 1.0,
+      "expectation_target": 3.75
+    },
+    {
+      "T_att": 480,
+      "mean_total": 7.51,
+      "p99": 15.0,
+      "envelope_phiG": 40.7451627253822,
+      "coverage_phiG": 1.0,
+      "envelope_phiP": 63.9951627253822,
+      "coverage_phiP": 1.0,
+      "expectation_target": 7.5
+    }
+  ],
+  "invariants": {
+    "counterexample_real": true,
+    "expectation_holds": true,
+    "high_prob_envelope_holds": true
+  }
+}

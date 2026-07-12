@@ -1,5 +1,7 @@
 __pycache__/
 *.pyc
+.venv/
+venv/
 champsim_plugin/bouncer_selftest
 paper/*.aux
 paper/*.log

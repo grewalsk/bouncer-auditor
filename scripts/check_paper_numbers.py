@@ -36,6 +36,7 @@ def main():
     fla = load("floor_longattack.json")
     rl = load("rlatency.json")
     wp = load("warmup_predictor.json")
+    ft = load("floor_traffic.json")
 
     # each check: (label, list of literal strings that MUST appear in the tex, provenance)
     checks = []
@@ -45,7 +46,7 @@ def main():
 
     # --- P0 / P1 ---
     chk("P0 R^2", "0.997", "p0.json")
-    chk("P1 steady floor 0.63%", "0.63", f"p1.json floor_violation_steady={p1['floor_violation_steady']:.5f}")
+    chk("P1 steady floor 0.64%", "0.64", f"p1.json floor_violation_steady={p1['floor_violation_steady']:.5f} (worst window; rounds to 0.64%)")
     chk("P1 clean tax", "0.9965", f"p1.json clean_tax={p1['clean_tax']:.5f}")
     chk("P1 detection latency 1 window", ["one window", "1.0"], "p1.json detection_latency=1.0")
     chk("P1 re-trust 14 windows", "14", "p1.json retrust_latency")
@@ -68,10 +69,15 @@ def main():
     tax_lo = min(1 - e3["invariants"]["clean_tax_range_mu"][1], 1 - e3["invariants"]["clean_tax_range_ipc"][1]) * 100
     tax_hi = max(1 - e3["invariants"]["clean_tax_range_mu"][0], 1 - e3["invariants"]["clean_tax_range_ipc"][0]) * 100
     chk("E3 clean-tax range 0.16-0.51%", [f"{tax_lo:.2f}", f"{tax_hi:.2f}"], f"e3_sensitivity.json tax {tax_lo:.2f}-{tax_hi:.2f}%")
-    rl_drift = [c["drift_sigma"] for c in rl["cells"]]
-    chk("R-latency drift range 3.8-28sd", [f"{min(rl_drift):.1f}"], f"rlatency.json drift {min(rl_drift):.1f}-{max(rl_drift):.0f} sd, TPR all 1.0")
-    att = [round(c["attenuation"] * 100) for c in wp["cells"]]
-    chk("warmup reseed confound 97->8pct", [str(max(att)), str(min(att))], f"warmup_predictor.json reseeded attenuation {max(att)}%->{min(att)}% of gap; fixed recovers 0.30")
+    chk("R-latency min drift bg 1.6 / full 3.2", [f"{rl['min_drift_bg_sigma']:.1f}", f"{rl['min_drift_full_sigma']:.1f}"],
+        f"rlatency.json min-drift-at-tau bg={rl['min_drift_bg_sigma']:.2f} full={rl['min_drift_full_sigma']:.2f} sigma")
+    att = [round(c["attenuation"] * 100) for c in wp["multiplicative_cells"]]
+    chk("warmup reseed confound 97->8pct (multiplicative)", [str(max(att)), str(min(att))],
+        f"warmup_predictor.json multiplicative reseeded attenuation {max(att)}%->{min(att)}% of gap; additive survives at 0.30")
+
+    # --- Lemma 1 traffic-weighting counterexample (R1 fix) ---
+    chk("floor-traffic 15.6x per-window violation", f"{ft['counterexample']['violation_factor']:.1f}",
+        f"floor_traffic.json violation={ft['counterexample']['violation_factor']:.2f}x over naive phi_P bound")
 
     # --- E1 keystone (means are PROTECTED) ---
     chk("E1 whole-cache 33.6% vs 4.8%",

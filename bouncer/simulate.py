@@ -74,10 +74,18 @@ def run_episode(comp: CompetenceModel, env: MicroArchEnv, bouncer: Bouncer,
         obs = dict(rC_per_set=rC_per_set, rF_per_set=rF_per_set,
                    feat_win=feat_win, conf_win=conf_win, a_win=a_win,
                    r_win=r_win, delta_true=delta_true)
+        # INVARIANT (single-assignment-per-window): snapshot the secret assignment
+        # the estimator is about to consume; deployment below must route on the SAME
+        # one. bouncer.step no longer reseeds internally, so this holds by construction
+        # -- the assertion guards against regressions.
+        _assign_est = bouncer.dueling.leaderC.copy()
         tel = bouncer.step(obs)
 
         # --- realized deployed performance (victim experience) ---
         d = bouncer.dueling
+        assert np.array_equal(d.leaderC, _assign_est), (
+            "assignment drifted between Delta-hat estimation and deployment routing "
+            "(the counterfactual-estimator bug); reseed must happen at window close")
         deployed = np.empty(n)
         deployed[d.leaderC] = rC_per_set[d.leaderC]      # leaders fixed
         deployed[d.leaderF] = rF_per_set[d.leaderF]
@@ -107,4 +115,9 @@ def run_episode(comp: CompetenceModel, env: MicroArchEnv, bouncer: Bouncer,
             label_attack=win.label_attack,
             off_policy=(delta_true < bouncer.cfg.tau),
         ))
+
+        # window closed: NOW advance the secret assignment for the next window.
+        # Reseeding here (not inside bouncer.step) is what keeps estimation and
+        # deployment on one assignment per window -- see the invariant above.
+        bouncer.dueling.maybe_reseed()
     return pd.DataFrame(rows)

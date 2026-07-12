@@ -130,8 +130,11 @@ class Bouncer:
         else:
             raise ValueError(mode)
 
-        self.dueling.maybe_reseed()
-
+        # NOTE: the secret reseed is deliberately NOT called here. One assignment
+        # must govern the adversary's view, the Delta-hat estimate, AND the deployed
+        # routing for the *same* window; reseeding here would advance the assignment
+        # between estimation and deployment (a counterfactual estimate). The episode
+        # runner (simulate.run_episode) reseeds at window close, after deployment.
         tel = {
             "state": self.gate.state,
             "C_active": self.gate.C_active_everywhere,

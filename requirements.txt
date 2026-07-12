@@ -1,4 +1,7 @@
-numpy>=1.26
-scipy>=1.11
-matplotlib>=3.8
-pandas>=2.0
+# Pinned to the versions used to generate the released results (CPython 3.11).
+# Other numpy builds may differ in the last ~1-2 ulps; scripts/check_paper_numbers.py
+# asserts headline numerals to a tolerance rather than byte-identity.
+numpy==1.26.4
+scipy==1.11.4
+matplotlib==3.8.4
+pandas==2.0.3

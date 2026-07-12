@@ -1,10 +1,12 @@
 {
-  "note": "Stateful predictor-like reward (accuracy ramps with consecutive windows on a policy). As the warmup timescale 1/c lengthens, the secret per-epoch reseed keeps both pools cold so reseeded Delta-hat attenuates toward noise, while FIXED leaders warm up and recover the true gap. Generalizes the ChampSim replacement reseed-confound (single trace) to PC-indexed predictors: set-locality is necessary but not sufficient; a near-stateless reward is also required.",
+  "note": "Second audit condition = reseed-identifiability of the policy contrast, NOT statelessness. Multiplicative warmup (contrast scales with the warmup state) is not reseed-identifiable: the secret per-epoch reseed keeps every slice cold, so reseeded Delta-hat attenuates while fixed leaders recover the true gap (the ChampSim replacement reseed-confound, generalized to a PC-indexed predictor). Additive warmup (state-invariant contrast = GAP) IS reseed-identifiable: reseeded Delta-hat survives at ~GAP even though each reward is stateful -- a direct counterexample to 'statelessness is necessary'. Statelessness is one sufficient special case.",
   "mu_C": 0.8,
   "mu_F": 0.5,
   "gap": 0.30000000000000004,
-  "cells": [
+  "b_additive": 0.2,
+  "multiplicative_cells": [
     {
+      "kind": "mult",
       "c": 3.0,
       "warmup_windows": 0.3,
       "reseeded_dhat": 0.2906635284423828,
@@ -14,6 +16,7 @@
       "attenuation": 0.9701144595953808
     },
     {
+      "kind": "mult",
       "c": 1.0,
       "warmup_windows": 1.0,
       "reseeded_dhat": 0.22201919555664062,
@@ -23,6 +26,7 @@
       "attenuation": 0.7399811829324111
     },
     {
+      "kind": "mult",
       "c": 0.5,
       "warmup_windows": 2.0,
       "reseeded_dhat": 0.15512466430664062,
@@ -32,6 +36,7 @@
       "attenuation": 0.5173269216090375
     },
     {
+      "kind": "mult",
       "c": 0.2,
       "warmup_windows": 5.0,
       "reseeded_dhat": 0.07942237854003906,
@@ -41,6 +46,7 @@
       "attenuation": 0.2647257774534062
     },
     {
+      "kind": "mult",
       "c": 0.1,
       "warmup_windows": 10.0,
       "reseeded_dhat": 0.044105148315429686,
@@ -50,6 +56,7 @@
       "attenuation": 0.14677826413714654
     },
     {
+      "kind": "mult",
       "c": 0.05,
       "warmup_windows": 20.0,
       "reseeded_dhat": 0.023183059692382817,
@@ -59,8 +66,71 @@
       "attenuation": 0.07759536468148785
     }
   ],
+  "additive_cells": [
+    {
+      "kind": "add",
+      "c": 3.0,
+      "warmup_windows": 0.3,
+      "reseeded_dhat": 0.2996170043945312,
+      "reseeded_std": 0.001075781422520148,
+      "fixed_dhat": 0.2996177673339844,
+      "fixed_std": 0.0009106669154752563,
+      "attenuation": 0.9999974536241293
+    },
+    {
+      "kind": "add",
+      "c": 1.0,
+      "warmup_windows": 1.0,
+      "reseeded_dhat": 0.2997737884521484,
+      "reseeded_std": 0.0013586496706843529,
+      "fixed_dhat": 0.29996490478515625,
+      "fixed_std": 0.0008668805322250503,
+      "attenuation": 0.9993628710227127
+    },
+    {
+      "kind": "add",
+      "c": 0.5,
+      "warmup_windows": 2.0,
+      "reseeded_dhat": 0.29940452575683596,
+      "reseeded_std": 0.001231170066060073,
+      "fixed_dhat": 0.2998970031738281,
+      "fixed_std": 0.0009400476048903988,
+      "attenuation": 0.9983578448207877
+    },
+    {
+      "kind": "add",
+      "c": 0.2,
+      "warmup_windows": 5.0,
+      "reseeded_dhat": 0.2994365692138672,
+      "reseeded_std": 0.0012800550193574037,
+      "fixed_dhat": 0.30005950927734376,
+      "fixed_std": 0.0011981045318227234,
+      "attenuation": 0.9979239449368665
+    },
+    {
+      "kind": "add",
+      "c": 0.1,
+      "warmup_windows": 10.0,
+      "reseeded_dhat": 0.29949493408203126,
+      "reseeded_std": 0.0012962374987454679,
+      "fixed_dhat": 0.30010833740234377,
+      "fixed_std": 0.0011311600817330335,
+      "attenuation": 0.9979560603826539
+    },
+    {
+      "kind": "add",
+      "c": 0.05,
+      "warmup_windows": 20.0,
+      "reseeded_dhat": 0.29951171875000004,
+      "reseeded_std": 0.0013317846268474278,
+      "fixed_dhat": 0.2997154235839844,
+      "fixed_std": 0.0010658149472864082,
+      "attenuation": 0.9993203391685738
+    }
+  ],
   "invariants": {
-    "fixed_recovers_gap_at_slow_warmup": true,
-    "reseeded_attenuates_at_slow_warmup": true
+    "mult_fixed_recovers_gap_at_slow_warmup": true,
+    "mult_reseeded_attenuates_at_slow_warmup": true,
+    "additive_reseeded_survives_at_slow_warmup": true
   }
 }

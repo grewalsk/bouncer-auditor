@@ -63,6 +63,43 @@ def fsm():
     C.savefig(fig, "fsm.pdf")
 
 
+def exposure():
+    """Which sets keep running C in GATED vs PROBING (the phi_G / phi_P audit-
+    exposure terms of Lemma 1) -- schematic, not to scale."""
+    C.setstyle()
+    fig, ax = plt.subplots(figsize=(7.0, 2.3))
+    ax.set_xlim(0, 10); ax.set_ylim(0, 3.1); ax.axis("off")
+    n_cells, cell_w, gap, x0 = 20, 0.28, 0.045, 2.9
+    neutral = "#e7e9ec"
+
+    def cell(ax, x, y, fc):
+        ax.add_patch(FancyBboxPatch((x, y), cell_w, 0.34, boxstyle="round,pad=0.006,rounding_size=0.03",
+                                    fc=fc, ec="#666", lw=0.5))
+
+    def row(y, colors, title, frac):
+        ax.text(0.0, y + 0.24, title, fontsize=8.5, fontweight="bold", va="center")
+        ax.text(0.0, y - 0.06, frac, fontsize=7, va="center", color="#555")
+        for i, c in enumerate(colors):
+            cell(ax, x0 + i * (cell_w + gap), y, c)
+
+    row(2.25, [C.PALETTE["bouncer"], C.PALETTE["fallback"]] + [neutral] * (n_cells - 2),
+        "GATED", r"$\phi_G=n_L/n_{sets}=1.56\%$ still runs $C$")
+    row(1.35, [C.PALETTE["bouncer"], C.PALETTE["fallback"], C.PALETTE["probe"],
+              C.PALETTE["probe"], C.PALETTE["probe"]] + [neutral] * (n_cells - 5),
+        "PROBING", r"$\phi_P=\phi_G+\rho_{aud}(\cdots)=6.41\%$ still runs $C$")
+
+    legend = [(C.PALETTE["bouncer"], "Leader-L (always $C$)", 0.0),
+             (C.PALETTE["fallback"], "Leader-F (always $\\pi_0$)", 2.15),
+             (C.PALETTE["probe"], "audited follower (PROBING)", 4.45),
+             (neutral, "follower ($\\pi_0$)", 7.15)]
+    for fc, label, lx in legend:
+        ax.add_patch(FancyBboxPatch((lx, 0.35), 0.22, 0.22, boxstyle="round,pad=0.004,rounding_size=0.02",
+                                    fc=fc, ec="#666", lw=0.5))
+        ax.text(lx + 0.32, 0.46, label, fontsize=6.6, va="center")
+    C.savefig(fig, "exposure.pdf")
+
+
 if __name__ == "__main__":
     architecture()
     fsm()
+    exposure()
