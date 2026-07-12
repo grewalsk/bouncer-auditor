@@ -7,7 +7,7 @@ now supported by accurate evidence, or scoped until they are.
 
 ## Where the artifact is
 
-- Repo: `/Users/kabirgrewal/projects/bouncer-hpca`, branch `revision/tmlr-r2`, commit `<COMMIT>`.
+- Repo: `/Users/kabirgrewal/projects/bouncer-hpca`, branch `revision/tmlr-r2`, commit `6f17216`.
 - Paper source: `paper/bouncer.tex` → compiled `paper/bouncer.pdf`.
 - Reproduce (deterministic, ~5 min):
   ```
