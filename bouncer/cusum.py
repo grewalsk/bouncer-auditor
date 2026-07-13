@@ -117,11 +117,12 @@ def siegmund_arl(K: float, H: float, mean_signal: float, sigma: float) -> float:
 
 
 def detection_delay_approx(K: float, H: float, delta_true: float) -> float:
-    """Deterministic-drift detection delay D ≈ H / (K - Δ_true) for Δ_true < K.
+    """Deterministic-drift INITIAL detection delay D_det ≈ H / (K - Δ_true) for Δ_true < K.
 
-    This is the limit of the Siegmund formula for strong positive drift and the
-    quantity that enters Lemma 1's regret bound (each true drop contributes
-    <= D * r_max regret)."""
+    The strong-drift limit of the Siegmund formula — an APPROXIMATION of the mean initial
+    delay, not an upper bound. It equals A2's D (expected fully-open windows per episode,
+    which also counts false re-trust) only in the reseeded near-i.i.d. regime where
+    re-trust ~ 0, as measured in exp_retrust.py; a correlated audit inflates the true D."""
     margin = K - delta_true
     if margin <= 0:
         return np.inf

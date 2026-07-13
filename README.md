@@ -11,10 +11,10 @@
 > with its decision* (set-locality) **and** that its policy contrast survive the
 > secret reseed (reseed-identifiable); statelessness is one sufficient case of the
 > latter. Cache **replacement** is the canonical clean case for set-locality (the
-> eviction on set `s` is scored by hits/misses on `s`); **prefetching** is the characterized
+> eviction on set `s` is scored by hits/misses on `s`); **prefetching** is the demonstrated
 > boundary (it fetches a *different* set than it was triggered on, so its benefit
 > can't be localized — and we show in real ChampSim that *not even the
-> controller's own reward* fixes this). Set-locality is what decides where the
+> controller's own reward* fixes this). Set-locality (with reseed-identifiability) is what *governs* — a boundary we argue and demonstrate, not a proven theorem — where the
 > mechanism works.
 
 This repository is the full research artifact for a TMLR submission (systems-flavored ML)
@@ -159,9 +159,12 @@ Every term is an expected value (linearity; marginals suffice, **no** independen
 **high-probability** form is proved for the **exposure** term only (independent reseeds,
 Hoeffding); the detection and false-alarm terms are bounded in expectation. On any window where `C`
 is genuinely better and the gate is open, `Bouncer = C`.
-The two slack terms are *exactly* the §3 knobs: `D ≈ H/(K−Δ)` and `α = 1/ARL₀`,
-with `ARL₀` from Siegmund's CUSUM average-run-length theory — which we validate
-empirically to a geometric-mean ratio of **0.998**.
+The two slack terms are the §3 knobs: in the reseeded regime where false re-trust ≈ 0
+(measured through the real controller in `exp_retrust.py`), A2's `D` reduces to the initial
+delay `D ≈ H/(K−Δ)`; a temporally-*correlated* (stateful) audit inflates `D` — a named
+limitation, tied to the reseed-identifiability boundary. `α = 1/ARL₀` comes from Siegmund's
+CUSUM average-run-length theory — an approximation we validate empirically to a
+geometric-mean ratio of **0.998**, not a proven upper bound.
 
 **Proposition 1 (Mimicry resistance, per-domain).** If the Leader-L/Leader-F
 assignment within a contested domain is drawn uniformly at random each epoch and
@@ -170,8 +173,10 @@ is *unobservable* to the adversary, then any input-only strategy that keeps
 **the victim cannot be degraded below the floor while evading detection.** Under a
 leaked fraction `f` of the secret assignment, the adversary can protect `f·n_L`
 leaders, so the `(1−f)` unprotected fraction still carries the degradation into
-`Δ̂`: detection survives while `f` is bounded away from 1 and **collapses as
-`f → 1`**. The whole property rests on the secrecy of the sampler.
+`Δ̂`: detection survives while the *unprotected* degradation exceeds the clean margin
+(`(1−f)·δ ≳ Δ_clean − K`) and **collapses sharply once the leak crosses that
+threshold — empirically in the `f = 0.6–0.8` band, well before `f = 1`**. The whole
+property rests on the secrecy of the sampler.
 
 *(Honest scope: this is conditional on per-domain dueling and within-region
 exchangeability up to a heterogeneity bias `β`; a global `Δ̂` carries no guarantee
@@ -243,9 +248,11 @@ the unguarded config 7.9% IPC while Bouncer is unharmed). But a per-set L1D
 it can over-gate a genuinely-helpful prefetcher (`roms`: +12.7% IPC missed → 11%
 clean tax).
 
-This is an honest, instructive finding — it motivates the design choice (paper §8)
-of feeding the auditor the **controller's own in-silicon reward** (e.g. Pythia's
-accuracy×timeliness, already computed for its RL update). It is **not** an
+This is an honest, instructive finding. For a **set-local** controller it motivates
+feeding the auditor the controller's own in-silicon reward (e.g. Pythia's
+accuracy×timeliness). But for **prefetching** we showed even that own reward does
+**not** localize the audit (11.2% → 9.7%), so prefetch stays *outside* the auditable
+class — the own reward is not a fix for de-localization. It is **not** an
 attack-detection headline: on `lbm` the gate engaged *before* the attack onset, so
 it is a competence-driven floor cap. The clean **TRUSTED→GATED transition
 dynamics** are shown where competence is controllable — the synthetic harness.

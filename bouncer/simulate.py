@@ -37,9 +37,10 @@ class SimConfig:
     m: int = 64                 # decisions per set per window
     sample_rate_inv_k: int = 8  # Tier-A samples 1/k of sets each window
     T: int = 400                # windows per episode
-    # rho_aud: fraction of followers re-enabled to C in PROBING. This is the SINGLE source of
-    # truth for the audit fraction; make_bouncer wires it into SetDuelingConfig.audited_frac so
-    # routing and the Lemma-1 phi_P bound cannot diverge (asserted in test_invariants).
+    # rho_aud: fraction of followers re-enabled to C in PROBING. make_bouncer wires this value
+    # into SetDuelingConfig.audited_frac (which keeps its own default only as a fallback for direct
+    # construction), and a per-window assertion in run_episode fails LOUDLY if routing and the
+    # Lemma-1 phi_P bound ever diverge -- so they cannot silently disagree.
     audited_region_frac: float = 0.05
 
 

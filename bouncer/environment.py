@@ -5,10 +5,14 @@ for validating the Bouncer competence auditor.
 Design philosophy
 -----------------
 Bouncer's guarantees (Lemma 1 safety floor; Prop 1 mimicry resistance) are
-*environment-agnostic*: they rest only on (i) bounded per-decision reward and
-(ii) the ability to randomly partition a shared resource into dueling pools.
-Therefore a faithful abstract model of a learned microarchitectural controller
-is sufficient to validate the auditor, which is the contribution of the paper.
+*environment-agnostic* given their assumptions: A1-A6 (bounded reward; expected
+fully-open windows per episode <= D; marginal false-alarm rate; switch cost; episode
+counts; a secret UNIFORM sampler), PLUS -- for the audit to be *faithful* --
+set-locality and reseed-identifiability (Def 1 / Remark 1). Under these, a faithful
+abstract model of a learned microarchitectural controller is sufficient to validate
+the auditor, which is the contribution of the paper. (Statelessness of A1's harness
+reward is one sufficient way to get reseed-identifiability; a real cache is set-local
+but not reseed-identifiable at per-window grain -- the measured boundary.)
 
 We model the prefetcher setting (Pythia) as the anchor; replacement and memory
 scheduling are obtained by changing the resource granularity and reward proxy.

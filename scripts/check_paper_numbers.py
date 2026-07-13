@@ -56,7 +56,7 @@ def main():
     chk("exposure fraction phi_G=1.56%", "1.56", "phi_G=n_L/n_sets")
     chk("exposure fraction phi_P=6.4%", "6.4", "phi_P")
     chk("P1 corrected 3-term loose 12.4", "12.4", f"p1.json lemma_bound_ipc={p1['lemma_bound_ipc']:.2f}")
-    chk("floor prediction mean 0.579 vs 0.581", ["0.579", "0.581"], "phi_G design constant predicts the MEAN attacked-GATED floor (0.63% is the worst window)")
+    chk("floor prediction mean 0.579 vs 0.580", ["0.579", "0.580"], "phi_G design constant predicts the MEAN attacked-GATED floor 0.579 vs measured 0.580455 (0.64% is the worst window)")
 
     # --- Theory (protected) ---
     chk("theory loose/tight/measured 15.1/7.8/5.9",
@@ -83,10 +83,12 @@ def main():
     pa = ft["probing_audit"]
     chk("PROBING sorted-prefix bug 0.985 vs uniform ~phi_P", ["0.985", f"{pa['uniform_low']:.3f}", f"{pa['uniform_high']:.3f}"],
         f"floor_traffic.json sorted-prefix low={pa['sorted_prefix_low']:.3f} vs uniform low={pa['uniform_low']:.3f}/high={pa['uniform_high']:.3f} (~phi_P)")
-    # --- false re-trust / fully-open windows per episode (R3 fix) ---
-    reprobe2 = next(w["retrust_mean"] for w in rt["worst_case"] if w["T_reprobe"] == 2)
-    chk("re-trust design lever 14.3 per 1000 win", "14.3",
-        f"retrust.json worst-case re-trusts at T_reprobe=2 = {reprobe2:.1f}/1000 win (->0 by T_reprobe=12)")
+    # --- fully-open windows per episode: real (small) vs correlated audit (inflates) ---
+    near_tau = next(r["open_frac_mean"] for r in rt["real"] if r["target"] == 0.04)
+    corr_hi = next(c["open_frac_mean"] for c in rt["correlated"] if c["rho"] == 0.95)
+    chk("re-trust: real fully-open <=0.07, correlated inflates to ~0.225",
+        [f"{near_tau:.3f}", f"{corr_hi:.3f}"],
+        f"retrust.json real near-tau fully-open={near_tau:.3f} (re-trust~0); correlated rho=0.95={corr_hi:.3f}")
 
     # --- E1 keystone (means are PROTECTED) ---
     chk("E1 whole-cache 33.6% vs 4.8%",

@@ -1,66 +1,52 @@
 {
-  "note": "Fully-open (C-everywhere) windows during a sustained true drop -- exactly what Lemma 1's detection term N_ep*D*r_max covers. (A) With the real estimator the audit reads Delta<tau and PROBING re-gates, so false re-trusts are ~0 and D is just the initial detection + SUSPECT transient (fully-open fraction < 0.07). (B) Under worst-case stipulated audit noise re-trusts occur, but a false re-trust needs T_reprobe consecutive crossings (prob ~ p^T_reprobe), so raising T_reprobe drives them down geometrically. D is finite and design-controlled.",
+  "note": "Fully-open (C-everywhere) fraction during a sustained true drop, through the REAL Bouncer CUSUM+FSM (not a surrogate). (A) With the reseeded i.i.d. audit the fully-open fraction is small (0.02-0.07) and false re-trusts ~0, so Lemma 1's detection term D is small. (B) A temporally-CORRELATED (stateful) audit strings together T_reprobe crossings, so false re-trust occurs and the fully-open fraction GROWS with correlation -- D is bounded only under the reseed-induced near-independence that reseed-identifiability requires; a correlated/stateful audit inflates it (a named limitation, tied to the set-locality boundary). This is a scoped assumption on D, not a proof that re-trust never happens.",
   "default_T_reprobe": 4,
   "real": [
     {
       "target": 0.04,
       "open_frac_mean": 0.06712962962962964,
-      "retrust_mean": 0.0,
-      "drop_windows": 180
+      "retrust_mean": 0.0
     },
     {
       "target": 0.0,
       "open_frac_mean": 0.04212962962962963,
-      "retrust_mean": 0.0,
-      "drop_windows": 180
+      "retrust_mean": 0.0
     },
     {
       "target": -0.1,
       "open_frac_mean": 0.019444444444444445,
-      "retrust_mean": 0.0,
-      "drop_windows": 180
+      "retrust_mean": 0.0
     }
   ],
-  "worst_case": [
+  "correlated": [
     {
-      "T_reprobe": 2,
-      "p_cross": 0.5,
-      "open_frac_mean": 0.028500000000000004,
-      "retrust_mean": 14.275,
-      "T": 1000
+      "rho": 0.0,
+      "open_frac_mean": 0.0078125,
+      "retrust_per_1000": 0.25,
+      "T": 2000
     },
     {
-      "T_reprobe": 4,
-      "p_cross": 0.5,
-      "open_frac_mean": 0.0048000000000000004,
-      "retrust_mean": 2.575,
-      "T": 1000
+      "rho": 0.5,
+      "open_frac_mean": 0.02890625,
+      "retrust_per_1000": 1.78125,
+      "T": 2000
     },
     {
-      "T_reprobe": 8,
-      "p_cross": 0.5,
-      "open_frac_mean": 0.00030000000000000003,
-      "retrust_mean": 0.175,
-      "T": 1000
+      "rho": 0.8,
+      "open_frac_mean": 0.10743749999999999,
+      "retrust_per_1000": 5.25,
+      "T": 2000
     },
     {
-      "T_reprobe": 12,
-      "p_cross": 0.5,
-      "open_frac_mean": 0.0,
-      "retrust_mean": 0.0,
-      "T": 1000
-    },
-    {
-      "T_reprobe": 16,
-      "p_cross": 0.5,
-      "open_frac_mean": 0.0,
-      "retrust_mean": 0.0,
-      "T": 1000
+      "rho": 0.95,
+      "open_frac_mean": 0.22471875,
+      "retrust_per_1000": 5.5625,
+      "T": 2000
     }
   ],
   "invariants": {
-    "real_estimator_no_false_retrust": true,
-    "real_fully_open_bounded": true,
-    "Treprobe_design_lever": true
+    "reseeded_fully_open_bounded": true,
+    "iid_small": true,
+    "correlation_inflates_D": true
   }
 }

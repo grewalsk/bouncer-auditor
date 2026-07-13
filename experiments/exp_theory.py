@@ -8,9 +8,13 @@ regret bound checked against measured cumulative regret.
     boundary approximation across a threshold sweep. Operates in a regime where
     ARL0 is finite and measurable (margin comparable to sigma).
     -> figures/th_arl.pdf
-(2) Regret bound. Sweep the number of genuine drop episodes N_ep; overlay the
-    Lemma 1 bound N_ep*D*r_max + alpha*T*c_sw on the measured worst-case
-    cumulative regret of the full Bouncer. The bound is a valid (loose) envelope.
+(2) Regret bound. Sweep the number of genuine drop episodes N_ep; overlay Lemma 1's
+    corrected THREE-term expectation bound N_ep*D*r_max + phi_P*T_att*r_max + alpha*T*c_sw
+    (the old two-term form, no exposure, is shown for contrast and is FALSE for long
+    attacks) on the measured cumulative regret of the full Bouncer.
+    NOTE: D here is the initial-delay approximation D_det = H/(K-Delta); it equals A2's
+    fully-open-windows D only in the reseeded regime where false re-trust ~ 0 (measured in
+    exp_retrust.py) -- these numerics are scoped to that regime.
     -> figures/th_regret.pdf
 """
 import numpy as np

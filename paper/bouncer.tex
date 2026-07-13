@@ -85,8 +85,9 @@ detects \emph{none} of the attacks ($0/50$, Wilson $95\%$ upper bound $0.07$) wh
 Bouncer detects \emph{all} ($50/50$, lower bound $0.93$), because it scores realized
 competence where an input monitor is blind to it by construction. A separate leak
 ablation isolates what the sampler's \emph{secrecy} adds: against a leak-aware regional
-adversary, detection degrades smoothly as the assignment leaks and collapses once it is
-known---while a sub-resolution \emph{slow-bleed} adversary evades the audit's resolution
+adversary, detection holds up to a moderate leak and then collapses sharply (in the
+$0.6$--$0.8$ leaked-fraction band, well before the assignment is fully
+known)---while a sub-resolution \emph{slow-bleed} adversary evades the audit's resolution
 altogether (a named, open vulnerability). We then probe the boundary on real
 ChampSim deployments on SPEC\,CPU2017. As an L1D prefetcher module Bouncer caps a
 corrupted prefetcher at the prefetch-off floor but over-gates a genuinely-helpful
@@ -262,7 +263,7 @@ violates it (a prefetch on $s$ benefits a different set $s'$), and we show in
 \Cref{sec:eval-champsim} that no per-set reward---not even the controller's own---
 recovers a faithful $\dhat$ for it. We therefore present Bouncer as a mechanism for
 the \emph{set-local} class, with replacement as the canonical instance and
-prefetching as the characterized boundary.
+prefetching as the demonstrated boundary.
 
 \begin{remark}[Set-locality is necessary, not sufficient---a reseed-identifiability
 condition]\label{rem:stateless}
@@ -438,12 +439,14 @@ from an input-only one.
 \textup{(A1)} per-decision reward $\in[0,\rmax]$; \textup{(A2)} a \emph{drop episode} is a
 \emph{maximal run} of consecutive windows with true competence $\Delta_t<\tau$ ($K=\tau+\gamma/2$),
 and over such an episode the \emph{expected number of fully-open windows}---$C$ running everywhere
-(TRUSTED/SUSPECT), i.e.\ the initial detection delay \emph{plus any false re-trust excursions}---is
-$\le D$. The initial delay is the Lorden/Siegmund mean $\approx H/(K-\Delta_t)$; the re-trust
-excursions are bounded because a false re-trust needs $T_{reprobe}$ consecutive PROBING estimates
-above $\tau+\Delta_{hys}$, which the reseeded audit makes rare and the background Tier-B corrects
-in $\sim\!1$ window (\Cref{sec:eval-retrust}: $\approx\!0$ false re-trusts for the real estimator,
-fully-open fraction $\le\!0.07$); \textup{(A3)} the per-window false-alarm \emph{probability}
+(TRUSTED/SUSPECT), the initial detection delay \emph{plus any false re-trust excursions}---is
+$\le D$. We treat this as an \emph{assumption on the FSM that we characterize empirically, not a
+closed-form bound}: \Cref{sec:eval-retrust} measures $D$ \emph{through the real controller} and
+finds $D\approx$ the initial delay ($\approx H/(K-\Delta_t)$, Lorden/Siegmund) with $\approx\!0$
+false re-trusts for the reseeded, near-i.i.d.\ audit (fully-open fraction $\le\!0.07$). It is
+\emph{not} horizon-independent in general: a temporally-\emph{correlated} (stateful) audit strings
+together the $T_{reprobe}$ crossings a false re-trust needs, inflating $D$---the same
+reseed-identifiability boundary---which we name as a limitation rather than bound; \textup{(A3)} the per-window false-alarm \emph{probability}
 is $\le\alpha=1/\mathrm{ARL}_0$ (a marginal bound; \emph{no} independence across windows is
 assumed); \textup{(A4)} a gate switch transient costs $\le c_{sw}$; \textup{(A5)} there are
 $N_{ep}$ drop episodes spanning $T_{att}\le T$ windows over a horizon of $T$ windows;
@@ -479,7 +482,7 @@ against the fallback---over the secret sampler, the detection delay, and the fal
 events---obeys
 \begin{equation}\label{eq:floor}
 \mathbb{E}\!\Big[\sum_t\!\big(r_t^{\pizero}-r_t^{\mathrm{Bouncer}}\big)\Big]
-\;\le\; \underbrace{N_{ep}\,D\,\rmax}_{\text{detection}}
+\;\le\; \underbrace{N_{ep}\,D\,\rmax}_{\text{detection + re-trust}}
 \;+\; \underbrace{\phi_P\,T_{att}\,\rmax}_{\text{audit exposure}}
 \;+\; \underbrace{\alpha\,T\,c_{sw}}_{\text{false alarm}}.
 \end{equation}
@@ -500,7 +503,7 @@ vector $w$ ($\sum_s w_s=1$), $\mathbb{E}[\text{exposure}]=\sum_s w_s\Pr[s\text{ 
 Detection and re-trust.} Within an episode $C$ runs everywhere on its \emph{fully-open} windows---the
 initial detection delay \emph{plus} any false re-trust excursions; by A2 their expected count is
 $\le D$, so the expected fully-open regret is $\le N_{ep}D\rmax$ (linearity over episodes). This is
-where a false re-trust is charged: A2's $D$ counts it, and \Cref{sec:eval-retrust} bounds it. \emph{(iii) False alarms.} By A3 the expected number of false alarms is
+where a false re-trust is charged: A2's $D$ counts it, and \Cref{sec:eval-retrust} measures it (small in the reseeded regime; inflated by a correlated audit). \emph{(iii) False alarms.} By A3 the expected number of false alarms is
 $\sum_{t=1}^{T}\Pr[\text{alarm}_t]\le\alpha T$ (linearity; marginals suffice, no independence),
 each costing $\le c_{sw}$. \emph{(iv)} Trusted windows with $C\ge\pizero$ contribute non-positive
 regret. Summing (i)--(iii) yields \cref{eq:floor}.
@@ -522,8 +525,9 @@ marginal), neither of which we assume. The guarantee we assert is the expected-r
 \cref{eq:floor}.
 
 \textbf{Two of the three regret terms are tunable, and one is fixed by design.} The detection and false-alarm slack are the \Cref{sec:tierb} knobs, while the
-audit-exposure term is instead fixed by the design constant $\phi_P$. The detection delay is
-$D\approx H/(K-\Delta_{true})$ and the false-alarm rate is
+audit-exposure term is instead fixed by the design constant $\phi_P$. In the reseeded regime
+where false re-trust $\approx0$ (\Cref{sec:eval-retrust}), A2's $D$ reduces to the initial delay
+$D\approx H/(K-\Delta_{true})$, and the false-alarm rate is
 $\alpha=1/\mathrm{ARL}_0$, where $\mathrm{ARL}_0$ (average run length to a false alarm) comes from Siegmund's corrected-
 boundary approximation~\cite{siegmund1985sequential}, a standard sequential-analysis result. For a one-sided CUSUM (a running change detector)
 accumulating $(K-\dhat)$ with standardized drift $\delta=(K-\mu)/\sigd$ and
@@ -556,7 +560,7 @@ the floor while evading the gate}. Under a leaked fraction $f$ of the within-$R$
 assignment, the adversary may spare $f\,n_L$ Leader-L sets, biasing $\dhat_R$
 upward by $\le f\,(\bar r^{\text{clean}}-\bar r^{\text{att}})$; the
 \emph{unprotected} $(1-f)$ of the degradation still enters $\dhat_R$, so the gate
-fires once the unprotected degradation pushes $\dhat_R$ below the CUSUM reference $K=\tau+\gamma/2$, i.e.\ $(1-f)(\bar r^{\text{clean}}-\bar r^{\text{att}})\gtrsim\gamma/2$ up to $O(\sigma_{\Delta,R})$ estimator noise (a realized per-window event),
+fires once the unprotected degradation pushes $\dhat_R$ below the CUSUM reference $K=\tau+\gamma/2$---i.e.\ $(1-f)(\bar r^{\text{clean}}-\bar r^{\text{att}})\gtrsim\Delta^{\text{clean}}_R-K$, where $\Delta^{\text{clean}}_R$ is the \emph{un-attacked} competence advantage on $R$ (up to $O(\sigma_{\Delta,R})$ estimator noise, a realized per-window event; empirically the crossing falls between $f{=}0.6$, where $\dhat_R\!\approx\!0.084<K$ and detection holds, and $f{=}0.8$, where $\dhat_R\!\approx\!0.227>K$ and it evades),
 i.e.\ detection is intact while the leaked fraction stays modest (empirically up
 to $f\!\approx\!0.6$, \Cref{sec:eval-p4}) and collapses sharply in the
 $0.6$--$0.8$ band, well before $f{=}1$ (not a gradual roll-off toward $1$).
@@ -570,7 +574,7 @@ them, so any input-only strategy raising $\bar r_L$ raises the follower mean to
 within $\beta$. Evasion ($\dhat_R\ge\tau$) thus forces follower reward
 $\ge r^{\pizero}+\tau-\beta$. Leaked knowledge of fraction $f$ lets the adversary
 exempt $f\,n_L$ Leader-L sets; the remaining $(1-f)$ fraction carries the
-degradation into $\dhat_R$, detectable once it pushes $\dhat_R$ below the CUSUM reference $K$ (margin $\gamma/2$, up to $O(\sigma_{\Delta,R})$ noise).
+degradation into $\dhat_R$, detectable once the unprotected degradation exceeds the clean margin, $(1-f)(\bar r^{\text{clean}}-\bar r^{\text{att}})\gtrsim\Delta^{\text{clean}}_R-K$ (up to $O(\sigma_{\Delta,R})$ noise).
 \end{proof}
 
 \textbf{What this does and does not cover.} (i) \emph{Global $\dhat$ is not
@@ -721,7 +725,7 @@ A4 switch transient $\le c_{sw}$ & A (analytical); M: P1 one-window dip $\le D\r
 A5 $N_{ep}$ episodes over $T$ & A (definitional, counts episodes). \\
 A6 secret \emph{uniform} audit subset & E: construction (\Cref{sec:tierb}); M: PROBING exposure is $\phi_P$-uniform, index-independent (\Cref{sec:eval-floortraffic}: $0.062$/$0.064$ low/high index vs $0.985$ for a sorted prefix). \\
 Prop.\ 1 finite resolution $\delta_R^{\min}(B)$ & E: \Cref{eq:var}; the sub-resolution slow-bleed is the named open hole (M: \Cref{fig:hole}). \\
-Prop.\ 1 intact secret (leak $f{=}0$) & E/M: secrecy ablation (P4), TPR collapses as $f{\to}1$. \\
+Prop.\ 1 intact secret (leak $f{=}0$) & E/M: secrecy ablation (P4), TPR collapses sharply in the $f{=}0.6$--$0.8$ band (the clean-margin crossing), well before $f{=}1$. \\
 \bottomrule
 \end{tabular}
 \end{table}
@@ -753,7 +757,7 @@ attack ends via PROBING, not a fixed timer. Bouncer holds the \emph{steady-state
 Leader-L sets that keep running $C$ under attack, so the \emph{mean} floor violation over the
 attacked GATED windows is
 $\phi_G(q_0-\mu_C^{att})\,\mathrm{slope}/\mathrm{IPC}_{\pizero}=0.579\%$, matching the measured
-$0.581\%$ to three digits (a design constant forward-predicting the measurement); the reported
+$0.580\%$ (a design constant forward-predicting the measurement to within $0.002$ points); the reported
 $0.64\%$ is the worst single window, $\sim\!2.4\sigma$ of per-window noise above that mean. The only larger excursion is the lone pre-detection window, which dips
 $36\%$ below the floor: exactly the bounded $\le D\rmax$ term of \Cref{lem:floor}, and the
 price of a one-window detection delay. Bouncer recovers performance to $0.55$ (returning to
@@ -833,14 +837,15 @@ decisive. \textbf{(b)} The secrecy
 ablation realizes \Cref{prop:mimicry} empirically: against the strongest,
 redistributive covert adversary, with the dueling pools drawn \emph{within} the
 victim region (an effective in-region pool of $\sim\!4$ Leader-L sets, hence a few
-windows of latency), detection power degrades smoothly as the secret leaks---
+windows of latency), detection power holds and then falls off a cliff as the secret leaks---
 $\mathrm{TPR}{=}1.0$ for leaked fraction $f\le0.4$, $0.975$ at $f{=}0.6$,
 collapsing to $0.075$ at $f{=}0.8$ and $0$ at $f{=}1.0$, with latency rising
 $1.2\!\to\!\infty$ windows. Panel (a)'s gap over the input monitor is the competence
 signal itself---an input monitor is blind to a competence drop by construction, so its
 $0/50$ is definitional (\Cref{sec:eval-p4}); panel (b) is what isolates the role of
 \emph{secrecy}: this leak-aware regional adversary is caught only while the assignment
-stays hidden, and detection degrades smoothly as it leaks.
+stays hidden, and detection collapses sharply once the leak crosses the clean-margin
+threshold (the $0.6$--$0.8$ band; \Cref{prop:mimicry}).
 
 \begin{figure}[t]\centering
 \begin{subfigure}{0.49\columnwidth}\includegraphics[width=\linewidth]{p4_mimicry_survival.pdf}\caption{}\end{subfigure}
@@ -1040,18 +1045,26 @@ $0.064$ under worst-case concentration), and over independently reseeded windows
 total stays under the Hoeffding envelope $\phi_P T_{att}\rmax+\rmax\sqrt{(T_{att}/2)\ln(1/\delta_s)}$
 (empirical coverage $1.00$ at $\delta_s{=}0.01$ for every $T_{att}\!\le\!480$).
 
-\subsection{Fully-open windows per episode: the detection term $D$ is finite}\label{sec:eval-retrust}
+\subsection{Fully-open windows per episode: what $D$ actually is}\label{sec:eval-retrust}
 A2's $D$ counts \emph{all} fully-open ($C$-everywhere) windows in a drop episode---the initial
 detection delay plus any \emph{false re-trust} excursions, where PROBING re-opens the gate after
-$T_{reprobe}$ audit estimates above $\tau+\Delta_{hys}$. We bound both (\texttt{exp\_retrust.py}).
-\emph{With the real estimator} a sustained true drop yields $\approx\!0$ false re-trusts across
-drop depths (the audit reads $\Delta<\tau$ and PROBING re-\emph{gates}), so the fully-open fraction
-is just the initial-detection/SUSPECT transient---$0.019$ (deep) to $0.067$ (near $\tau$), well
-below $1$. \emph{Under worst-case stipulated audit noise} (a crossing every other window), false
-re-trusts do occur, but the background Tier-B corrects each in $\sim\!1$ window (fully-open fraction
-$\le\!0.03$) and raising $T_{reprobe}$ drives the re-trust rate down geometrically
-($14.3\!\to\!2.6\!\to\!0.2\!\to\!0$ per $1000$ windows at $T_{reprobe}{=}2,4,8,12$). So $D$ is finite
-and design-controlled, and the detection term $N_{ep}D\rmax$ covers false re-trusts by construction.
+$T_{reprobe}$ audit estimates above $\tau+\Delta_{hys}$. We measure $D$ \emph{through the real
+controller} (\texttt{exp\_retrust.py} drives the actual Tier-B CUSUM and FSM, so re-gating pays the
+true CUSUM delay, not a one-window surrogate---an error a reviewer caught in an earlier draft).
+\emph{With the reseeded, near-i.i.d.\ audit} a sustained true drop yields $\approx\!0$ false
+re-trusts across drop depths (the audit reads $\Delta<\tau$ and rarely strings together
+$T_{reprobe}$ crossings), so the fully-open fraction is just the initial-detection/SUSPECT
+transient---$0.019$ (deep) to $0.067$ (near $\tau$), and $D\approx$ the initial delay. This is
+\emph{not} horizon-independent in general: a temporally-\emph{correlated} (stateful) audit produces
+runs of crossings, so false re-trust occurs and the fully-open fraction climbs with the correlation
+$\rho$---$0.008$ at $\rho{=}0$ to $0.225$ at $\rho{=}0.95$, again through the real controller. So
+$D$ is small precisely under the reseed-induced near-independence that reseed-identifiability
+already requires; a correlated audit inflates it. We therefore state $D$ as a \emph{measured
+assumption} (A2) for the reseeded regime and name the correlated-audit inflation as a
+\emph{limitation}, not a bound---and every Lemma-1 numeric floor reported in this evaluation
+(P1's $12.4$; the theory-validation $15.1/7.8/5.9$ and long-attack $123.6$, $11.9$-vs-$2.52$)
+uses $D\approx$ the initial delay, valid where re-trust $\approx0$ (as measured here), not for
+an arbitrary audit.
 
 \begin{figure}[t]\centering
 \begin{subfigure}{\columnwidth}\includegraphics[width=\linewidth]{th_arl.pdf}\caption{}\end{subfigure}\\

@@ -95,8 +95,14 @@ def regret_bound(*, r_max: float, N_ep: int, T: int, c_sw: float,
     sigma_delta     : std of Δ̂ per window (from set_dueling.sigma_delta(m))
     mean_signal_clean : E[Δ̂] in-control (clean), used for ARL0/alpha
     delta_true_drop : true competence during a drop episode (< K), sets D
+
+    NOTE: D here is the initial-detection-delay approximation D_det = H/(K-Delta). This equals
+    A2's fully-open-windows-per-episode D only in the reseeded, near-i.i.d. regime where false
+    re-trust ~ 0 (measured in exp_retrust.py: fully-open fraction <= 0.07). A temporally-correlated
+    (stateful) audit inflates the true D_open (a named limitation), and these numerics do not cover
+    that regime.
     """
-    D = detection_delay_approx(K, H, delta_true_drop)
+    D = detection_delay_approx(K, H, delta_true_drop)  # D_det; == D_open only where re-trust ~ 0
     alpha = false_alarm_rate_per_window(K, H, mean_signal_clean, sigma_delta)
     det = N_ep * D * r_max
     fa = alpha * T * c_sw

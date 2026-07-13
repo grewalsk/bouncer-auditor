@@ -1,23 +1,21 @@
-"""False re-trust during a sustained drop (TMLR-R3 reviewer's Lemma-1 gap).
+"""Fully-open windows during a sustained drop, through the REAL controller (TMLR-R3/R4 gap).
 
-Lemma 1's detection term N_ep*D*r_max charges the fully-open (C-everywhere) windows during a
-drop episode. The R3 review noted that a maximal true-drop episode can contain MORE than one
-fully-open interval: PROBING re-trusts to TRUSTED after T_reprobe consecutive audit estimates
->= tau+hys (gate_fsm.py), and a priori nothing bounds how often that happens. So A2 must bound
-the fully-open window count per episode (initial detection delay + any false re-trust
-excursions), and we must show that bound D is finite and design-controlled.
+Lemma 1's detection term charges the fully-open (C-everywhere) windows in a drop episode. The R3
+review noted the FSM can FALSELY re-trust (PROBING->TRUSTED after T_reprobe audit estimates
+>= tau+hys), re-opening the gate mid-drop; the R4 review then showed our first attempt understated
+it by driving a bare GateFSM with a 1-window re-gate surrogate. This version drives the ACTUAL
+Bouncer (real Tier-B CUSUM + FSM, so re-gating takes the true CUSUM delay) and reports the
+fully-open fraction honestly.
 
-Two measurements:
-  (A) REAL ESTIMATOR. Under a sustained true drop driven through the actual harness, the
-      estimator reads Delta<tau and PROBING re-gates rather than re-trusts, so false re-trusts
-      are ~0 and the fully-open windows are just the initial detection + SUSPECT transient.
-  (B) WORST-CASE STIPULATED AUDIT. Drive the gate directly with adversarial audit noise centered
-      at the re-trust threshold (the reviewer's construction). Re-trusts now occur, but raising
-      the re-probe evidence T_reprobe drives them down geometrically -- so D is bounded and tunable
-      even in the worst case. A false re-trust needs T_reprobe consecutive crossings, probability
-      ~ p^T_reprobe, which is the design lever.
-
-Deterministic; emits results/retrust.json + figures/retrust.pdf.
+We drive the real Bouncer.step with a constructed audit signal whose mean competence is below tau
+(a genuine drop) but with tunable temporal CORRELATION rho:
+  * rho=0 (i.i.d., the reseeded/near-stateless regime): the audit rarely strings together
+    T_reprobe crossings, so false re-trust is rare and the fully-open fraction is small.
+  * rho->1 (a temporally-correlated, i.e. STATEFUL, audit): runs above threshold become common,
+    false re-trust occurs, and the fully-open fraction GROWS -- it is NOT horizon-independent.
+So the detection term is bounded (small D) exactly under the reseed-induced near-independence that
+reseed-identifiability already requires; a correlated/stateful audit inflates it. This is a scoped
+finding, not a claim that re-trust never happens. Deterministic; emits results/retrust.json + figure.
 """
 import sys, json
 import numpy as np
@@ -26,107 +24,107 @@ import common as C
 import matplotlib.pyplot as plt
 from bouncer.adversary import BroadAttack
 from bouncer.simulate import run_episode
-from bouncer.gate_fsm import GateFSM, GateConfig, Gate
+from bouncer.gate_fsm import GateConfig
+
+TAU = 0.05
 
 
 def u_for_delta(comp, target):
     return float(np.clip((comp.a_C - comp.q0 - target) / comp.b_C, 0.0, 1.0))
 
 
-# ---- (A) real estimator: sustained drop through the harness -------------------------------
+# ---- (A) real estimator, i.i.d. reseeded reward: sustained drop through the full harness ----
 def real_cell(target, n_ep=24, T=200, onset=20):
     comp = C.make_competence()
     u = u_for_delta(comp, target)
-    open_frac, retrusts = [], []
+    open_frac, retr = [], []
     for s in range(n_ep):
         env, b = C.make_bouncer("full", comp=comp, seed=s)
-        sim = C.simconfig(T=T)
         adv = BroadAttack(C.STD["n_sets"], onset=onset, offset=None, stress=u, seed=s + 700)
-        df = run_episode(comp, env, b, adv, sim, seed=s + 800)
+        df = run_episode(comp, env, b, adv, C.simconfig(T=T), seed=s + 800)
         st = df.state.values[onset:]
         openm = np.isin(st, ["TRUSTED", "SUSPECT"])
         prior_closed = ~np.isin(df.state.values[onset - 1:-1], ["TRUSTED", "SUSPECT"])
-        open_frac.append(float(openm.mean())); retrusts.append(int(np.sum(openm & prior_closed)))
+        open_frac.append(float(openm.mean())); retr.append(int(np.sum(openm & prior_closed)))
     return dict(target=round(target, 3), open_frac_mean=float(np.mean(open_frac)),
-                retrust_mean=float(np.mean(retrusts)), drop_windows=T - onset)
+                retrust_mean=float(np.mean(retr)))
 
 
-# ---- (B) worst-case stipulated audit noise: drive the gate directly ------------------------
-def worst_cell(T_reprobe, p_cross=0.5, T=1000, n_rep=40):
-    """Gate driven under a sustained true drop with adversarial audit noise: each window the
-    stipulated audit estimate crosses tau+hys with probability p_cross (worst case near tau) and
-    is below tau otherwise. Count re-trust events and fully-open fraction vs T_reprobe."""
-    tau, hys = 0.05, 0.05
+# ---- (B) REAL Bouncer driven with a correlated audit signal (mean competence < tau) --------
+def corr_cell(rho, T=2000, n_rep=16, mean_delta=-0.02, noise=0.10):
+    """Drive the real Bouncer.step (real CUSUM + FSM). The per-window audit competence follows an
+    AR(1) with stationary mean `mean_delta` (< 0, i.e. below tau) and correlation `rho`. We build
+    rewards so the measured dhat matches the target, and count fully-open windows through the FSM."""
+    n = C.STD["n_sets"]; n_samp = max(8, n // C.STD["k"])
     fracs, rtrs = [], []
     for rep in range(n_rep):
-        rng = np.random.default_rng(1000 + rep + T_reprobe)
-        g = GateFSM(GateConfig(tau=tau, delta_hys=hys, T_reprobe=T_reprobe))
-        g.state = Gate.GATED                        # a true drop was already detected
-        opens = rtr = 0
+        rng = np.random.default_rng(3000 + rep)
+        env, b = C.make_bouncer("full", seed=rep)
+        feat = env.features(np.full(n_samp, 0.05)); conf = env.confidence(np.full(n_samp, 0.05))
+        x = mean_delta
+        opens = rtr = 0; was_open = b.gate.C_active_everywhere
         for _ in range(T):
-            cross = rng.random() < p_cross
-            dhat = (tau + hys + 0.02) if cross else (tau - 0.02)   # above threshold, or clearly below
-            was_open = g.C_active_everywhere
-            # background Tier-B re-gates a FALSELY-trusted gate the moment competence reads bad
-            # (bouncer.py:_step_full TRUSTED->GATED path), so a re-trust is corrected in ~1 window:
-            if g.state == Gate.TRUSTED and dhat < tau:
-                g.state = Gate.GATED; g._dwell_count = 0; g.history.append(g.state)
-            else:
-                g.step(tier_a_escalate=False, tier_a_clear=False, tierb_delta_fired=(dhat < tau), delta_hat=dhat)
-            now_open = g.C_active_everywhere
-            opens += int(now_open)
-            rtr += int(now_open and not was_open)
-        fracs.append(opens / T); rtrs.append(rtr)
-    return dict(T_reprobe=T_reprobe, p_cross=p_cross, open_frac_mean=float(np.mean(fracs)),
-                retrust_mean=float(np.mean(rtrs)), T=T)
+            x = rho * x + (1 - rho) * mean_delta + np.sqrt(max(1 - rho * rho, 0)) * noise * rng.standard_normal()
+            dhat_target = TAU + x                                  # mean = tau + mean_delta < tau
+            rC = np.clip(np.full(n, 0.5 + dhat_target), 0, 1); rF = np.full(n, 0.5)
+            obs = dict(rC_per_set=rC, rF_per_set=rF, feat_win=feat, conf_win=conf,
+                       a_win=np.ones(n_samp), r_win=rC[:n_samp], delta_true=dhat_target)
+            tel = b.step(obs)
+            now_open = bool(tel["C_active"])
+            opens += int(now_open); rtr += int(now_open and not was_open); was_open = now_open
+        fracs.append(opens / T); rtrs.append(rtr / T * 1000)
+    return dict(rho=rho, open_frac_mean=float(np.mean(fracs)), retrust_per_1000=float(np.mean(rtrs)), T=T)
 
 
 def main():
     C.setstyle()
     real = [real_cell(t) for t in (0.04, 0.0, -0.10)]
-    worst = [worst_cell(r) for r in (2, 4, 8, 12, 16)]
+    corr = [corr_cell(r) for r in (0.0, 0.5, 0.8, 0.95)]
 
-    print("(A) REAL estimator, sustained drop:")
+    print("(A) real estimator (i.i.d. reseeded reward), sustained drop -- through the full harness:")
     for r in real:
         print(f"    Delta={r['target']:+.2f}: fully-open frac={r['open_frac_mean']:.3f}  "
-              f"false re-trusts/episode={r['retrust_mean']:.2f}")
-    print("(B) WORST-CASE stipulated audit (p_cross=0.5), gate driven directly:")
-    for r in worst:
-        print(f"    T_reprobe={r['T_reprobe']:2d}: fully-open frac={r['open_frac_mean']:.3f}  "
-              f"re-trusts in {r['T']} windows={r['retrust_mean']:.1f}")
+              f"re-trusts/episode={r['retrust_mean']:.2f}")
+    print("(B) REAL Bouncer (CUSUM+FSM) driven with a correlated audit, mean competence < tau:")
+    for r in corr:
+        print(f"    rho={r['rho']:.2f}: fully-open frac={r['open_frac_mean']:.3f}  "
+              f"re-trusts/1000={r['retrust_per_1000']:.1f}")
 
-    real_clean = max(r["retrust_mean"] for r in real) < 0.5           # real estimator ~never re-trusts
-    real_bounded = max(r["open_frac_mean"] for r in real) < 0.15
-    worst_sorted = sorted(worst, key=lambda r: r["T_reprobe"])
-    lever_works = worst_sorted[0]["retrust_mean"] > 5 * max(worst_sorted[-1]["retrust_mean"], 1e-9)  # geometric drop
-    print(f"  (A) real estimator ~never false-re-trusts: {real_clean} (max {max(r['retrust_mean'] for r in real):.2f}); "
-          f"fully-open bounded: {real_bounded}")
-    print(f"  (B) T_reprobe lever (re-trusts {worst_sorted[0]['retrust_mean']:.1f} -> {worst_sorted[-1]['retrust_mean']:.2f}): {lever_works}")
+    real_bounded = max(r["open_frac_mean"] for r in real) < 0.15         # reseeded audit: small
+    corr_sorted = sorted(corr, key=lambda r: r["rho"])
+    # correlation inflates the fully-open fraction: the honest, scoped finding
+    corr_inflates = corr_sorted[-1]["open_frac_mean"] > 3 * max(corr_sorted[0]["open_frac_mean"], 1e-3)
+    iid_small = corr_sorted[0]["open_frac_mean"] < 0.10                  # rho=0 stays small
+    print(f"  (A) reseeded audit fully-open bounded (<0.15): {real_bounded} "
+          f"(max {max(r['open_frac_mean'] for r in real):.3f})")
+    print(f"  (B) i.i.d. small ({corr_sorted[0]['open_frac_mean']:.3f}); correlation inflates it "
+          f"(-> {corr_sorted[-1]['open_frac_mean']:.3f}): iid_small={iid_small}, inflates={corr_inflates}")
 
     fig, ax = plt.subplots(1, 2, figsize=(6.6, 2.7))
-    ax[0].bar([f"{r['target']:+.2f}" for r in real], [r["open_frac_mean"] for r in real],
-              color=C.PALETTE["bouncer"])
+    ax[0].bar([f"{r['target']:+.2f}" for r in real], [r["open_frac_mean"] for r in real], color=C.PALETTE["bouncer"])
     ax[0].set_xlabel(r"true drop $\Delta$"); ax[0].set_ylabel("fully-open fraction"); ax[0].set_ylim(0, 0.15)
-    ax[0].set_title("(A) real estimator:\nre-trust $\\approx$ 0, $D$ = detection+SUSPECT", fontsize=8)
-    ax[1].semilogy([r["T_reprobe"] for r in worst_sorted], [max(r["retrust_mean"], 0.1) for r in worst_sorted],
-                   "o-", color=C.PALETTE["unguarded"])
-    ax[1].set_xlabel(r"$T_{reprobe}$"); ax[1].set_ylabel("re-trusts / 1000 win")
-    ax[1].set_title("(B) worst-case audit:\nthe design lever bounds $D$", fontsize=8)
+    ax[0].set_title("(A) reseeded i.i.d. audit:\n$D$ small (detection+SUSPECT)", fontsize=8)
+    ax[1].plot([r["rho"] for r in corr_sorted], [r["open_frac_mean"] for r in corr_sorted], "o-",
+               color=C.PALETTE["unguarded"])
+    ax[1].set_xlabel(r"audit correlation $\rho$"); ax[1].set_ylabel("fully-open fraction")
+    ax[1].set_title("(B) correlated (stateful) audit\ninflates $D$ (reseed-id. boundary)", fontsize=8)
     C.savefig(fig, "retrust.pdf")
 
     C.save_json("retrust.json", dict(
-        note=("Fully-open (C-everywhere) windows during a sustained true drop -- exactly what Lemma 1's "
-              "detection term N_ep*D*r_max covers. (A) With the real estimator the audit reads Delta<tau and "
-              "PROBING re-gates, so false re-trusts are ~0 and D is just the initial detection + SUSPECT "
-              "transient (fully-open fraction < 0.07). (B) Under worst-case stipulated audit noise re-trusts "
-              "occur, but a false re-trust needs T_reprobe consecutive crossings (prob ~ p^T_reprobe), so "
-              "raising T_reprobe drives them down geometrically. D is finite and design-controlled."),
-        default_T_reprobe=GateConfig().T_reprobe, real=real, worst_case=worst,
-        invariants=dict(real_estimator_no_false_retrust=real_clean, real_fully_open_bounded=real_bounded,
-                        Treprobe_design_lever=lever_works)))
-    assert real_clean, "the real estimator should ~never false-re-trust during a genuine drop"
-    assert real_bounded, "the real fully-open fraction must be small (D finite)"
-    assert lever_works, "T_reprobe must geometrically reduce worst-case false re-trust"
+        note=("Fully-open (C-everywhere) fraction during a sustained true drop, through the REAL "
+              "Bouncer CUSUM+FSM (not a surrogate). (A) With the reseeded i.i.d. audit the fully-open "
+              "fraction is small (0.02-0.07) and false re-trusts ~0, so Lemma 1's detection term D is "
+              "small. (B) A temporally-CORRELATED (stateful) audit strings together T_reprobe crossings, "
+              "so false re-trust occurs and the fully-open fraction GROWS with correlation -- D is bounded "
+              "only under the reseed-induced near-independence that reseed-identifiability requires; a "
+              "correlated/stateful audit inflates it (a named limitation, tied to the set-locality "
+              "boundary). This is a scoped assumption on D, not a proof that re-trust never happens."),
+        default_T_reprobe=GateConfig().T_reprobe, real=real, correlated=corr,
+        invariants=dict(reseeded_fully_open_bounded=real_bounded, iid_small=iid_small,
+                        correlation_inflates_D=corr_inflates)))
+    assert real_bounded, "reseeded i.i.d. audit fully-open fraction must be small (D small)"
+    assert iid_small, "at rho=0 the fully-open fraction should be small"
+    assert corr_inflates, "correlation should inflate the fully-open fraction (the honest limitation)"
 
 
 if __name__ == "__main__":
