@@ -93,9 +93,9 @@ def run_episode(comp: CompetenceModel, env: MicroArchEnv, bouncer: Bouncer,
         if tel["C_active"]:
             deployed[foll] = rC_per_set[foll]            # followers run C
         elif tel["probing"]:
-            n_aud = max(1, int(simcfg.audited_region_frac * len(foll)))
             deployed[foll] = rF_per_set[foll]
-            deployed[foll[:n_aud]] = rC_per_set[foll[:n_aud]]  # small audited region
+            aud = d.audited                                    # secret UNIFORM subset (set_dueling._assign);
+            deployed[aud] = rC_per_set[aud]                    # NOT the sorted prefix -- traffic-independent exposure
         else:  # GATED
             deployed[foll] = rF_per_set[foll]
 

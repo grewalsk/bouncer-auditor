@@ -1,15 +1,17 @@
 # Bouncer: Competence Auditing for Set-Local Learned Microarchitectural Controllers
 
-> A runtime monitor + trust gate that **bounds the worst-case cost of a learned
-> microarchitectural controller** to that of a known-safe heuristic — under
+> A runtime monitor + trust gate that **bounds the *expected* cost of a learned
+> microarchitectural controller** against a known-safe heuristic — under
 > **adaptive mimicry** and **benign distribution shift** — with no
 > POMDP/belief-state machinery and no added latency on the cache-access critical
 > path (analytical; RTL timing future work).
 >
-> **The organizing insight — *set-locality*.** A secret per-set competence audit
-> is faithful exactly when a controller's *reward shares a dueling set with its
-> decision*. Cache **replacement** is the canonical clean case (the eviction on
-> set `s` is scored by hits/misses on `s`); **prefetching** is the characterized
+> **The organizing insight — *set-locality* + *reseed-identifiability*.** A secret
+> per-set competence audit requires that a controller's *reward share a dueling set
+> with its decision* (set-locality) **and** that its policy contrast survive the
+> secret reseed (reseed-identifiable); statelessness is one sufficient case of the
+> latter. Cache **replacement** is the canonical clean case for set-locality (the
+> eviction on set `s` is scored by hits/misses on `s`); **prefetching** is the characterized
 > boundary (it fetches a *different* set than it was triggered on, so its benefit
 > can't be localized — and we show in real ChampSim that *not even the
 > controller's own reward* fixes this). Set-locality is what decides where the
@@ -151,8 +153,10 @@ w.p. `≥ 1 − δ·N_ep`:
 Σ_t ( r_t^{π₀} − r_t^{Bouncer} )  ≤  N_ep · D · r_max  +  α · T · c_sw
 ```
 
-i.e. **Bouncer is never more than a bounded slack worse than the fallback**, and
-on any window where `C` is genuinely better and the gate is open, `Bouncer = C`.
+i.e. **Bouncer's *expected* regret against the fallback is at most a bounded slack**
+(the guarantee is in expectation, over the secret sampler / delay / false alarms; a
+high-probability form is proved for the exposure term only). On any window where `C`
+is genuinely better and the gate is open, `Bouncer = C`.
 The two slack terms are *exactly* the §3 knobs: `D ≈ H/(K−Δ)` and `α = 1/ARL₀`,
 with `ARL₀` from Siegmund's CUSUM average-run-length theory — which we validate
 empirically to a geometric-mean ratio of **0.998**.
@@ -329,8 +333,8 @@ what the prose claims.
 ## 10. Honest scope & status
 
 - **The mechanism is for the *set-local* class.** Set-dueling competence auditing
-  is faithful exactly when reward and decision share a set — **replacement** is the
-  clean case; **prefetching** is the de-localized boundary (confirmed in real
+  requires that reward and decision share a set (and a reseed-identifiable contrast)
+  — **replacement** is the set-local clean case; **prefetching** is the de-localized boundary (confirmed in real
   ChampSim: even the controller's own reward only moves the over-gating tax
   11.2% → 9.7%). This characterization is the paper's organizing contribution.
 - **Controlled quantitative claims** (estimator fidelity, safety floor, mimicry

@@ -52,8 +52,35 @@ def test_estimate_matches_deployment_pool():
     print("  [ok] bouncer.step does not reseed internally; estimator == deployment pool")
 
 
+def test_probing_audit_is_uniform_secret():
+    # A6: the PROBING audit subset must be a uniform secret subset of followers, NOT a sorted
+    # prefix. Check a low-index set is audited ~rho_aud (not ~1), index-independent.
+    from bouncer.set_dueling import SetDueling, SetDuelingConfig
+    d = SetDueling(SetDuelingConfig(n_sets=2048, n_L=32, n_F=32, audited_frac=0.05, reseed_period=1), seed=9)
+    lo = hi = 0; N = 4000
+    for _ in range(N):
+        d.maybe_reseed()
+        lo += int(d.is_audited[0]); hi += int(d.is_audited[2047])
+    lo, hi = lo / N, hi / N
+    assert lo < 0.15 and hi < 0.15, f"audit should be ~rho_aud everywhere, got lo={lo} hi={hi}"
+    assert abs(lo - hi) < 0.05, f"audit exposure must be index-independent, got lo={lo} hi={hi}"
+    print(f"  [ok] PROBING audit is uniform-secret (low={lo:.3f}, high={hi:.3f} ~ rho_aud)")
+
+
+def test_theory_envelopes():
+    # Exercise the Lemma-1 helpers (reviewer R2 noted they were untested).
+    from bouncer.theory import exposure_envelope, false_alarm_envelope
+    env = exposure_envelope(phi=0.064, T_att=240, r_max=1.0, delta_s=0.01)
+    assert env > 0.064 * 240 and env < 0.064 * 240 + 30, f"exposure envelope out of range: {env}"
+    fa = false_alarm_envelope(alpha=1e-3, T=1000, c_sw=0.1, delta_f=0.01)
+    assert fa > 0, "false-alarm envelope (independence-conditional helper) should be positive"
+    print(f"  [ok] theory helpers exercised (exposure_envelope={env:.2f}, false_alarm_envelope={fa:.3f})")
+
+
 if __name__ == "__main__":
     test_single_assignment_per_window()
     test_reseed_reshuffles()
     test_estimate_matches_deployment_pool()
+    test_probing_audit_is_uniform_secret()
+    test_theory_envelopes()
     print("ALL INVARIANTS PASS")

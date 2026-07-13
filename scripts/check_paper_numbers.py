@@ -78,6 +78,10 @@ def main():
     # --- Lemma 1 traffic-weighting counterexample (R1 fix) ---
     chk("floor-traffic 15.6x per-window violation", f"{ft['counterexample']['violation_factor']:.1f}",
         f"floor_traffic.json violation={ft['counterexample']['violation_factor']:.2f}x over naive phi_P bound")
+    # --- PROBING sorted-prefix bug + uniform-secret fix (R2 fix) ---
+    pa = ft["probing_audit"]
+    chk("PROBING sorted-prefix bug 0.985 vs uniform ~phi_P", ["0.985", f"{pa['uniform_low']:.3f}", f"{pa['uniform_high']:.3f}"],
+        f"floor_traffic.json sorted-prefix low={pa['sorted_prefix_low']:.3f} vs uniform low={pa['uniform_low']:.3f}/high={pa['uniform_high']:.3f} (~phi_P)")
 
     # --- E1 keystone (means are PROTECTED) ---
     chk("E1 whole-cache 33.6% vs 4.8%",

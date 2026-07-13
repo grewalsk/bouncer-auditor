@@ -11,25 +11,33 @@ transient <= c_sw, and N_ep drop episodes over horizon T:
     E[ Σ_t (r^{pi0}_t - r^{Bouncer}_t) ]  <=  N_ep*D*r_max  +  phi_P*T_att*r_max  +  alpha*T*c_sw
                                              (detection)      (audit exposure)      (false alarm)
 
-Two subtleties the earlier statement got wrong (TMLR-R1 review), now fixed:
+The guarantee is an EXPECTATION bound (TMLR-R2 review): every term is an expected value proved by
+linearity from the MARGINAL assumptions A2 (E[delay]<=D), A3 (per-window false-alarm prob <=alpha),
+A6 (secret uniform sampler: each set carries C w.p. <=phi_P independent of its traffic). No
+independence across windows is needed for eq. (floor).
 
-  (A) TRAFFIC-WEIGHTING + SAMPLER RANDOMNESS. The exposure term is the *traffic* on the
-      Leader-C sets, not their set fraction. A1-A5 do not bound per-set traffic, so the
-      per-window bound phi*r_max is FALSE under concentrated traffic (a single hot set tagged
-      Leader-C -> regret r_max; see exp_floor_traffic.py, ~15.6x violation). It is repaired by
-      the *secret sampler*: each set is Leader-C w.p. phi_G independent of its traffic, so for
-      ANY traffic E[per-window exposure] <= phi_G*r_max (phi_P PROBING). Over T_att
-      INDEPENDENTLY reseeded windows the total exposure is a sum of independent [0,r_max]
-      variables, so by Hoeffding, w.p. >= 1-delta_s,
+Two subtleties the earlier statement got wrong, now fixed:
+
+  (A) TRAFFIC-WEIGHTING + THE SECRET UNIFORM SAMPLER (A6). The exposure term is the *traffic* on
+      the sets still running C, not their set fraction. A1-A5 do not bound per-set traffic, so the
+      per-window bound phi*r_max is FALSE under concentrated traffic (a single hot set tagged for C
+      -> regret r_max; exp_floor_traffic.py, ~15.6x). The FIX is A6: each set carries C w.p. phi_G
+      (GATED) / <=phi_P (PROBING) independent of its traffic, so for ANY traffic
+      E[per-window exposure] <= phi_P*r_max. CRUCIAL IMPLEMENTATION POINT: the PROBING audit subset
+      must be a *uniform secret* subset of followers, NOT a fixed/sorted prefix -- a sorted prefix
+      exposes a low-index hot set w.p. ~1-n_L/n_sets=0.984 (the R2 bug), which no secrecy repairs.
+      Over INDEPENDENTLY reseeded windows the exposure total is a sum of independent [0,r_max]
+      variables, so Hoeffding gives, w.p. >= 1-delta_s,
           Sum_exposure <= phi_P*T_att*r_max + r_max*sqrt(T_att*ln(1/delta_s)/2)   (o(T_att) slack).
-      exposure_envelope() returns this high-probability envelope.
+      exposure_envelope() returns this high-probability envelope (the ONE term we concentrate).
 
-  (B) FALSE-ALARM CONCENTRATION. A3 gives a per-window false-alarm *probability* alpha, so the
-      realized false-alarm count over T windows is random; alpha*T is its EXPECTATION. The
-      high-probability count is alpha*T + sqrt(T*ln(1/delta_f)/2) (Hoeffding on independent
-      window alarms). The bound above is stated in expectation; the high-probability form adds
-      the two sqrt slacks and unions the sampler/detection/false-alarm failures into the total
-      probability 1 - delta*N_ep - delta_s - delta_f.
+  (B) NO HIGH-PROBABILITY DETECTION / FALSE-ALARM CLAIM. A2 bounds only the MEAN delay and A3 only
+      the MARGINAL alarm probability, which give the expectation terms N_ep*D*r_max and alpha*T*c_sw
+      by linearity -- but NOT a high-probability bound: a high-prob detection term needs a delay
+      tail, and a high-prob false-alarm term needs a martingale/renewal concentration for the
+      STATEFUL CUSUM (per-window alarms are not independent). false_alarm_envelope() below is the
+      count *under an added independence assumption*, provided for reference only; Lemma 1 does not
+      assume it.
 
 The detection and false-alarm terms are the §4 CUSUM knobs (D, alpha are functions of pool
 size n, decisions/window m, CUSUM H through sigma_Δ and the Siegmund ARL); the audit-exposure

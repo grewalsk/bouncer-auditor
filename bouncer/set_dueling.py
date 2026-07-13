@@ -37,6 +37,7 @@ class SetDuelingConfig:
     n_F: int = 32          # Leader-F (fallback) sets
     reseed_period: int = 1  # epochs between reseeds (1 = every epoch)
     r_max: float = 1.0
+    audited_frac: float = 0.05  # rho_aud: secret fraction of followers re-enabled to C in PROBING
 
 
 class SetDueling:
@@ -53,17 +54,29 @@ class SetDueling:
         self._assign()
 
     def _assign(self):
-        """Secret uniform partition of sets into Leader-C / Leader-F / Follower."""
+        """Secret uniform partition of sets into Leader-C / Leader-F / Follower, plus a
+        secret uniform subset of followers audited (re-enabled to C) during PROBING.
+
+        The PROBING audit subset MUST be drawn uniformly and secretly, not as a fixed
+        (e.g. sorted) prefix of the followers: Lemma 1's exposure bound assumes each set is
+        audited with probability rho_aud INDEPENDENT of its traffic. We therefore take the
+        audit subset from the *random-order* follower portion of the permutation (before
+        sorting), so `is_audited[s]` is a fresh Bernoulli(rho_aud) uncorrelated with s's
+        index or traffic, reshuffled every epoch and unobservable to software."""
         c = self.cfg
         perm = self.hw_rng.permutation(c.n_sets)
         self.leaderC = np.sort(perm[: c.n_L])
         self.leaderF = np.sort(perm[c.n_L : c.n_L + c.n_F])
-        self.follower = np.sort(perm[c.n_L + c.n_F :])
+        foll = perm[c.n_L + c.n_F :]                       # RANDOM order -- do NOT sort before sampling
+        n_aud = int(round(c.audited_frac * len(foll)))
+        self.audited = np.sort(foll[:n_aud])               # uniform secret subset (PROBING audit)
+        self.follower = np.sort(foll)
         self.epoch += 1
         # boolean masks for fast routing
         self.is_leaderC = np.zeros(c.n_sets, dtype=bool); self.is_leaderC[self.leaderC] = True
         self.is_leaderF = np.zeros(c.n_sets, dtype=bool); self.is_leaderF[self.leaderF] = True
         self.is_follower = np.zeros(c.n_sets, dtype=bool); self.is_follower[self.follower] = True
+        self.is_audited = np.zeros(c.n_sets, dtype=bool); self.is_audited[self.audited] = True
 
     def maybe_reseed(self):
         if (self.epoch + 1) % self.cfg.reseed_period == 0:
