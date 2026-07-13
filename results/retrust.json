@@ -1,0 +1,66 @@
+{
+  "note": "Fully-open (C-everywhere) windows during a sustained true drop -- exactly what Lemma 1's detection term N_ep*D*r_max covers. (A) With the real estimator the audit reads Delta<tau and PROBING re-gates, so false re-trusts are ~0 and D is just the initial detection + SUSPECT transient (fully-open fraction < 0.07). (B) Under worst-case stipulated audit noise re-trusts occur, but a false re-trust needs T_reprobe consecutive crossings (prob ~ p^T_reprobe), so raising T_reprobe drives them down geometrically. D is finite and design-controlled.",
+  "default_T_reprobe": 4,
+  "real": [
+    {
+      "target": 0.04,
+      "open_frac_mean": 0.06712962962962964,
+      "retrust_mean": 0.0,
+      "drop_windows": 180
+    },
+    {
+      "target": 0.0,
+      "open_frac_mean": 0.04212962962962963,
+      "retrust_mean": 0.0,
+      "drop_windows": 180
+    },
+    {
+      "target": -0.1,
+      "open_frac_mean": 0.019444444444444445,
+      "retrust_mean": 0.0,
+      "drop_windows": 180
+    }
+  ],
+  "worst_case": [
+    {
+      "T_reprobe": 2,
+      "p_cross": 0.5,
+      "open_frac_mean": 0.028500000000000004,
+      "retrust_mean": 14.275,
+      "T": 1000
+    },
+    {
+      "T_reprobe": 4,
+      "p_cross": 0.5,
+      "open_frac_mean": 0.0048000000000000004,
+      "retrust_mean": 2.575,
+      "T": 1000
+    },
+    {
+      "T_reprobe": 8,
+      "p_cross": 0.5,
+      "open_frac_mean": 0.00030000000000000003,
+      "retrust_mean": 0.175,
+      "T": 1000
+    },
+    {
+      "T_reprobe": 12,
+      "p_cross": 0.5,
+      "open_frac_mean": 0.0,
+      "retrust_mean": 0.0,
+      "T": 1000
+    },
+    {
+      "T_reprobe": 16,
+      "p_cross": 0.5,
+      "open_frac_mean": 0.0,
+      "retrust_mean": 0.0,
+      "T": 1000
+    }
+  ],
+  "invariants": {
+    "real_estimator_no_false_retrust": true,
+    "real_fully_open_bounded": true,
+    "Treprobe_design_lever": true
+  }
+}

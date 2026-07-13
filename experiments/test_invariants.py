@@ -67,6 +67,21 @@ def test_probing_audit_is_uniform_secret():
     print(f"  [ok] PROBING audit is uniform-secret (low={lo:.3f}, high={hi:.3f} ~ rho_aud)")
 
 
+def test_implemented_phi_p_below_bound():
+    # The rounded implemented PROBING exposure prob must not exceed the Lemma's phi_P formula.
+    from bouncer.set_dueling import SetDuelingConfig
+    from bouncer.simulate import SimConfig
+    n_sets, n_L, n_F = 2048, 32, 32
+    rho = SimConfig.audited_region_frac
+    assert abs(rho - SetDuelingConfig().audited_frac) < 1e-12, "audit fraction must be single-sourced"
+    n_foll = n_sets - n_L - n_F
+    n_aud = round(rho * n_foll)
+    impl = (n_L + n_aud) / n_sets                       # union: Leader-L always + audited followers
+    phi_P = n_L / n_sets + rho * (1 - (n_L + n_F) / n_sets)
+    assert impl <= phi_P + 1e-9, f"implemented exposure {impl} exceeds bound phi_P {phi_P}"
+    print(f"  [ok] implemented PROBING exposure {impl:.6f} <= Lemma phi_P {phi_P:.6f}")
+
+
 def test_theory_envelopes():
     # Exercise the Lemma-1 helpers (reviewer R2 noted they were untested).
     from bouncer.theory import exposure_envelope, false_alarm_envelope
@@ -82,5 +97,6 @@ if __name__ == "__main__":
     test_reseed_reshuffles()
     test_estimate_matches_deployment_pool()
     test_probing_audit_is_uniform_secret()
+    test_implemented_phi_p_below_bound()
     test_theory_envelopes()
     print("ALL INVARIANTS PASS")

@@ -13,8 +13,9 @@ bound and (ii) verifies the corrected three-term bound envelopes it:
   TIGHT   replace r_max by the realized gap (q0 - mu_C^att) and split the
           post-detection occupancy: phi_G on GATED windows, phi_P on PROBING.
           NOTE: the tight form uses the MEAN detection delay D=H/(K-Delta); it is a
-          mean-level / high-probability envelope (A2 gives D = mean + a tail term), NOT a
-          deterministic bound. The DETERMINISTIC guarantee is the LOOSE bound. Weak-drop
+          MEAN-LEVEL envelope (holds in expectation), NOT a high-probability or
+          deterministic bound. The guarantee is the LOOSE three-term EXPECTATION bound
+          (only its exposure term additionally has a high-probability envelope). Weak-drop
           configs (Delta near tau) can exceed the mean-D tight form by 1-2 windows; the
           strict assertion below holds at the deep-drop operating point (stress=0.92).
 

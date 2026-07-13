@@ -37,6 +37,7 @@ def main():
     rl = load("rlatency.json")
     wp = load("warmup_predictor.json")
     ft = load("floor_traffic.json")
+    rt = load("retrust.json")
 
     # each check: (label, list of literal strings that MUST appear in the tex, provenance)
     checks = []
@@ -82,6 +83,10 @@ def main():
     pa = ft["probing_audit"]
     chk("PROBING sorted-prefix bug 0.985 vs uniform ~phi_P", ["0.985", f"{pa['uniform_low']:.3f}", f"{pa['uniform_high']:.3f}"],
         f"floor_traffic.json sorted-prefix low={pa['sorted_prefix_low']:.3f} vs uniform low={pa['uniform_low']:.3f}/high={pa['uniform_high']:.3f} (~phi_P)")
+    # --- false re-trust / fully-open windows per episode (R3 fix) ---
+    reprobe2 = next(w["retrust_mean"] for w in rt["worst_case"] if w["T_reprobe"] == 2)
+    chk("re-trust design lever 14.3 per 1000 win", "14.3",
+        f"retrust.json worst-case re-trusts at T_reprobe=2 = {reprobe2:.1f}/1000 win (->0 by T_reprobe=12)")
 
     # --- E1 keystone (means are PROTECTED) ---
     chk("E1 whole-cache 33.6% vs 4.8%",

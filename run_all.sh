@@ -49,6 +49,8 @@ echo "==> [6c5] reseed-identifiability (multiplicative vs additive warmup contra
 $PY experiments/exp_warmup_predictor.py
 echo "==> [6c6] coverage-hole slow-bleed (named limitation)"
 $PY experiments/exp_coverage_hole.py
+echo "==> [6c7] false re-trust: fully-open windows per episode (Lemma 1 detection term D)"
+$PY experiments/exp_retrust.py
 echo "==> [6d] ChampSim real-systems figures (prefetcher suite + replacement boundary)"
 $PY experiments/exp_champsim_fig.py
 $PY experiments/exp_e1_fig.py   # reads committed results/champsim_e1/ logs

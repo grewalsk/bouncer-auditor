@@ -37,7 +37,10 @@ class SimConfig:
     m: int = 64                 # decisions per set per window
     sample_rate_inv_k: int = 8  # Tier-A samples 1/k of sets each window
     T: int = 400                # windows per episode
-    audited_region_frac: float = 0.05  # fraction of sets re-enabled in PROBING
+    # rho_aud: fraction of followers re-enabled to C in PROBING. This is the SINGLE source of
+    # truth for the audit fraction; make_bouncer wires it into SetDuelingConfig.audited_frac so
+    # routing and the Lemma-1 phi_P bound cannot diverge (asserted in test_invariants).
+    audited_region_frac: float = 0.05
 
 
 def run_episode(comp: CompetenceModel, env: MicroArchEnv, bouncer: Bouncer,
@@ -81,6 +84,9 @@ def run_episode(comp: CompetenceModel, env: MicroArchEnv, bouncer: Bouncer,
         _assign_est = bouncer.dueling.leaderC.copy()
         tel = bouncer.step(obs)
 
+        # routing and the phi_P bound must use the same audit fraction (no silent divergence)
+        assert abs(bouncer.dueling.cfg.audited_frac - simcfg.audited_region_frac) < 1e-12, (
+            "audited_frac (routing) != audited_region_frac (bound); wire them from one source")
         # --- realized deployed performance (victim experience) ---
         d = bouncer.dueling
         assert np.array_equal(d.leaderC, _assign_est), (

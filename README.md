@@ -144,18 +144,20 @@ safety-floor slack. Every hyperparameter is a point on this chain.
 
 ## 4. The guarantees (no POMDP)
 
-**Lemma 1 (Safety floor / bounded regret).** With bounded reward, detection delay
-`≤ D` w.p. `≥ 1−δ` once true competence drops below `τ`, false-alarm rate `≤ α`,
-switch transient `≤ c_sw`, and `N_ep` genuine drop episodes over `T` windows, then
-w.p. `≥ 1 − δ·N_ep`:
+**Lemma 1 (Safety floor / bounded regret, in expectation).** With bounded reward (A1),
+expected fully-open windows per drop episode `≤ D` (A2: initial detection + any false
+re-trust), marginal false-alarm probability `≤ α` (A3), switch transient `≤ c_sw` (A4),
+`N_ep` episodes over `T` windows (A5), and a secret **uniform** sampler exposing each set
+to `C` with probability `≤ φ_P` independent of traffic (A6), the **expected** regret obeys
 
 ```
-Σ_t ( r_t^{π₀} − r_t^{Bouncer} )  ≤  N_ep · D · r_max  +  α · T · c_sw
+E[ Σ_t ( r_t^{π₀} − r_t^{Bouncer} ) ]  ≤  N_ep·D·r_max  +  φ_P·T_att·r_max  +  α·T·c_sw
+                                          (detection+re-trust)  (exposure)   (false alarm)
 ```
 
-i.e. **Bouncer's *expected* regret against the fallback is at most a bounded slack**
-(the guarantee is in expectation, over the secret sampler / delay / false alarms; a
-high-probability form is proved for the exposure term only). On any window where `C`
+Every term is an expected value (linearity; marginals suffice, **no** independence). A
+**high-probability** form is proved for the **exposure** term only (independent reseeds,
+Hoeffding); the detection and false-alarm terms are bounded in expectation. On any window where `C`
 is genuinely better and the gate is open, `Bouncer = C`.
 The two slack terms are *exactly* the §3 knobs: `D ≈ H/(K−Δ)` and `α = 1/ARL₀`,
 with `ARL₀` from Siegmund's CUSUM average-run-length theory — which we validate
@@ -211,9 +213,10 @@ crashes far below the fallback floor; Bouncer detects in one window, floors to
 
 **Mimicry survival + secrecy (headline).** Under an adaptive mimicry adversary
 that holds the input distribution in-place while degrading `C`, an input-OOD
-monitor detects **none** of the attacks while full Bouncer detects **all** — and
-that robustness is purchased *entirely* by the secrecy of the dueling sets, which
-collapses as the assignment leaks.
+monitor detects **none** of the attacks while full Bouncer detects **all**. That
+50/50-vs-0/50 gap is because Bouncer measures *realized competence* (the input monitor
+is blind to it by construction); *secrecy* is what defeats a **leak-aware** attacker,
+isolated by the leak ablation (TPR collapses as the assignment leaks).
 
 <p align="center">
   <img src="docs/img/ci_mimicry.png" width="48%">
@@ -336,11 +339,13 @@ what the prose claims.
   requires that reward and decision share a set (and a reseed-identifiable contrast)
   — **replacement** is the set-local clean case; **prefetching** is the de-localized boundary (confirmed in real
   ChampSim: even the controller's own reward only moves the over-gating tax
-  11.2% → 9.7%). This characterization is the paper's organizing contribution.
+  11.2% → 9.7%). These two conditions (necessity argued, boundary demonstrated;
+  a full sufficiency theorem is future work) are the paper's organizing contribution.
 - **Controlled quantitative claims** (estimator fidelity, safety floor, mimicry
   survival, secrecy, sensitivity, robustness) come from a faithful **synthetic
   competence harness**, which is itself a set-local model — legitimate because the
-  guarantees rest only on bounded reward + a partitionable resource, and the
+  guarantees rest on bounded reward, a partitionable resource, and a secret uniform
+  sampler (A1–A6), plus set-locality and reseed-identifiability for faithfulness, and the
   misspecification sweep shows they survive violating the i.i.d. assumption.
 - **Security is scoped, with a named open vulnerability.** Mimicry resistance holds
   only for a *declared domain audited at resolution `δ_R^min(B)` with an intact

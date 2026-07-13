@@ -270,11 +270,11 @@ def main():
         for r in q0_results.values())
     inv["joint_floor_and_mimicry"] = bool(joint["p1"]["floor_violation_steady"] <= 0.02
                                           and min(joint["mimicry"]["full_tpr"]) >= 0.90)
-    # honest characterization: TPR stays flat at 1.0 across every tested drop because the
-    # CUSUM DRIFT (not the estimator resolution) sets detection: for any off-policy gap
-    # Delta<tau the drift K-Delta >= gamma/2 = 3.2*sigma_Delta, so TPR~1 at fixed (K,H); the
-    # quantity that grows toward tau is LATENCY D=H/(K-Delta), not the miss rate. This
-    # monotone check is trivially satisfied by a flat curve; latency is the real axis.
+    # honest characterization: every off-policy gap EVENTUALLY gates (within-episode TPR~1),
+    # so this within-episode curve is flat; the drift K-Delta >= gamma/2 = 0.05 is 1.6*sigma on
+    # the background/TRUSTED pool (n=8) and 3.2*sigma only at full duty (n=32) after Tier-A
+    # escalation. The quantity that grows toward tau is LATENCY D=H/(K-Delta), so the
+    # FIXED-DEADLINE TPR falls near tau (see exp_rlatency); latency is the real axis.
     inv["detectability_monotone_in_delta"] = bool(
         detect["full_tpr"][-1] >= detect["full_tpr"][0])  # deeper drop -> >= TPR (flat here)
     inv["sin_blind_everywhere"] = bool(max(detect["sin_tpr"]) <= 0.10)
@@ -283,12 +283,11 @@ def main():
                                      and inv["floor_holds_all_q0"] and inv["joint_floor_and_mimicry"])
     inv["scope"] = ("Robust to collapse-curve SHAPE (clip/logistic, soft/sharp knee), "
                     "the reward->IPC map, the fallback floor q0 in [0.4,0.6], and a JOINT "
-                    "mu_C x IPC change. Detection power is set by the CUSUM drift SNR, not "
-                    "estimator resolution: for any off-policy gap Delta<tau the drift "
-                    "K-Delta >= gamma/2 = 3.2*sigma_Delta, so full_tpr stays flat at 1.0 at "
-                    "fixed (K,H) for every tested drop (the smallest, |Delta|=0.015, already "
-                    "has 7.4*sigma_Delta drift); the quantity that grows toward tau is the "
-                    "detection LATENCY D=H/(K-Delta), not the miss rate. "
+                    "mu_C x IPC change. Detection is a matter of LATENCY, not deadline-free "
+                    "power: every off-policy gap Delta<tau eventually gates (within-episode "
+                    "TPR~1), with drift K-Delta >= gamma/2 = 0.05 = 1.6*sigma background (n=8) "
+                    "/ 3.2*sigma full duty (n=32); the FIXED-DEADLINE TPR falls near tau as the "
+                    "detection LATENCY D=H/(K-Delta) grows (see exp_rlatency). "
                     "Tier-A feature/confidence maps are NOT swept; the headline "
                     "competence>input result is a Tier-B property.")
     print("\n=== E3 qualitative invariants ===")

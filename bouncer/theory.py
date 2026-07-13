@@ -5,8 +5,9 @@ Lemma 1 (Safety floor / bounded regret vs. fallback). The n_L Leader-C sets run 
 EVERY gate state (they must, so Delta-hat stays measurable), so the bound is THREE-term,
 not two. With audit-exposure fractions phi_G = n_L/n_sets (GATED) and
 phi_P = phi_G + rho_aud*(1 - (n_L+n_F)/n_sets) (PROBING), T_att drop-episode windows,
-detection delay <= D w.p. >= 1-delta, per-window false-alarm probability <= alpha, switch
-transient <= c_sw, and N_ep drop episodes over horizon T:
+EXPECTED fully-open windows per episode <= D (initial detection + any false re-trust),
+MARGINAL per-window false-alarm probability <= alpha, switch transient <= c_sw, and N_ep
+drop episodes over horizon T:
 
     E[ Σ_t (r^{pi0}_t - r^{Bouncer}_t) ]  <=  N_ep*D*r_max  +  phi_P*T_att*r_max  +  alpha*T*c_sw
                                              (detection)      (audit exposure)      (false alarm)
