@@ -108,7 +108,7 @@ def regret_validation():
     phi_G = C.STD["n_L"] / C.STD["n_sets"]
     phi_P = phi_G + SimConfig.audited_region_frac * (1 - (C.STD["n_L"] + C.STD["n_F"]) / C.STD["n_sets"])
 
-    # --- N_ep sweep at L_att=60 (protected: loose/tight/measured 15.14/7.83/5.92 at N_ep=6) ---
+    # --- N_ep sweep at L_att=60 (loose/tight/measured; tight = realized occupancy) ---
     Neps = [1, 2, 3, 4, 5, 6]
     meas, bound, tight, corrected = [], [], [], []
     for Nep in Neps:
@@ -117,7 +117,12 @@ def regret_validation():
         meas.append(float(pos[-1]))
         det_term = Nep * D * env.ipc_slope * comp.r_max
         bound.append(float(det_term))                                          # old two-term (no exposure)
-        tight.append(float(Nep * env.ipc_slope * gap * (D + phi_G * (sim_T - D))))
+        # tight form: realized occupancy -- phi_G per GATED window, phi_P per PROBING window
+        # (matches the paper's stated form; charging all post-detection windows at phi_G was
+        # the TMLR-R5-flagged formula/prose mismatch)
+        n_gated = int((df["state"] == "GATED").sum())
+        n_prob = int((df["state"] == "PROBING").sum())
+        tight.append(float(env.ipc_slope * gap * (Nep * D + phi_G * n_gated + phi_P * n_prob)))
         T_att = Nep * sim_T
         corrected.append(float(det_term + env.ipc_slope * phi_P * T_att * comp.r_max))  # corrected loose
         print(f"  N_ep={Nep}: measured={meas[-1]:.2f}  two_term={bound[-1]:.2f}  "

@@ -38,6 +38,7 @@ def main():
     wp = load("warmup_predictor.json")
     ft = load("floor_traffic.json")
     rt = load("retrust.json")
+    ps = load("prop1_selection.json")
 
     # each check: (label, list of literal strings that MUST appear in the tex, provenance)
     checks = []
@@ -58,10 +59,13 @@ def main():
     chk("P1 corrected 3-term loose 12.4", "12.4", f"p1.json lemma_bound_ipc={p1['lemma_bound_ipc']:.2f}")
     chk("floor prediction mean 0.579 vs 0.580", ["0.579", "0.580"], "phi_G design constant predicts the MEAN attacked-GATED floor 0.579 vs measured 0.580455 (0.64% is the worst window)")
 
-    # --- Theory (protected) ---
-    chk("theory loose/tight/measured 15.1/7.8/5.9",
-        ["15.1", "7.8", "5.9"],
-        f"theory.json N_ep=6 {th['regret']['bound'][-1]:.1f}/{th['regret']['tight'][-1]:.1f}/{th['regret']['measured'][-1]:.1f}")
+    # --- Theory (literals DERIVED from JSON, not hard-coded; TMLR-R5) ---
+    th_two = f"{th['regret']['bound'][-1]:.1f}"
+    th_tight = f"{th['regret']['tight'][-1]:.1f}"
+    th_meas = f"{th['regret']['measured'][-1]:.1f}"
+    chk(f"theory two-term/tight/measured {th_two}/{th_tight}/{th_meas}",
+        [th_two, th_tight, th_meas],
+        f"theory.json N_ep=6 (tight = realized phi_G/phi_P occupancy)")
     chk("ARL 927 vs 938", ["927", "938"], "theory.json ARL sweep at H=5sigma")
     chk("theory L_att two-term violated 25.8 vs 7.6",
         ["25.8", "7.6"], f"theory.json Latt measured={th['regret']['Latt']['measured'][-1]:.1f} two_term={th['regret']['Latt']['two_term'][-1]:.1f}")
@@ -89,6 +93,17 @@ def main():
     chk("re-trust: real fully-open <=0.07, correlated inflates to ~0.225",
         [f"{near_tau:.3f}", f"{corr_hi:.3f}"],
         f"retrust.json real near-tau fully-open={near_tau:.3f} (re-trust~0); correlated rho=0.95={corr_hi:.3f}")
+    # --- retrust noise-amplitude disclosure (R5 fix) ---
+    chk("retrust noise disclosure 3.2-6.4x sigma", ["3.2", "6.4"],
+        f"retrust.json noise sweep at rho=0.95 (injected 0.10 = 3.2-6.4x harness sigma; harness-matched amplitudes stay small)")
+
+    # --- Prop 1 selection bias + sustained evasion (R5 fix) ---
+    chk("prop1 counterexample E[r_foll|evade]=0.000, P(evade)=0.50",
+        [f"{ps['two_set']['E_rfoll_given_evade']:.3f}", f"{ps['two_set']['p_evade']:.2f}"],
+        f"prop1_selection.json two-set: E[r_foll|evade]={ps['two_set']['E_rfoll_given_evade']:.4f} p_evade={ps['two_set']['p_evade']:.4f}")
+    chk("prop1 sustained evasion 0.50->0.04 under Hoeffding",
+        [f"{ps['sustained'][0]['p_sustained_evade']:.2f}", f"{ps['sustained'][-1]['p_sustained_evade']:.2f}"],
+        f"prop1_selection.json W=1..16: {ps['sustained'][0]['p_sustained_evade']:.4f}->{ps['sustained'][-1]['p_sustained_evade']:.4f}")
 
     # --- E1 keystone (means are PROTECTED) ---
     chk("E1 whole-cache 33.6% vs 4.8%",

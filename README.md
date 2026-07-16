@@ -22,8 +22,8 @@ paper: the mechanism, two proven guarantees, a comprehensive simulation harness
 that validates the mechanism's quantitative claims in the synthetic harness, and a **real ChampSim integration** that runs the
 auditor inside a cycle-level simulator on SPEC CPU2017 traces.
 
-📄 **Paper:** [`paper/bouncer.pdf`](paper/bouncer.pdf) (11 pages, IEEEtran) ·
-🔬 **Reproduce:** [`./run_all.sh`](run_all.sh) (~4 min) ·
+📄 **Paper:** [`paper/bouncer.pdf`](paper/bouncer.pdf) (33 pages, TMLR format) ·
+🔬 **Reproduce:** [`./run_all.sh`](run_all.sh) (~5 min) ·
 🧩 **Real simulator:** [`champsim_plugin/`](champsim_plugin)
 
 ---
@@ -168,9 +168,12 @@ geometric-mean ratio of **0.998**, not a proven upper bound.
 
 **Proposition 1 (Mimicry resistance, per-domain).** If the Leader-L/Leader-F
 assignment within a contested domain is drawn uniformly at random each epoch and
-is *unobservable* to the adversary, then any input-only strategy that keeps
-`Δ̂ ≥ τ` (evades the gate) forces the victim's reward `≥ r^{π₀} + τ − β` — i.e.
-**the victim cannot be degraded below the floor while evading detection.** Under a
+is *unobservable* to the adversary, then (i) any input-only strategy holding
+`E[Δ̂] ≥ τ` forces the victim's **expected** reward `≥ r^{π₀} + τ − β`, and (ii) a
+truly degrading strategy (`E[Δ̂] ≤ τ − ε`) sustains realized evasion over `W`
+independently-reseeded windows only with probability `≤ exp(−2Wε²/r_max²)` — a
+single window's realized evasion is selection-biased and carries **no** guarantee
+(see `exp_prop1_selection.py`, which owns the reviewer counterexample). Under a
 leaked fraction `f` of the secret assignment, the adversary can protect `f·n_L`
 leaders, so the `(1−f)` unprotected fraction still carries the degradation into
 `Δ̂`: detection survives while the *unprotected* degradation exceeds the clean margin
@@ -193,7 +196,7 @@ All numbers are produced by [`./run_all.sh`](run_all.sh) (deterministic, seeded)
 |---|---|---|
 | Estimator tracks ground-truth competence | **R² = 0.997**, RMSE ≈ σ_Δ | P0 |
 | Concentration bound is tight | empirical std = 0.85–0.98× the bound | P0 |
-| Safety floor under attack | steady-state violation **0.63%**; detect in **1 window** | P1 |
+| Safety floor under attack | steady-state violation **0.64%** (worst window); detect in **1 window** | P1 |
 | Clean-workload tax | IPC ratio **0.9965** (> 0.99 target) | P1 |
 | Re-trust is *measured*, not timed | recovers 14 windows after attack ends | P1 |
 | Competence detector vs input-OOD | TPR = 1.0 @ FPR ≤ 0.05 on broad **and** mimicry | P2 |
@@ -206,7 +209,7 @@ All numbers are produced by [`./run_all.sh`](run_all.sh) (deterministic, seeded)
 | Sensitivity (τ, H grid) | **28/36** cells: ≤3-win detect, FPR ≤ 5%, no misses | Sensitivity |
 | Misspecification robustness | i.i.d. violated (σ_het → 0.3): mimicry TPR stays 1.0, floor holds | RobustEnv |
 | CUSUM ARL vs Siegmund theory | empirical/theory ratio **0.998** | Theory |
-| Lemma 1 regret bound | loose (15.1) + tight (7.8) both envelope measured 5.9 | Theory |
+| Lemma 1 plug-in envelopes | two-term (15.1) + occupancy tight (9.5) both cover measured 5.9 (conditional plug-ins, re-trust≈0 regime) | Theory |
 
 ### The two figures the paper is built around
 

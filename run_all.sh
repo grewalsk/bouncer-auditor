@@ -51,6 +51,8 @@ echo "==> [6c6] coverage-hole slow-bleed (named limitation)"
 $PY experiments/exp_coverage_hole.py
 echo "==> [6c7] false re-trust: fully-open windows per episode (Lemma 1 detection term D)"
 $PY experiments/exp_retrust.py
+echo "==> [6c8] Prop 1 selection bias + sustained-evasion envelope"
+$PY experiments/exp_prop1_selection.py
 echo "==> [6d] ChampSim real-systems figures (prefetcher suite + replacement boundary)"
 $PY experiments/exp_champsim_fig.py
 $PY experiments/exp_e1_fig.py   # reads committed results/champsim_e1/ logs

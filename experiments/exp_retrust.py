@@ -7,15 +7,20 @@ it by driving a bare GateFSM with a 1-window re-gate surrogate. This version dri
 Bouncer (real Tier-B CUSUM + FSM, so re-gating takes the true CUSUM delay) and reports the
 fully-open fraction honestly.
 
-We drive the real Bouncer.step with a constructed audit signal whose mean competence is below tau
-(a genuine drop) but with tunable temporal CORRELATION rho:
-  * rho=0 (i.i.d., the reseeded/near-stateless regime): the audit rarely strings together
-    T_reprobe crossings, so false re-trust is rare and the fully-open fraction is small.
-  * rho->1 (a temporally-correlated, i.e. STATEFUL, audit): runs above threshold become common,
-    false re-trust occurs, and the fully-open fraction GROWS -- it is NOT horizon-independent.
-So the detection term is bounded (small D) exactly under the reseed-induced near-independence that
-reseed-identifiability already requires; a correlated/stateful audit inflates it. This is a scoped
-finding, not a claim that re-trust never happens. Deterministic; emits results/retrust.json + figure.
+We drive the real Bouncer.step with a CONSTRUCTED audit signal whose mean competence is below tau
+(a genuine drop) but with tunable temporal correlation rho AND tunable noise amplitude:
+  * rho=0 (i.i.d.): the audit rarely strings together T_reprobe crossings, so false re-trust is
+    rare and the fully-open fraction is small.
+  * rho->1 (temporally correlated): runs above threshold become common, false re-trust occurs,
+    and the fully-open fraction GROWS -- D is NOT horizon-independent for an arbitrary audit.
+  * NOISE DISCLOSURE (TMLR-R5): the headline rho=0.95 cell uses innovation noise 0.10, which is
+    3.2-6.4x the harness estimator noise (sigma_full=0.0156 at n_L=32, sigma_bg=0.0313 at n_bg=8).
+    The magnitude is therefore a property of this constructed high-variance counterexample, not of
+    the harness; the noise sweep below reports the fully-open fraction at each amplitude, including
+    the harness-matched ones. Temporal independence here is a SEPARATE assumption from
+    reseed-identifiability (a signed-mean condition); we do not equate them.
+This is a scoped assumption-characterization for A2's D, not a claim that re-trust never happens.
+Deterministic; emits results/retrust.json + figure.
 """
 import sys, json
 import numpy as np
@@ -76,10 +81,16 @@ def corr_cell(rho, T=2000, n_rep=16, mean_delta=-0.02, noise=0.10):
     return dict(rho=rho, open_frac_mean=float(np.mean(fracs)), retrust_per_1000=float(np.mean(rtrs)), T=T)
 
 
+SIGMA_FULL, SIGMA_BG = 0.015625, 0.03125     # harness estimator noise (n_L=32 / n_bg=8)
+
+
 def main():
     C.setstyle()
     real = [real_cell(t) for t in (0.04, 0.0, -0.10)]
     corr = [corr_cell(r) for r in (0.0, 0.5, 0.8, 0.95)]
+    # noise sweep at rho=0.95: harness-matched amplitudes up to the constructed 0.10
+    noises = [SIGMA_FULL, SIGMA_BG, 0.05, 0.10]
+    nsweep = [dict(corr_cell(0.95, noise=nz), noise=nz) for nz in noises]
 
     print("(A) real estimator (i.i.d. reseeded reward), sustained drop -- through the full harness:")
     for r in real:
@@ -87,8 +98,13 @@ def main():
               f"re-trusts/episode={r['retrust_mean']:.2f}")
     print("(B) REAL Bouncer (CUSUM+FSM) driven with a correlated audit, mean competence < tau:")
     for r in corr:
-        print(f"    rho={r['rho']:.2f}: fully-open frac={r['open_frac_mean']:.3f}  "
+        print(f"    rho={r['rho']:.2f} (noise 0.10): fully-open frac={r['open_frac_mean']:.3f}  "
               f"re-trusts/1000={r['retrust_per_1000']:.1f}")
+    print("(B') noise sweep at rho=0.95 (amplitude matters as much as correlation):")
+    for r in nsweep:
+        tag = " (=sigma_full)" if abs(r["noise"] - SIGMA_FULL) < 1e-9 else (
+              " (=sigma_bg)" if abs(r["noise"] - SIGMA_BG) < 1e-9 else "")
+        print(f"    noise={r['noise']:.4f}{tag}: fully-open frac={r['open_frac_mean']:.4f}")
 
     real_bounded = max(r["open_frac_mean"] for r in real) < 0.15         # reseeded audit: small
     corr_sorted = sorted(corr, key=lambda r: r["rho"])
@@ -110,21 +126,34 @@ def main():
     ax[1].set_title("(B) correlated (stateful) audit\ninflates $D$ (reseed-id. boundary)", fontsize=8)
     C.savefig(fig, "retrust.pdf")
 
+    # noise sweep: fully-open fraction grows with amplitude; harness-matched amplitude stays small
+    ns_sorted = sorted(nsweep, key=lambda r: r["noise"])
+    noise_monotone = ns_sorted[-1]["open_frac_mean"] > ns_sorted[0]["open_frac_mean"]
+    harness_matched_small = ns_sorted[0]["open_frac_mean"] < 0.05
+
     C.save_json("retrust.json", dict(
         note=("Fully-open (C-everywhere) fraction during a sustained true drop, through the REAL "
               "Bouncer CUSUM+FSM (not a surrogate). (A) With the reseeded i.i.d. audit the fully-open "
               "fraction is small (0.02-0.07) and false re-trusts ~0, so Lemma 1's detection term D is "
-              "small. (B) A temporally-CORRELATED (stateful) audit strings together T_reprobe crossings, "
-              "so false re-trust occurs and the fully-open fraction GROWS with correlation -- D is bounded "
-              "only under the reseed-induced near-independence that reseed-identifiability requires; a "
-              "correlated/stateful audit inflates it (a named limitation, tied to the set-locality "
-              "boundary). This is a scoped assumption on D, not a proof that re-trust never happens."),
-        default_T_reprobe=GateConfig().T_reprobe, real=real, correlated=corr,
+              "small. (B) A temporally-CORRELATED audit strings together T_reprobe crossings, so false "
+              "re-trust occurs and the fully-open fraction grows -- D is NOT horizon-independent for an "
+              "arbitrary audit. NOISE DISCLOSURE: the rho=0.95 headline uses innovation noise 0.10 = "
+              "3.2-6.4x the harness sigma (0.0156 full / 0.0313 background); the noise sweep shows the "
+              "fully-open fraction at each amplitude (harness-matched amplitudes stay small even at "
+              "rho=0.95). This is a constructed correlated/high-variance counterexample characterizing "
+              "A2's D as an assumption; temporal independence is a separate assumption from "
+              "reseed-identifiability, and this is not a proof that re-trust never happens."),
+        default_T_reprobe=GateConfig().T_reprobe, sigma_full=SIGMA_FULL, sigma_bg=SIGMA_BG,
+        real=real, correlated=corr, noise_sweep=nsweep,
         invariants=dict(reseeded_fully_open_bounded=real_bounded, iid_small=iid_small,
-                        correlation_inflates_D=corr_inflates)))
+                        correlation_inflates_D=corr_inflates,
+                        noise_amplitude_matters=noise_monotone,
+                        harness_matched_amplitude_small=harness_matched_small)))
     assert real_bounded, "reseeded i.i.d. audit fully-open fraction must be small (D small)"
     assert iid_small, "at rho=0 the fully-open fraction should be small"
     assert corr_inflates, "correlation should inflate the fully-open fraction (the honest limitation)"
+    assert noise_monotone, "fully-open fraction should grow with injected noise amplitude"
+    assert harness_matched_small, "at harness-matched noise the fully-open fraction should stay small"
 
 
 if __name__ == "__main__":

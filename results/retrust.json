@@ -1,6 +1,8 @@
 {
-  "note": "Fully-open (C-everywhere) fraction during a sustained true drop, through the REAL Bouncer CUSUM+FSM (not a surrogate). (A) With the reseeded i.i.d. audit the fully-open fraction is small (0.02-0.07) and false re-trusts ~0, so Lemma 1's detection term D is small. (B) A temporally-CORRELATED (stateful) audit strings together T_reprobe crossings, so false re-trust occurs and the fully-open fraction GROWS with correlation -- D is bounded only under the reseed-induced near-independence that reseed-identifiability requires; a correlated/stateful audit inflates it (a named limitation, tied to the set-locality boundary). This is a scoped assumption on D, not a proof that re-trust never happens.",
+  "note": "Fully-open (C-everywhere) fraction during a sustained true drop, through the REAL Bouncer CUSUM+FSM (not a surrogate). (A) With the reseeded i.i.d. audit the fully-open fraction is small (0.02-0.07) and false re-trusts ~0, so Lemma 1's detection term D is small. (B) A temporally-CORRELATED audit strings together T_reprobe crossings, so false re-trust occurs and the fully-open fraction grows -- D is NOT horizon-independent for an arbitrary audit. NOISE DISCLOSURE: the rho=0.95 headline uses innovation noise 0.10 = 3.2-6.4x the harness sigma (0.0156 full / 0.0313 background); the noise sweep shows the fully-open fraction at each amplitude (harness-matched amplitudes stay small even at rho=0.95). This is a constructed correlated/high-variance counterexample characterizing A2's D as an assumption; temporal independence is a separate assumption from reseed-identifiability, and this is not a proof that re-trust never happens.",
   "default_T_reprobe": 4,
+  "sigma_full": 0.015625,
+  "sigma_bg": 0.03125,
   "real": [
     {
       "target": 0.04,
@@ -44,9 +46,41 @@
       "T": 2000
     }
   ],
+  "noise_sweep": [
+    {
+      "rho": 0.95,
+      "open_frac_mean": 0.00565625,
+      "retrust_per_1000": 0.0,
+      "T": 2000,
+      "noise": 0.015625
+    },
+    {
+      "rho": 0.95,
+      "open_frac_mean": 0.021531250000000002,
+      "retrust_per_1000": 0.71875,
+      "T": 2000,
+      "noise": 0.03125
+    },
+    {
+      "rho": 0.95,
+      "open_frac_mean": 0.09568750000000001,
+      "retrust_per_1000": 3.0625,
+      "T": 2000,
+      "noise": 0.05
+    },
+    {
+      "rho": 0.95,
+      "open_frac_mean": 0.22471875,
+      "retrust_per_1000": 5.5625,
+      "T": 2000,
+      "noise": 0.1
+    }
+  ],
   "invariants": {
     "reseeded_fully_open_bounded": true,
     "iid_small": true,
-    "correlation_inflates_D": true
+    "correlation_inflates_D": true,
+    "noise_amplitude_matters": true,
+    "harness_matched_amplitude_small": true
   }
 }

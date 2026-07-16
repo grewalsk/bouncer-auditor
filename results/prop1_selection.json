@@ -1,0 +1,49 @@
+{
+  "note": "Owns the TMLR-R5 Prop-1 counterexample: conditioning on a single window's realized evasion (dhat_R >= tau) after an unconditional exchangeability identity is selection bias -- in the two-set construction E[r_foll|evade]=0 despite E[r_foll]=0.5, so the old realized single-window claim is FALSE. The corrected Prop 1 states (i) the expectation form (valid algebra) and (ii) the sustained-evasion form: with independent per-epoch reseeds and bounded rewards, a truly degrading strategy (E[dhat]<=tau-eps) sustains W-window evasion only w.p. <= exp(-2 W eps^2/range^2) (measured decay under the envelope), and the CUSUM (reference K>tau) then fires within 2H/gamma windows. At the pinned many-set operating point the single-window follower selection bias is ~0; the catastrophe needs cross-set anticorrelation plus a tiny pool.",
+  "two_set": {
+    "E_rL": 0.499681,
+    "E_rfoll": 0.500319,
+    "p_evade": 0.499681,
+    "E_rfoll_given_evade": 0.0,
+    "claimed_floor": 0.7
+  },
+  "sustained": [
+    {
+      "W": 1,
+      "p_sustained_evade": 0.499055,
+      "hoeffding": 0.8824969025845955
+    },
+    {
+      "W": 2,
+      "p_sustained_evade": 0.25076,
+      "hoeffding": 0.7788007830714049
+    },
+    {
+      "W": 4,
+      "p_sustained_evade": 0.312875,
+      "hoeffding": 0.6065306597126334
+    },
+    {
+      "W": 8,
+      "p_sustained_evade": 0.145305,
+      "hoeffding": 0.36787944117144233
+    },
+    {
+      "W": 16,
+      "p_sustained_evade": 0.038445,
+      "hoeffding": 0.1353352832366127
+    }
+  ],
+  "pinned": {
+    "p_evade": 0.000755,
+    "E_rfoll": 0.499806015625,
+    "E_rfoll_given_evade": 0.496067880794702,
+    "selection_bias": 0.003738134830298001
+  },
+  "invariants": {
+    "counterexample_real": true,
+    "sustained_evasion_decays": true,
+    "hoeffding_envelope_holds": true,
+    "pinned_point_bias_negligible": true
+  }
+}
