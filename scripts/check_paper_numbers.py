@@ -104,6 +104,9 @@ def main():
     chk("prop1 sustained evasion 0.50->0.04 under Hoeffding",
         [f"{ps['sustained'][0]['p_sustained_evade']:.2f}", f"{ps['sustained'][-1]['p_sustained_evade']:.2f}"],
         f"prop1_selection.json W=1..16: {ps['sustained'][0]['p_sustained_evade']:.4f}->{ps['sustained'][-1]['p_sustained_evade']:.4f}")
+    chk("prop1 old range-1 exponent violated 84.8x (corrected range-2 printed)",
+        [f"{ps['printed_formula']['old_violation_factor']:.1f}"],
+        f"prop1_selection.json W=100 Rademacher: exact {ps['printed_formula']['p_exact']:.6f} vs old envelope {ps['printed_formula']['old_envelope']:.6f}; corrected holds={ps['printed_formula']['new_holds']}")
 
     # --- E1 keystone (means are PROTECTED) ---
     chk("E1 whole-cache 33.6% vs 4.8%",

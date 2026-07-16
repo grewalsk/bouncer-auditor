@@ -40,10 +40,38 @@
     "E_rfoll_given_evade": 0.496067880794702,
     "selection_bias": 0.003738134830298001
   },
+  "printed_formula": {
+    "W": 100,
+    "tau": 0.2,
+    "p_exact": 0.028443966820490395,
+    "old_envelope": 0.00033546262790251126,
+    "new_envelope": 0.13533528323661262,
+    "old_violation_factor": 84.7902700766909,
+    "new_holds": true
+  },
+  "cusum_block": {
+    "W_block": 16,
+    "counterexample": {
+      "prefix_avg": 0.045,
+      "fired": false,
+      "final_C": 0.27000000000000013
+    },
+    "containment_holds": true,
+    "empirical": {
+      "eps": 0.2,
+      "p_noalarm": 0.0,
+      "corrected_envelope": 0.7261490370736908
+    }
+  },
   "invariants": {
     "counterexample_real": true,
     "sustained_evasion_decays": true,
     "hoeffding_envelope_holds": true,
-    "pinned_point_bias_negligible": true
+    "pinned_point_bias_negligible": true,
+    "old_range1_formula_violated": true,
+    "corrected_range2_formula_holds": true,
+    "old_cusum_step_false": true,
+    "cusum_block_containment": true,
+    "cusum_noalarm_under_envelope": true
   }
 }

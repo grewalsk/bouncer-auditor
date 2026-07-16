@@ -1,3 +1,4 @@
+> **HISTORICAL (R1-era).** This response describes revision/tmlr-r1. For current status see `hardening/REVISION_STATUS.md` and `REVIEW_PROMPT_R*.md` (later rounds superseded several statements below, including the Lemma form and audit counts).
 # TMLR R1 response — Bouncer (`revision/tmlr-r1`)
 
 Response to the hostile TMLR-calibrated review (verdict: Claims-and-Evidence = **No**, one

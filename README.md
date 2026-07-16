@@ -170,8 +170,12 @@ geometric-mean ratio of **0.998**, not a proven upper bound.
 assignment within a contested domain is drawn uniformly at random each epoch and
 is *unobservable* to the adversary, then (i) any input-only strategy holding
 `E[Δ̂] ≥ τ` forces the victim's **expected** reward `≥ r^{π₀} + τ − β`, and (ii) a
-truly degrading strategy (`E[Δ̂] ≤ τ − ε`) sustains realized evasion over `W`
-independently-reseeded windows only with probability `≤ exp(−2Wε²/r_max²)` — a
+truly degrading strategy (`E[Δ̂] ≤ τ − ε`) sustains realized evasion over `W ≥ 2H/γ`
+windows only with probability `≤ exp(−Wε²/(2r_max²))` (Hoeffding with the correct
+`2r_max` range; requires per-window Δ̂ independent given the strategy — holds for the
+harness's i.i.d. reward, violable by gate-history-dependent adversaries). The no-alarm
+block *contains* the high-average event (the CUSUM's max(0,·) floor only raises the
+statistic), so no invalid "then it fires" step is needed. A
 single window's realized evasion is selection-biased and carries **no** guarantee
 (see `exp_prop1_selection.py`, which owns the reviewer counterexample). Under a
 leaked fraction `f` of the secret assignment, the adversary can protect `f·n_L`

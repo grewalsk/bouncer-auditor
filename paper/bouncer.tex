@@ -66,7 +66,7 @@ attribute reward to the right policy only for a \emph{set-local} controller---on
 whose decision and reward fall on the same set (canonically cache
 \emph{replacement}; PC-indexed predictors are \emph{expected} set-local but
 untested). \emph{Prefetching is the cautionary boundary}, since a prefetch benefits
-a different set than it was decided on. On real hardware a second condition
+a different set than it was decided on. In the real-trace ChampSim study a second condition
 appears: the policy \emph{contrast} must survive the reshuffle (be
 \emph{reseed-identifiable}), because the same secret reshuffle that buys mimicry
 resistance erases the policy-specific state a path-dependent reward accumulates. A
@@ -172,7 +172,7 @@ hits and misses on that set---and is the clean case. \emph{Prefetching is the
 instructive boundary}: a prefetch triggered on one set benefits a \emph{different}
 set, so no per-set reward captures it, and we confirm on a real simulator that not
 even the controller's own reward rescues the audit (\Cref{sec:eval-champsim}). A
-second condition surfaces on real hardware, and it is \emph{not} statelessness. The
+second condition surfaces in the real-trace simulator study, and it is \emph{not} statelessness. The
 secret reshuffle erases any long-run, policy-specific state a reward accumulates, so
 what the audit needs is that the policy \emph{contrast}---the C-minus-fallback
 advantage---survive that erasure: the reward must be \emph{reseed-identifiable}. A
@@ -569,14 +569,23 @@ victim cannot be degraded below the floor \emph{in expectation} while holding th
 conditioning on it selects favorable audit noise (with a two-set pool and
 anticorrelated rewards, $\mathbb{E}[r_{\text{foll}}\mid\dhat_R\ge\tau]$ can sit at
 $0$ while the unconditional means are equal; \Cref{sec:eval-prop1}). What secrecy
-buys is a \emph{sustained} guarantee: the assignment is redrawn independently each
-epoch and rewards are bounded, so a truly degrading strategy---one with
-$\mathbb{E}[\dhat_R]\le\tau-\epsilon$---keeps the $W$-window average of $\dhat_R$
-above $\tau$ only with probability $\le e^{-2W\epsilon^2/r_{\max}^2}$ (Hoeffding);
-and once that average falls below $\tau$, the CUSUM (reference $K=\tau+\gamma/2>\tau$)
-accumulates at least $\gamma/2$ per window and fires within $2H/\gamma$ further
-windows. Sustained realized evasion by a degrading adversary is thus exponentially
-unlikely in the audit length. Under a leaked fraction $f$ of the within-$R$
+buys is a \emph{sustained} guarantee, under one explicit temporal premise:
+\emph{assume the per-window $\dhat_R$ values are independent given the strategy}
+(the fresh secret reseed makes the \emph{assignments} independent, but this premise
+additionally requires the reward process not to depend on gate history---it holds
+for the harness's i.i.d.\ per-decision reward, and an adaptive, gate-history-dependent
+strategy can violate it; \Cref{tab:discharge}). Then, since
+$\dhat_R\in[-\rmax,\rmax]$ (a range of width $2\rmax$), a truly degrading
+strategy---one with $\mathbb{E}[\dhat_R]\le\tau-\epsilon$---keeps the $W$-window
+average of $\dhat_R$ at or above $\tau$ only with probability
+$\le e^{-W\epsilon^2/(2r_{\max}^2)}$ (Hoeffding with the correct $2\rmax$ range).
+And a no-alarm block \emph{contains} the high-average event: because the CUSUM's
+$\max(0,\cdot)$ floor only raises the statistic, no alarm within $W$ windows forces
+$\sum_t(K-\dhat_{R,t})<H$, i.e.\ the block average of $\dhat_R$ exceeds
+$K-H/W\ge\tau$ whenever $W\ge 2H/\gamma$. Hence for any $W\ge 2H/\gamma$,
+$\Pr[\text{no alarm in }W\text{ windows}]\le\Pr[\text{block average}\ge\tau]\le
+e^{-W\epsilon^2/(2r_{\max}^2)}$: sustained realized evasion by a degrading adversary
+is exponentially unlikely in the audit length. Under a leaked fraction $f$ of the within-$R$
 assignment, the adversary may spare $f\,n_L$ Leader-L sets, biasing $\dhat_R$
 upward by $\le f\,(\bar r^{\text{clean}}-\bar r^{\text{att}})$; the
 \emph{unprotected} $(1-f)$ of the degradation still enters $\dhat_R$, so the gate
@@ -594,13 +603,17 @@ them, so $\mathbb{E}[\dhat_R]\ge\tau$ forces $\mathbb{E}[\bar
 r_{\text{foll}}]\ge r^{\pizero}+\tau-\beta$. This is an \emph{unconditional}
 identity; it may \emph{not} be applied on the realized event $\{\dhat_R\ge\tau\}$,
 which selects the noise (\Cref{sec:eval-prop1} reproduces the failure).
-\emph{(ii)} Per-window $\dhat_R$ values are independent across epochs (fresh secret
-draws) and bounded, so Hoeffding bounds the probability that their $W$-window
-average exceeds its mean by $\epsilon$; a strategy with
-$\mathbb{E}[\dhat_R]\le\tau-\epsilon$ therefore keeps the average above $\tau$ w.p.\
-$\le e^{-2W\epsilon^2/r_{\max}^2}$. When the average is below $\tau$, each window
-adds at least $K-\tau=\gamma/2$ to the CUSUM statistic, which reaches $H$ within
-$2H/\gamma$ windows. \emph{(Leak.)} Leaked knowledge of fraction $f$ lets the
+\emph{(ii)} Under the stated temporal premise the per-window $\dhat_R$ are
+independent and bounded in $[-\rmax,\rmax]$, so Hoeffding (range $2\rmax$) gives
+$\Pr[\text{block average}\ge\mathbb{E}[\dhat_R]+\epsilon]\le
+e^{-2W\epsilon^2/(2\rmax)^2}=e^{-W\epsilon^2/(2\rmax^2)}$. For the CUSUM
+containment: $C_t=\max(0,C_{t-1}+(K-\dhat_{R,t}))\ge\sum_{s\le t}(K-\dhat_{R,s})$,
+so no alarm by window $W$ ($C_W<H$) forces $WK-\sum_t\dhat_{R,t}<H$, i.e.\ the block
+average exceeds $K-H/W$, which is $\ge\tau$ for $W\ge 2H/\gamma$. The no-alarm event
+is therefore contained in the high-average event, to which the concentration bound
+applies. (Note this replaces an earlier, incorrect ``once the average dips, the
+CUSUM fires within $2H/\gamma$ windows'' step: an average below $\tau$ does not make
+every subsequent increment at least $\gamma/2$.) \emph{(Leak.)} Leaked knowledge of fraction $f$ lets the
 adversary exempt $f\,n_L$ Leader-L sets; the remaining $(1-f)$ fraction carries the
 degradation into $\mathbb{E}[\dhat_R]$, detectable once the unprotected degradation exceeds the clean margin, $(1-f)(\bar r^{\text{clean}}-\bar r^{\text{att}})\gtrsim\Delta^{\text{clean}}_R-K$ (up to $O(\sigma_{\Delta,R})$ noise).
 \end{proof}
@@ -752,6 +765,7 @@ A3 marginal false-alarm prob.\ $\le 1/\mathrm{ARL}_0$ & A (assumed; \emph{approx
 A4 switch transient $\le c_{sw}$ & A (analytical); M: P1 one-window dip $\le D\rmax$. \\
 A5 $N_{ep}$ episodes over $T$ & A (definitional, counts episodes). \\
 A6 secret \emph{uniform} audit subset & E: construction (\Cref{sec:tierb}); M: PROBING exposure is $\phi_P$-uniform, index-independent (\Cref{sec:eval-floortraffic}: $0.062$/$0.064$ low/high index vs $0.985$ for a sorted prefix). \\
+Prop.\ 1(ii) temporal premise (per-window $\dhat_R$ independent given the strategy) & A: holds in the synthetic harness (i.i.d.\ per-decision reward + fresh reseeds); \textbf{violable} by gate-history-dependent adversaries and correlated audits (\Cref{sec:eval-retrust}); \emph{not} inferable from reseeding alone. \\
 Prop.\ 1 finite resolution $\delta_R^{\min}(B)$ & E: \Cref{eq:var}; the sub-resolution slow-bleed is the named open hole (M: \Cref{fig:hole}). \\
 Prop.\ 1 intact secret (leak $f{=}0$) & E/M: secrecy ablation (P4), TPR collapses sharply in the $f{=}0.6$--$0.8$ band (the clean-margin crossing), well before $f{=}1$. \\
 \bottomrule
@@ -865,8 +879,12 @@ intervals. Measuring \emph{realized competence} rather than input distribution i
 decisive. \textbf{(b)} The secrecy
 ablation realizes \Cref{prop:mimicry} empirically: against the strongest,
 redistributive covert adversary, with the dueling pools drawn \emph{within} the
-victim region (an effective in-region pool of $\sim\!4$ Leader-L sets, hence a few
-windows of latency), detection power holds and then falls off a cliff as the secret leaks---
+victim region (implemented as \emph{global} pools intersected with $R$, giving an
+effective in-region pool of $\sim\!4$ Leader-L sets, hence a few windows of latency;
+a named in-region pool is empty w.p.\ $0.013$ per window---$0.027$ for either
+pool---in which case that window's $\dhat_R$ reads $0$, so this \emph{approximates}
+\Cref{prop:mimicry}'s fixed nonempty within-$R$ construction rather than
+implementing it exactly), detection power holds and then falls off a cliff as the secret leaks---
 $\mathrm{TPR}{=}1.0$ for leaked fraction $f\le0.4$, $0.975$ at $f{=}0.6$,
 collapsing to $0.075$ at $f{=}0.8$ and $0$ at $f{=}1.0$, with latency rising
 $1.2\!\to\!\infty$ windows. Panel (a)'s gap over the input monitor is the competence
@@ -1112,7 +1130,9 @@ $\mathbb{E}[r_{\text{foll}}\mid\dhat_R\ge\tau]{=}0.000$ with $P(\text{evade}){=}
 the old claim's $0.7$ floor. Conditioning on evasion \emph{selects} the noise; the old
 single-window realized statement was false, and we retract it. \emph{The repair, measured.} Over
 $W$ independently reseeded windows, the probability that this construction's $W$-window average
-$\dhat_R$ stays $\ge\tau$ decays under the Hoeffding envelope $e^{-2W\epsilon^2/r_{\max}^2}$
+$\dhat_R$ stays $\ge\tau$ decays under the Hoeffding envelope $e^{-W\epsilon^2/(2r_{\max}^2)}$
+(range $2\rmax$; an earlier draft printed the range-$\rmax$ exponent, which a $W{=}100$
+Rademacher example violates by $84.8\times$---the released regression now asserts the corrected constant)
 ($0.50\!\to\!0.04$ measured from $W{=}1\!\to\!16$ vs.\ envelope $0.88\!\to\!0.14$), which is
 \Cref{prop:mimicry}(ii). \emph{Why the leak ablation was unaffected:} at the pinned operating
 point ($n_L{=}32$ sets, $m{=}64$ decisions, independent per-set rewards) the single-window
@@ -1132,7 +1152,7 @@ The auditor compiles and runs in real ChampSim as \emph{both} a cache-replacemen
 module (set-local by \Cref{def:setlocal}---structurally the clean case, but
 stateful; see below) and an L1D prefetcher
 module (\emph{not} set-local). ChampSim is the standard trace-driven CPU cache simulator. The two together test the set-locality
-\emph{boundary} on real hardware traces: the prefetcher case exhibits the
+\emph{boundary} on real program traces in ChampSim: the prefetcher case exhibits the
 de-localization boundary in detail, and the replacement case shows the clean side
 is set-local yet stateful---a second boundary (the secret reseed confounds a
 path-dependent reward), rather than a real-hardware clean-case validation. We present the prefetcher case first because it is where the boundary
