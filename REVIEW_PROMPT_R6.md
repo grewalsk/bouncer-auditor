@@ -6,7 +6,8 @@ claims are now supported by accurate evidence, or scoped until they are.
 
 ## Where the artifact is
 
-- Repo: `/Users/kabirgrewal/projects/bouncer-hpca`, branch `revision/tmlr-r2`, commit `82f0e68`.
+- Repo: `/Users/kabirgrewal/projects/bouncer-hpca`, branch `revision/tmlr-r2`, commit `3e0e5a0`
+  (the R6 content spans `82f0e68` + the final relabels in `3e0e5a0`; review the latter).
 - Paper: `paper/bouncer.tex` → `paper/bouncer.pdf` (34 pp). Reproduce (deterministic, ~5 min):
   ```
   python3.11 -m venv .venv
