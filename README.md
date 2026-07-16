@@ -22,8 +22,8 @@ paper: the mechanism, two proven guarantees, a comprehensive simulation harness
 that validates the mechanism's quantitative claims in the synthetic harness, and a **real ChampSim integration** that runs the
 auditor inside a cycle-level simulator on SPEC CPU2017 traces.
 
-📄 **Paper:** [`paper/bouncer.pdf`](paper/bouncer.pdf) (33 pages, TMLR format) ·
-🔬 **Reproduce:** [`./run_all.sh`](run_all.sh) (~5 min) ·
+📄 **Paper:** [`paper/bouncer.pdf`](paper/bouncer.pdf) (34 pages, TMLR format) ·
+🔬 **Reproduce:** [`./run_all.sh`](run_all.sh) (machine-dependent: ~5 min on a fast machine, ~20 min in a constrained sandbox) ·
 🧩 **Real simulator:** [`champsim_plugin/`](champsim_plugin)
 
 ---
@@ -156,8 +156,10 @@ E[ Σ_t ( r_t^{π₀} − r_t^{Bouncer} ) ]  ≤  N_ep·D·r_max  +  φ_P·T_att
 ```
 
 Every term is an expected value (linearity; marginals suffice, **no** independence). A
-**high-probability** form is proved for the **exposure** term only (independent reseeds,
-Hoeffding); the detection and false-alarm terms are bounded in expectation. On any window where `C`
+**high-probability** form is proved for the **exposure** term only (bounded per-window
+exposures whose conditional mean given the past is pinned by the fresh uniform secret draw;
+Azuma-Hoeffding, since exposures need not be independent under history-adaptive traffic); the
+detection and false-alarm terms are bounded in expectation. On any window where `C`
 is genuinely better and the gate is open, `Bouncer = C`.
 The two slack terms are the §3 knobs: in the reseeded regime where false re-trust ≈ 0
 (measured through the real controller in `exp_retrust.py`), A2's `D` reduces to the initial
@@ -311,10 +313,10 @@ champsim_plugin/          REAL ChampSim integration (not just a skeleton)
   pythia_bouncer_shim.cc    example wiring into Pythia's reward
   champsim_knobs.md         the §12 hyperparameters as build knobs
 
-paper/                    bouncer.tex (IEEEtran) + references.bib + bouncer.pdf
+paper/                    bouncer.tex (TMLR format) + references.bib + bouncer.pdf
 SPEC.md                   the design spec this artifact implements
 REVIEW_RESPONSE.md        how every finding from two adversarial review rounds was fixed
-run_all.sh                regenerate every result, figure, and the PDF (~4 min)
+run_all.sh                regenerate every result, figure, and the PDF (runtime machine-dependent)
 ```
 
 ---
@@ -322,7 +324,8 @@ run_all.sh                regenerate every result, figure, and the PDF (~4 min)
 ## 8. Reproduce
 
 ```bash
-# Python results, figures, paper, and the standalone C++ self-test (~4 min, deterministic)
+# Python results, figures, paper, and the standalone C++ self-test (deterministic;
+# runtime machine-dependent: ~5 min on a fast machine, ~20 min in a constrained sandbox)
 pip install -r requirements.txt        # numpy scipy matplotlib pandas + a LaTeX toolchain
 ./run_all.sh
 

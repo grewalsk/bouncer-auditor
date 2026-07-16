@@ -516,10 +516,13 @@ each costing $\le c_{sw}$. \emph{(iv)} Trusted windows with $C\ge\pizero$ contri
 regret. Summing (i)--(iii) yields \cref{eq:floor}.
 \end{proof}
 
-\textbf{A high-probability refinement, for the exposure term only.} Because the assignment is
-redrawn \emph{independently} each epoch, the per-window exposures are independent $[0,\rmax]$
-variables, so Hoeffding tightens the middle term to a high-probability envelope: with probability
-$\ge1-\delta_s$,
+\textbf{A high-probability refinement, for the exposure term only.} The per-window exposures
+need \emph{not} be independent---traffic may adapt to gate history---but each lies in
+$[0,\rmax]$, and its conditional mean given all prior windows is $\le\phi_P\rmax$: the window's
+secret draw is uniform and independent of the past (A6), and the input-only adversary's traffic
+is blind to it. Azuma--Hoeffding for bounded differences (each of width $\rmax$) therefore
+tightens the middle term to the same high-probability envelope independence would give: with
+probability $\ge1-\delta_s$,
 \begin{equation}\label{eq:floorhp}
 \textstyle\sum_{t}(\text{exposure regret})_t \;\le\; \phi_P T_{att}\rmax \;+\; \rmax\sqrt{\tfrac{T_{att}}{2}\ln\tfrac1{\delta_s}},
 \end{equation}
@@ -580,8 +583,9 @@ strategy---one with $\mathbb{E}[\dhat_R]\le\tau-\epsilon$---keeps the $W$-window
 average of $\dhat_R$ at or above $\tau$ only with probability
 $\le e^{-W\epsilon^2/(2r_{\max}^2)}$ (Hoeffding with the correct $2\rmax$ range).
 And a no-alarm block \emph{contains} the high-average event: because the CUSUM's
-$\max(0,\cdot)$ floor only raises the statistic, no alarm within $W$ windows forces
-$\sum_t(K-\dhat_{R,t})<H$, i.e.\ the block average of $\dhat_R$ exceeds
+$\max(0,\cdot)$ floor only raises the statistic, no alarm within $W$ windows (the
+implemented detector alarms only on the strict $C_t>H$) forces
+$\sum_t(K-\dhat_{R,t})\le H$, i.e.\ the block average of $\dhat_R$ is at least
 $K-H/W\ge\tau$ whenever $W\ge 2H/\gamma$. Hence for any $W\ge 2H/\gamma$,
 $\Pr[\text{no alarm in }W\text{ windows}]\le\Pr[\text{block average}\ge\tau]\le
 e^{-W\epsilon^2/(2r_{\max}^2)}$: sustained realized evasion by a degrading adversary
@@ -607,9 +611,12 @@ which selects the noise (\Cref{sec:eval-prop1} reproduces the failure).
 independent and bounded in $[-\rmax,\rmax]$, so Hoeffding (range $2\rmax$) gives
 $\Pr[\text{block average}\ge\mathbb{E}[\dhat_R]+\epsilon]\le
 e^{-2W\epsilon^2/(2\rmax)^2}=e^{-W\epsilon^2/(2\rmax^2)}$. For the CUSUM
-containment: $C_t=\max(0,C_{t-1}+(K-\dhat_{R,t}))\ge\sum_{s\le t}(K-\dhat_{R,s})$,
-so no alarm by window $W$ ($C_W<H$) forces $WK-\sum_t\dhat_{R,t}<H$, i.e.\ the block
-average exceeds $K-H/W$, which is $\ge\tau$ for $W\ge 2H/\gamma$. The no-alarm event
+containment: on the no-alarm event no reset occurs, so the recurrence
+$C_t=\max(0,C_{t-1}+(K-\dhat_{R,t}))\ge\sum_{s\le t}(K-\dhat_{R,s})$ holds
+throughout the block, and no alarm by window $W$---$C_t\le H$ for all $t\le W$,
+since the implemented detector alarms only on the strict $C_t>H$---forces
+$WK-\sum_t\dhat_{R,t}\le H$, i.e.\ the block
+average is at least $K-H/W$, which is $\ge\tau$ for $W\ge 2H/\gamma$. The no-alarm event
 is therefore contained in the high-average event, to which the concentration bound
 applies. (Note this replaces an earlier, incorrect ``once the average dips, the
 CUSUM fires within $2H/\gamma$ windows'' step: an average below $\tau$ does not make
@@ -1134,7 +1141,15 @@ $\dhat_R$ stays $\ge\tau$ decays under the Hoeffding envelope $e^{-W\epsilon^2/(
 (range $2\rmax$; an earlier draft printed the range-$\rmax$ exponent, which a $W{=}100$
 Rademacher example violates by $84.8\times$---the released regression now asserts the corrected constant)
 ($0.50\!\to\!0.04$ measured from $W{=}1\!\to\!16$ vs.\ envelope $0.88\!\to\!0.14$), which is
-\Cref{prop:mimicry}(ii). \emph{Why the leak ablation was unaffected:} at the pinned operating
+\Cref{prop:mimicry}(ii). The regression also exercises the proposition's CUSUM step on the
+\emph{implemented} detector: it reproduces the retracted ``fires within $2H/\gamma$''
+counterexample (prefix average below $\tau$, no alarm), verifies the
+no-alarm$\Rightarrow$block-mean containment both on random degrading streams and
+\emph{exhaustively} (every path of a three-point reward support from three starting
+statistics, $2{,}068$ no-alarm paths, including an exact $C{=}H$ boundary path, which
+correctly does not alarm under the strict-$>$ semantics), and computes an \emph{exact}
+(dynamic-program) no-alarm probability for an in-support two-point degrading stream
+($0.0038$, matched by Monte Carlo on the detector and under the corrected envelope $0.726$). \emph{Why the leak ablation was unaffected:} at the pinned operating
 point ($n_L{=}32$ sets, $m{=}64$ decisions, independent per-set rewards) the single-window
 follower selection bias is $\approx\!0$ ($0.004$); the catastrophe requires cross-set
 anticorrelation \emph{plus} a tiny pool, and the CUSUM integrates over windows regardless.
@@ -1421,7 +1436,8 @@ including the transfer-function sensitivity sweep
 the real ChampSim L1D prefetcher \emph{and} LLC replacement modules
 (\texttt{champsim\_plugin/bouncer\_pref/}, \texttt{bouncer\_repl/}), and the paper
 source. \texttt{./run\_all.sh} regenerates every synthetic result, figure, and the
-PDF in $\sim$5 minutes on a laptop (CPython 3.11, pinned numpy/scipy/matplotlib/pandas); all RNG is
+PDF (machine-dependent: $\sim$5 minutes on a fast laptop, $\sim$20 minutes in a constrained
+sandbox; CPython 3.11, pinned numpy/scipy/matplotlib/pandas); all RNG is
 explicitly seeded, so results are deterministic.
 \texttt{champsim\_plugin/setup\_champsim.sh} clones and builds ChampSim, installs
 the Bouncer modules, fetches public SPEC\,CPU2017 traces, and reproduces the

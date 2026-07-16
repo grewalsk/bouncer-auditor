@@ -1,5 +1,5 @@
 {
-  "note": "Owns the TMLR-R5 Prop-1 counterexample: conditioning on a single window's realized evasion (dhat_R >= tau) after an unconditional exchangeability identity is selection bias -- in the two-set construction E[r_foll|evade]=0 despite E[r_foll]=0.5, so the old realized single-window claim is FALSE. The corrected Prop 1 states (i) the expectation form (valid algebra) and (ii) the sustained-evasion form: with independent per-epoch reseeds and bounded rewards, a truly degrading strategy (E[dhat]<=tau-eps) sustains W-window evasion only w.p. <= exp(-2 W eps^2/range^2) (measured decay under the envelope), and the CUSUM (reference K>tau) then fires within 2H/gamma windows. At the pinned many-set operating point the single-window follower selection bias is ~0; the catastrophe needs cross-set anticorrelation plus a tiny pool.",
+  "note": "Owns the TMLR-R5 Prop-1 counterexample: conditioning on a single window's realized evasion (dhat_R >= tau) after an unconditional exchangeability identity is selection bias -- in the two-set construction E[r_foll|evade]=0 despite E[r_foll]=0.5, so the old realized single-window claim is FALSE. The corrected Prop 1 states (i) the expectation form (valid algebra) and (ii) the sustained-evasion form UNDER AN EXPLICIT TEMPORAL PREMISE: per-window dhat_R independent given the strategy (fresh reseeds make the assignments independent; the reward process must additionally not depend on gate history -- holds for the harness's i.i.d. reward, violable by adaptive gate-history-dependent strategies). Then a truly degrading strategy (E[dhat]<=tau-eps) sustains a W-window average >= tau only w.p. <= exp(-W eps^2/(2 r_max^2)) (Hoeffding, width-2r_max support), and the no-alarm event is CONTAINED in the high-average event: the CUSUM's max(0,.) floor means no alarm in W windows forces block mean >= K - H/W >= tau for W >= 2H/gamma. (An earlier draft's incorrect 'average dips -> fires within 2H/gamma windows' step is reproduced as a counterexample in cusum_block.) At the pinned many-set operating point the single-window follower selection bias is ~0; the catastrophe needs cross-set anticorrelation plus a tiny pool.",
   "two_set": {
     "E_rL": 0.499681,
     "E_rfoll": 0.500319,
@@ -57,9 +57,37 @@
       "final_C": 0.27000000000000013
     },
     "containment_holds": true,
-    "empirical": {
+    "exhaustive": {
+      "W": 8,
+      "support": [
+        -0.65,
+        0.05,
+        0.35
+      ],
+      "C0": [
+        0.0,
+        0.3,
+        0.6
+      ],
+      "n_noalarm_paths": 2068,
+      "n_boundary_paths": 654,
+      "holds": true
+    },
+    "equality_at_H": {
+      "fired": false,
+      "C_equals_H": true
+    },
+    "exact_dp": {
       "eps": 0.2,
-      "p_noalarm": 0.0,
+      "r_max": 1.0,
+      "support": [
+        -0.65,
+        0.35
+      ],
+      "mean": -0.15000000000000002,
+      "p_noalarm_exact": 0.003814697265625,
+      "p_noalarm_mc": 0.00382,
+      "mc_sigma": 0.00019493961501953965,
       "corrected_envelope": 0.7261490370736908
     }
   },
@@ -72,6 +100,9 @@
     "corrected_range2_formula_holds": true,
     "old_cusum_step_false": true,
     "cusum_block_containment": true,
+    "cusum_exhaustive_containment": true,
+    "cusum_equality_at_H_no_alarm": true,
+    "cusum_dp_matches_mc": true,
     "cusum_noalarm_under_envelope": true
   }
 }

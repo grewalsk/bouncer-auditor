@@ -17,8 +17,10 @@ Three things are measured:
      fix draws a secret UNIFORM audit subset (set_dueling.is_audited); we measure both the buggy
      sorted-prefix probability and the fixed uniform probability, at low AND high index.
  (3) THE REPAIR HOLDS: with the fixed routing, E[exposure] = phi_G (GATED) / <= phi_P (PROBING)
-     for ANY traffic, and over independently reseeded windows the total concentrates under the
-     Hoeffding envelope phi_P*T_att*r_max + r_max*sqrt(T_att/2 ln(1/delta_s)).
+     for ANY traffic; per-window exposures are bounded in [0, r_max] with conditional mean
+     <= phi_P*r_max under the fresh secret draw (they need not be independent under history-
+     adaptive traffic), so the total concentrates under the Azuma-Hoeffding envelope
+     phi_P*T_att*r_max + r_max*sqrt(T_att/2 ln(1/delta_s)).
 
 Deterministic; emits results/floor_traffic.json + figures/floor_traffic.pdf.
 """
@@ -134,8 +136,11 @@ def main():
               "GATED: E[exposure]=phi_G for any traffic. PROBING: the audit subset must be a secret "
               "uniform subset of followers (set_dueling.is_audited), NOT a sorted prefix -- a sorted "
               "prefix exposes low-index sets with prob ~1-n_L/n_sets (the R2 reviewer's bug), whereas "
-              "the uniform subset exposes any set with prob ~phi_P independent of index/traffic. Over "
-              "independently reseeded windows the total concentrates under the Hoeffding envelope."),
+              "the uniform subset exposes any set with prob ~phi_P independent of index/traffic. "
+              "Per-window exposures are bounded in [0, r_max] with conditional mean <= phi_P*r_max "
+              "under the fresh uniform secret draw; they need not be independent under history-"
+              "adaptive traffic, so the total concentrates under the Azuma-Hoeffding envelope "
+              "(same constant independence would give)."),
         phi_G=PHI_G, phi_P=PHI_P, r_max=R_MAX, rho_aud=RHO_AUD,
         counterexample=dict(worst_window_regret=worst_window_regret,
                             naive_phiP_allowance=naive_probing_allow,

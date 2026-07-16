@@ -27,8 +27,11 @@ Two subtleties the earlier statement got wrong, now fixed:
       E[per-window exposure] <= phi_P*r_max. CRUCIAL IMPLEMENTATION POINT: the PROBING audit subset
       must be a *uniform secret* subset of followers, NOT a fixed/sorted prefix -- a sorted prefix
       exposes a low-index hot set w.p. ~1-n_L/n_sets=0.984 (the R2 bug), which no secrecy repairs.
-      Over INDEPENDENTLY reseeded windows the exposure total is a sum of independent [0,r_max]
-      variables, so Hoeffding gives, w.p. >= 1-delta_s,
+      Per-window exposures lie in [0,r_max] with conditional mean <= phi_P*r_max given the past
+      (the window's secret draw is uniform and independent of history, and the input-only
+      adversary's traffic is blind to it); the exposures themselves need NOT be independent
+      under gate-history-adaptive traffic, so the envelope is Azuma-Hoeffding for bounded
+      differences (same constant independence would give), w.p. >= 1-delta_s,
           Sum_exposure <= phi_P*T_att*r_max + r_max*sqrt(T_att*ln(1/delta_s)/2)   (o(T_att) slack).
       exposure_envelope() returns this high-probability envelope (the ONE term we concentrate).
 
@@ -59,8 +62,10 @@ from .cusum import siegmund_arl, detection_delay_approx, false_alarm_rate_per_wi
 def exposure_envelope(*, phi: float, T_att: int, r_max: float, delta_s: float = 0.01) -> float:
     """High-probability audit-exposure envelope, traffic-agnostic (Lemma-1 subtlety A).
 
-    Over T_att independently-reseeded windows the total exposure regret is a sum of independent
-    [0, r_max] variables with per-window mean <= phi*r_max, so by Hoeffding it is at most
+    Over T_att windows the total exposure regret is a sum of [0, r_max] variables whose
+    conditional mean given the past is <= phi*r_max (fresh uniform secret draw, blind traffic);
+    the variables need not be independent under history-adaptive traffic, so the bound is
+    Azuma-Hoeffding for bounded differences (width r_max each), which gives the same
         phi*T_att*r_max + r_max*sqrt(T_att*ln(1/delta_s)/2)
     with probability >= 1 - delta_s, for ANY per-set traffic distribution. The sqrt slack is the
     sampler randomness the old deterministic phi*T_att*r_max statement omitted."""

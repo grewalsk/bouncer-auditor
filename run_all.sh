@@ -1,6 +1,7 @@
 #!/usr/bin/env bash
 # Regenerate every result, figure, and the compiled paper from scratch.
-# Deterministic: all RNG is explicitly seeded. Total runtime ~4-5 min on a laptop.
+# Deterministic: all RNG is explicitly seeded. Runtime machine-dependent: ~5 min on a fast
+# laptop, ~20 min in a constrained sandbox.
 #
 # Reproduction environment: pinned in requirements.txt (numpy 1.26.4, scipy 1.11.4,
 # matplotlib 3.8.4, pandas 2.0.3 on CPython 3.11). Floating-point results on other

@@ -123,8 +123,9 @@ def main():
         note=("Second audit condition = reseed-identifiability of the policy contrast, NOT statelessness. "
               "Multiplicative warmup (contrast scales with the warmup state) is not reseed-identifiable: the "
               "secret per-epoch reseed keeps every slice cold, so reseeded Delta-hat attenuates while fixed "
-              "leaders recover the true gap (the ChampSim replacement reseed-confound, generalized to a "
-              "PC-indexed predictor). Additive warmup (state-invariant contrast = GAP) IS reseed-identifiable: "
+              "leaders recover the true gap (the ChampSim replacement reseed-confound, isolated here in a "
+              "synthetic predictor-like slice model; real PC-indexed predictor rewards remain untested). "
+              "Additive warmup (state-invariant contrast = GAP) IS reseed-identifiable: "
               "reseeded Delta-hat survives at ~GAP even though each reward is stateful -- a direct "
               "counterexample to 'statelessness is necessary'. Statelessness is one sufficient special case."),
         mu_C=MU_C, mu_F=MU_F, gap=GAP, b_additive=B_ADD,

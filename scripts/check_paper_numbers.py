@@ -29,6 +29,87 @@ def tex_text():
     return re.sub(r"\s+", " ", txt)                                        # collapse whitespace
 
 
+# Tight marker set: only words that actually signal a retraction. Bare "old"/"earlier" are
+# ordinary prose words and over-exempt (TMLR-R7 hardening: the pre-R7 defective JSON note
+# passed a loose marker check because it retracted a DIFFERENT claim on the same line).
+RETRACTION_MARKERS = re.compile(r"\b(retract\w*|incorrect|false|earlier draft)\b", re.I)
+CTX_CHARS = 120  # exemption window, chars each side of a match, in whitespace-collapsed text
+
+
+def hygiene_checks(tex):
+    """TMLR-R7 (optional item 6): repo-wide tripwires for the retracted Prop-1(ii) inferences
+    and current-document drift. Retracted claims may be MENTIONED (to refute them) but only
+    in a retraction context: a match is exempt iff a retraction marker appears within
+    CTX_CHARS characters in the whitespace-collapsed file text (collapsing defeats the
+    line-wrap escape; the tight window defeats a marker for a DIFFERENT claim elsewhere in
+    the same paragraph/JSON note). Historical snapshots in hardening/ (other than
+    REVISION_STATUS.md) and round-pinned REVIEW_PROMPT_R*.md are out of scope by design."""
+    import glob
+    out = []
+
+    def scan(label, paths, pattern, exempt_in_retraction_context=True):
+        rx = re.compile(pattern, re.I)
+        bad = []
+        for p in paths:
+            txt = re.sub(r"\s+", " ", open(p, errors="replace").read())
+            for m in rx.finditer(txt):
+                ctx = txt[max(0, m.start() - CTX_CHARS): m.end() + CTX_CHARS]
+                if exempt_in_retraction_context and RETRACTION_MARKERS.search(ctx):
+                    continue
+                bad.append(f"{os.path.relpath(p, HERE)} ('{txt[m.start():m.end()+30]}...')")
+        out.append((label, not bad, "clean" if not bad else "found: " + "; ".join(bad[:3])))
+
+    tex_files = glob.glob(os.path.join(HERE, "paper", "*.tex"))
+    md_files = [os.path.join(HERE, "README.md"),
+                os.path.join(HERE, "hardening", "REVISION_STATUS.md")]
+    py_files = glob.glob(os.path.join(HERE, "experiments", "*.py")) + \
+        glob.glob(os.path.join(HERE, "bouncer", "*.py"))
+    json_files = glob.glob(os.path.join(RES, "*.json"))
+    everything = tex_files + md_files + py_files + json_files
+
+    # The retracted CUSUM inference, in both original phrasings and verb alternations
+    # ("fires/fired/fire within 2H/gamma", "reaches H within 2H/gamma") -- but not legitimate
+    # measured-latency prose ("fires within one measurement window") and not the corrected
+    # containment's legitimate "W >= 2H/gamma".
+    scan("hygiene: retracted CUSUM step only in retraction context", everything,
+         r"(fires?|fired) within \$?2\s*H|reaches \$?H\$? within \$?2\s*H")
+    # The premise-free reseed=>independence inference, both retracted sites: the Prop-1(ii)
+    # sentence ("...and rewards are bounded") and the Lemma-1 exposure sentence ("...the
+    # per-window exposures are independent"). Wrap-proof and case-insensitive; \emph{} allowed.
+    scan("hygiene: premise-free reseed inference purged", everything,
+         r"redrawn\s+(\\emph\{)?independently\}?,?\s+each\s+epoch,?\s+"
+         r"(and\s+rewards\s+are\s+bounded|the\s+per-window\s+exposures\s+are\s+independent)",
+         exempt_in_retraction_context=False)
+    scan("hygiene: old range-r_max tex exponent absent", tex_files + py_files,
+         r"e\^\{-2W\\epsilon\^2/r")
+    scan("hygiene: old exp(-2W eps...) form only in retraction context",
+         py_files + json_files + md_files, r"exp\(-2\s*W\s*eps")
+
+    n_corrected = tex.count(r"e^{-W\epsilon^2/(2r_{\max}^2)}") + tex.count(r"e^{-W\epsilon^2/(2\rmax^2)}")
+    out.append(("hygiene: corrected exponent printed in tex (>=2 sites)", n_corrected >= 2,
+                f"{n_corrected} occurrences"))
+
+    readme = open(os.path.join(HERE, "README.md"), errors="replace").read()
+    out.append(("hygiene: README says TMLR (no IEEEtran)", "IEEEtran" not in readme,
+                "clean" if "IEEEtran" not in readme else "IEEEtran still present"))
+
+    log_p = os.path.join(HERE, "paper", "bouncer.log")
+    m_r = re.search(r"\((\d+) pages, TMLR format\)", readme)
+    if not os.path.exists(log_p):
+        out.append(("hygiene: README page count vs built PDF", True,
+                    "paper/bouncer.log absent; skipped (run_all stage 8 creates it before stage 9)"))
+    else:
+        # stale-build guard: an old log agreeing with an old README is a silent false pass
+        stale = os.path.getmtime(TEX) > os.path.getmtime(log_p)
+        m_l = re.search(r"Output written on .*?bouncer\.pdf \((\d+) pages",
+                        open(log_p, errors="replace").read())
+        ok = bool(m_r and m_l and m_r.group(1) == m_l.group(1)) and not stale
+        out.append(("hygiene: README page count vs built PDF", ok,
+                    f"README={m_r.group(1) if m_r else '?'} log={m_l.group(1) if m_l else '?'}"
+                    + (" STALE BUILD: bouncer.tex newer than bouncer.log; rerun stage 8" if stale else "")))
+    return out
+
+
 def main():
     tex = tex_text()
     p0, p1, p4, th = load("p0.json"), load("p1.json"), load("p4.json"), load("theory.json")
@@ -107,6 +188,13 @@ def main():
     chk("prop1 old range-1 exponent violated 84.8x (corrected range-2 printed)",
         [f"{ps['printed_formula']['old_violation_factor']:.1f}"],
         f"prop1_selection.json W=100 Rademacher: exact {ps['printed_formula']['p_exact']:.6f} vs old envelope {ps['printed_formula']['old_envelope']:.6f}; corrected holds={ps['printed_formula']['new_holds']}")
+    dpn = ps["cusum_block"]["exact_dp"]
+    chk("prop1 exact-DP no-alarm prob + envelope (CUSUM containment, R7)",
+        [f"{dpn['p_noalarm_exact']:.4f}", f"{dpn['corrected_envelope']:.3f}"],
+        f"prop1_selection.json exact_dp p={dpn['p_noalarm_exact']:.6f} mc={dpn['p_noalarm_mc']:.6f} env={dpn['corrected_envelope']:.4f}")
+    chk("prop1 exhaustive no-alarm path count (R7)",
+        [f"{ps['cusum_block']['exhaustive']['n_noalarm_paths']:,}".replace(",", "{,}")],
+        f"prop1_selection.json exhaustive n_noalarm_paths={ps['cusum_block']['exhaustive']['n_noalarm_paths']} holds={ps['cusum_block']['exhaustive']['holds']}")
 
     # --- E1 keystone (means are PROTECTED) ---
     chk("E1 whole-cache 33.6% vs 4.8%",
@@ -130,7 +218,14 @@ def main():
             fails.append((label, missing, prov))
         print(f"  [{status}] {label:42s} <- {prov}" + (f"   MISSING {missing}" if missing else ""))
 
-    print(f"\n  {len(checks)-len(fails)}/{len(checks)} checks passed.")
+    n_checks = len(checks)
+    for label, ok, detail in hygiene_checks(tex):
+        n_checks += 1
+        if not ok:
+            fails.append((label, [detail], "hygiene"))
+        print(f"  [{'OK  ' if ok else 'FAIL'}] {label:42s} <- {detail}")
+
+    print(f"\n  {n_checks-len(fails)}/{n_checks} checks passed.")
     if fails:
         print("\nNUMBER AUDIT FAILED (paper numeral not found / disagrees with released JSON):")
         for label, missing, prov in fails:
