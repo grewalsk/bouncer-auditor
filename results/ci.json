@@ -24,9 +24,9 @@
   },
   "floor": {
     "detection_latency": [
-      1.0,
-      1.0,
-      1.0
+      2.0,
+      2.0,
+      2.0
     ],
     "steady_floor_violation": [
       0.006408258387646997,

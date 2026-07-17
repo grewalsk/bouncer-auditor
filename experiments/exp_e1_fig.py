@@ -84,7 +84,8 @@ def main():
                 "(2) whole-cache competence gap is real (LIP %.3f vs SRRIP-HP %.3f); "
                 "(3) secret per-epoch reseed CONFOUNDS the per-window dueling signal for the STATEFUL "
                 "replacement reward (reseeded mean dhat=%.4f ~ noise; fixed-leader mean dhat=%.4f resolves). "
-                "Set-locality is necessary but not sufficient: reward must be (near-)stateless or leaders stable."
+                "Set-locality is necessary but not sufficient: the policy contrast must remain "
+                "reseed-identifiable at the chosen epoch, or leaders must remain stable."
                 % (base["learned_LIP_insert3"], base["fallback_SRRIP_HP_insert2"], res_m, fix_m),
         reseeded_clean_mean_dhat=res_m, reseeded_clean_std=res_s,
         fixed_leader_clean_mean_dhat=fix_m, fixed_leader_clean_std=fix_s,

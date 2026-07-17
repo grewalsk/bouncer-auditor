@@ -56,6 +56,10 @@ class Bouncer:
         gate_cfg = cfg.gate
         gate_cfg.tau = cfg.tau
         self.gate = GateFSM(gate_cfg)
+        # The always-fallback baseline must route the first window through pi0.
+        # Other modes begin TRUSTED and may change state only for the next window.
+        if cfg.detector_mode == "always_fb":
+            self.gate.state = Gate.GATED
         self.K = K
         self.telemetry = []
 
@@ -89,13 +93,19 @@ class Bouncer:
 
     # ------------------------------------------------------------------
     def step(self, obs: dict) -> dict:
-        """Advance one window. obs keys:
+        """Close one window and compute the gate state for the next. obs keys:
         rC_per_set, rF_per_set, feat_win, conf_win, a_win, r_win, delta_true.
-        Returns telemetry dict including the gate state and whether C is active.
+        Telemetry field `state` is the state that routed the just-completed
+        window; `state_next` is the post-audit state for the next window.
         """
         cfg = self.cfg
         mode = cfg.detector_mode
         delta_true = obs.get("delta_true", None)
+        # Causal boundary: an end-of-window audit cannot change how that same
+        # window was routed. Snapshot the deployment state before processing it.
+        state_used = self.gate.state
+        C_active_used = self.gate.C_active_everywhere
+        probing_used = self.gate.probing
 
         # --- Tier-A ---
         escalate, ascores = self.tier_a.step_window(
@@ -136,9 +146,12 @@ class Bouncer:
         # between estimation and deployment (a counterfactual estimate). The episode
         # runner (simulate.run_episode) reseeds at window close, after deployment.
         tel = {
-            "state": self.gate.state,
-            "C_active": self.gate.C_active_everywhere,
-            "probing": self.gate.probing,
+            "state": state_used,
+            "C_active": C_active_used,
+            "probing": probing_used,
+            "state_next": self.gate.state,
+            "C_active_next": self.gate.C_active_everywhere,
+            "probing_next": self.gate.probing,
             "delta_hat": delta_hat,
             "rbar_L": rbar_L, "rbar_F": rbar_F,
             "delta_true": delta_true,

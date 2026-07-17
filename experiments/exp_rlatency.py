@@ -11,7 +11,8 @@ Two honesty fixes over the earlier version:
      Tier-A escalates to SUSPECT/PROBING). Per-domain audits use even smaller pools and see less.
   2. TPR IS REPORTED AT FIXED DEADLINES. For each gap we report the fraction gated within
      {10, 20, 40} windows, not just "ever." Near tau the short-deadline TPR is low even though
-     every episode eventually gates: latency, not deadline-free TPR, is the supported result.
+     every tested episode gates within the 40-window deadline: latency, not
+     deadline-free TPR, is the supported result.
 
 Note on the escalation path: BroadAttack shifts the input marginal, so Tier-A escalates and the
 audit runs at FULL duty (32 leaders) during detection here; the deep-drop latencies below are on
@@ -87,7 +88,7 @@ def main():
     print(f"  min standardized drift at tau: full-duty {min_drift_full:.2f} sigma; "
           f"background/TRUSTED {min_drift_bg:.2f} sigma  (sigma_full={sf:.5f}, sigma_bg={sb:.5f})")
 
-    # every episode eventually gates across the range (given the horizon)...
+    # Every tested episode gates across this finite range and horizon.
     ever_all = all(r["tpr_ever"] >= 0.95 for r in rows)
     # ...but the short-deadline TPR DROPS as the gap approaches tau (latency, not TPR, is the result)
     tpr10 = [r["tpr_by_10"] for r in rows]
@@ -119,7 +120,7 @@ def main():
 
     C.save_json("rlatency.json", dict(
         note=("Positive form of E3. Detection LATENCY rises toward the tau boundary tracking the "
-              "deterministic-drift limit D=H/(K-Delta). Every episode eventually gates within the "
+              "deterministic-drift limit D=H/(K-Delta). Every tested episode gates within the "
               "horizon, but the fixed-deadline TPR (by 10/20/40 windows) falls as the gap approaches "
               "tau -- latency, not deadline-free TPR, is the supported result. The minimum "
               "standardized drift at tau is 1.6 sigma on the background/TRUSTED pool (n_bg=8), and "
@@ -133,7 +134,7 @@ def main():
                         latency_rises_toward_tau=rises,
                         latency_tracks_prediction=tracks)))
     # regressions: the positive result must hold, honestly stated
-    assert ever_all, "every gap should eventually gate within the horizon"
+    assert ever_all, "every tested gap should gate within the finite horizon"
     assert rises, "latency should rise as Delta -> tau"
     assert deadline_tpr_degrades, "short-deadline TPR should degrade near tau (latency is the result)"
 

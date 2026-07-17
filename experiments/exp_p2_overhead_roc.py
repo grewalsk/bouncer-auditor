@@ -116,29 +116,33 @@ def latency_vs_pool():
 
 
 def overhead_budget():
-    """§9 analytical overhead budget (storage bits + per-decision work)."""
-    d, p = 16, 8                     # feature dim, RP hashes
+    """Illustrative 16-bit storage budget matching the released Tier-A dimensions.
+
+    The Python reference uses floating point; this calculation is a proposed quantized
+    representation, not an RTL area, timing, or numerical-fidelity measurement.
+    """
+    d, p = 16, 8                     # feature dim, dense projection dimension
     n_L = n_F = 32
     # storage (bits)
-    rp_matrix = d * p * 8            # 8-bit RP weights
-    quantile_sketch = p * 4 * 16     # p comps x 4 quantiles x 16-bit
-    fwd_model = 16 * 16              # 16 weights x 16-bit
+    rp_matrix = d * p * 16           # proposed 16-bit dense projection weights
+    s_in_ref = p * 2 * 16            # projected reference mean and std
+    fwd_model = (d + 2) * 16         # feature + action + bias coefficients
     cusum_regs = 4 * 2 * 16          # 4 detectors x {C+,C-} x 16-bit
     dueling_ctr = (n_L + n_F) * 8    # saturating counters (reuse ATD/sampler)
-    s_in_ref = p * 2 * 16            # ref mean/std
-    total_bits = rp_matrix + quantile_sketch + fwd_model + cusum_regs + dueling_ctr + s_in_ref
+    total_bits = rp_matrix + s_in_ref + fwd_model + cusum_regs + dueling_ctr
     table = [
         ("Set-dueling counters", dueling_ctr, "reuse existing", "sampler"),
-        ("S_in: RP matrix + quantile sketch", rp_matrix + quantile_sketch + s_in_ref,
-         "<= few adds on 1/k dec", "adjacent SRAM"),
-        ("S_res: forward model g", fwd_model, "16 MACs on 1/k dec", "adjacent"),
+        ("S_in: dense projection + mean/std", rp_matrix + s_in_ref,
+         f"{d * p} MACs on 1/k dec", "adjacent SRAM"),
+        ("S_res: forward model g", fwd_model, f"{d + 2} MACs on 1/k dec", "adjacent"),
         ("CUSUM detectors (x4)", cusum_regs, "2 add/cmp each", "adjacent"),
     ]
     return dict(total_bits=total_bits, total_bytes=total_bits / 8.0,
                 table=table,
                 area_pct_est=round(total_bits / 8.0 / (1024.0 * 256) * 100, 4),  # vs 256KB SRAM budget
-                energy_pct_target="<1%",
-                added_latency_analytical_ns=0)  # analytical only; RTL timing is future work
+                energy_not_measured=True,
+                access_path_timing_not_measured=True,
+                proposed_quantization_bits=16)
 
 
 def main():
@@ -211,7 +215,8 @@ def main():
                  sin_mim=[fpr_im.tolist(), tpr_im.tolist()]),
         latency_vs_pool=rows, delta_drop=delta_drop,
         overhead=budget))
-    print(f"  overhead: {budget['total_bytes']:.0f} bytes total, ~{budget['area_pct_est']}% of a 256KB SRAM, no added critical-path latency (analytical)")
+    print(f"  overhead: {budget['total_bytes']:.0f} bytes proposed 16-bit storage, "
+          f"~{budget['area_pct_est']}% of a 256KB SRAM; RTL timing/energy not measured")
 
 
 if __name__ == "__main__":

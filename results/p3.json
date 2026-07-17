@@ -1,33 +1,33 @@
 {
   "generality": {
     "prefetch\n(Pythia)|broad": {
-      "latency": 1.0666666666666667,
-      "floor_viol": 0.006168172482404687,
+      "latency": 2.066666666666667,
+      "floor_viol": 0.006159852897685089,
       "detect_rate": 1.0
     },
     "prefetch\n(Pythia)|drift": {
-      "latency": 4.466666666666667,
+      "latency": 5.466666666666667,
       "floor_viol": 0.00674986644534823,
       "detect_rate": 1.0
     },
     "replacement\n(Hawkeye)|broad": {
-      "latency": 1.0,
+      "latency": 2.0,
       "floor_viol": 0.006526498159718548,
       "detect_rate": 1.0
     },
     "replacement\n(Hawkeye)|drift": {
-      "latency": 5.0,
-      "floor_viol": 0.006944323232036586,
+      "latency": 6.0,
+      "floor_viol": 0.0069387971493502275,
       "detect_rate": 1.0
     },
     "scheduler\n(RL, model-\u0394\u0302)|broad": {
-      "latency": 1.0,
-      "floor_viol": 0.006102280420444719,
+      "latency": 2.0,
+      "floor_viol": 0.006101043761866626,
       "detect_rate": 1.0
     },
     "scheduler\n(RL, model-\u0394\u0302)|drift": {
-      "latency": 4.0,
-      "floor_viol": 0.006587307381865719,
+      "latency": 5.0,
+      "floor_viol": 0.006591147836221295,
       "detect_rate": 1.0
     }
   },

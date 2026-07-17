@@ -1,6 +1,6 @@
 {
   "KEYSTONE_REAL": false,
-  "finding": "Real-ChampSim replacement: (1) cache_fill API fix makes dhat nonzero (was ==0); (2) whole-cache competence gap is real (LIP 0.336 vs SRRIP-HP 0.048); (3) secret per-epoch reseed CONFOUNDS the per-window dueling signal for the STATEFUL replacement reward (reseeded mean dhat=0.0054 ~ noise; fixed-leader mean dhat=0.2334 resolves). Set-locality is necessary but not sufficient: reward must be (near-)stateless or leaders stable.",
+  "finding": "Real-ChampSim replacement: (1) cache_fill API fix makes dhat nonzero (was ==0); (2) whole-cache competence gap is real (LIP 0.336 vs SRRIP-HP 0.048); (3) secret per-epoch reseed CONFOUNDS the per-window dueling signal for the STATEFUL replacement reward (reseeded mean dhat=0.0054 ~ noise; fixed-leader mean dhat=0.2334 resolves). Set-locality is necessary but not sufficient: the policy contrast must remain reseed-identifiable at the chosen epoch, or leaders must remain stable.",
   "reseeded_clean_mean_dhat": 0.005361235658536586,
   "reseeded_clean_std": 0.04078455387980695,
   "fixed_leader_clean_mean_dhat": 0.23343717777777775,

@@ -270,7 +270,7 @@ def main():
         for r in q0_results.values())
     inv["joint_floor_and_mimicry"] = bool(joint["p1"]["floor_violation_steady"] <= 0.02
                                           and min(joint["mimicry"]["full_tpr"]) >= 0.90)
-    # honest characterization: every off-policy gap EVENTUALLY gates (within-episode TPR~1),
+    # Every tested off-policy gap gates within the finite episode (TPR~1),
     # so this within-episode curve is flat; the drift K-Delta >= gamma/2 = 0.05 is 1.6*sigma on
     # the background/TRUSTED pool (n=8) and 3.2*sigma only at full duty (n=32) after Tier-A
     # escalation. The quantity that grows toward tau is LATENCY D=H/(K-Delta), so the
@@ -284,8 +284,8 @@ def main():
     inv["scope"] = ("Robust to collapse-curve SHAPE (clip/logistic, soft/sharp knee), "
                     "the reward->IPC map, the fallback floor q0 in [0.4,0.6], and a JOINT "
                     "mu_C x IPC change. Detection is a matter of LATENCY, not deadline-free "
-                    "power: every off-policy gap Delta<tau eventually gates (within-episode "
-                    "TPR~1), with drift K-Delta >= gamma/2 = 0.05 = 1.6*sigma background (n=8) "
+                    "power: every tested off-policy gap Delta<tau gates within the episode "
+                    "(TPR~1), with drift K-Delta >= gamma/2 = 0.05 = 1.6*sigma background (n=8) "
                     "/ 3.2*sigma full duty (n=32); the FIXED-DEADLINE TPR falls near tau as the "
                     "detection LATENCY D=H/(K-Delta) grows (see exp_rlatency). "
                     "Tier-A feature/confidence maps are NOT swept; the headline "

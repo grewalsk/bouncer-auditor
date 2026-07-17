@@ -34,74 +34,49 @@
 \maketitle
 
 \begin{abstract}
-Learned controllers---reinforcement-learning prefetchers, imitation-trained
-cache-replacement policies, neural branch predictors---are entering the processor
-datapath because they beat hand-tuned heuristics \emph{on average}. That average is
-fragile. A learned controller's advantage is workload-dependent and can silently
-invert on a new workload, and a co-located adversary that knows the design can
-\emph{steer} a shared controller into its bad regime while the aggregate
-performance counters still look normal. Nothing checks, at runtime, whether the
-controller is still beating the heuristic it replaced.
+Learned microarchitectural controllers can outperform fixed heuristics on average
+yet regress under workload shift or adversarial steering. We present
+\textbf{Bouncer}, a runtime monitor and trust gate that measures \emph{realized
+competence}: it secretly set-duels a learned controller against a vetted fallback
+on hidden, per-epoch-reshuffled sets and gates the controller when its measured
+advantage falls below a threshold.
 
-We present \textbf{Bouncer}, a runtime monitor and trust gate that measures
-\emph{realized competence} directly. It repurposes \emph{set-dueling}---already in
-commercial caches---to secretly run the learned controller against a safe fallback
-on a hidden, per-epoch-reshuffled slice of sets, compare the reward each earns, and
-revert to the fallback whenever the learned controller stops winning. Because the
-winner is \emph{measured}, we prove a bounded-regret safety floor: over the union of
-audited declared domains, and in the controller's own reward, Bouncer's \emph{expected}
-regret against the fallback is at most $N_{ep}\!\cdot\!D\!\cdot\!\rmax + \phi_P T_{att}\rmax + \alpha T c_{sw}$---a per-episode detection-and-re-trust transient, an audit-exposure term that
-grows only with the dueling fraction of attack duration, and a false-alarm term.
-Because the set assignment is a hardware \emph{secret}, an attacker cannot tell
-which accesses are scored, yielding a per-domain mimicry-resistance property: an
-evader cannot degrade the victim \emph{in expectation}, and \emph{sustained} realized
-evasion by a truly degrading adversary is exponentially unlikely in the audit length
-(a single window's realized evasion is selection-biased and carries no guarantee). The auditor is a few cheap always-on tripwires
-gating an expensive confirmer, fits in $\sim\!336$\,bytes ($\sim\!0.13\%$ of a
-256\,KB SRAM) with no belief-state machinery, and by an analytical argument (RTL
-timing is future work) adds no latency on the cache-access critical path.
+Under bounded rewards, secret uniform sampling, and explicit assumptions on
+detection, re-trust, and false alarms, Bouncer bounds expected window-normalized
+regret over audited declared domains by three terms: fully-open detection and
+re-trust windows, audit exposure proportional to the secret dueling fraction and
+drop duration, and false-alarm switching. A per-domain result gives an
+expectation-level mimicry floor and, when per-window estimates are independent
+conditional on the strategy, an exponentially decreasing probability of sustained
+realized evasion. It gives no single-window guarantee and does not cover
+sub-resolution harm.
 
-Our organizing result is \emph{where this works}. A secret per-set audit can
-attribute reward to the right policy only for a \emph{set-local} controller---one
-whose decision and reward fall on the same set (canonically cache
-\emph{replacement}; PC-indexed predictors are \emph{expected} set-local but
-untested). \emph{Prefetching is the cautionary boundary}, since a prefetch benefits
-a different set than it was decided on. In the real-trace ChampSim study a second condition
-appears: the policy \emph{contrast} must survive the reshuffle (be
-\emph{reseed-identifiable}), because the same secret reshuffle that buys mimicry
-resistance erases the policy-specific state a path-dependent reward accumulates. A
-(near-)\emph{stateless} reward suffices but is not necessary---we exhibit a stateful
-reward whose contrast is state-invariant and stays auditable. \textbf{Set-locality is
-therefore necessary but not sufficient: a secret, reseeded audit also needs a
-reseed-identifiable contrast}; the two conditions govern which controllers Bouncer can
-certify (we argue each is necessary and demonstrate the boundary; a full sufficiency theorem is
-future work).
+Given representative within-domain sampling, faithful auditing requires two
+controller-side properties. First, reward must be \emph{set-local},
+so a decision and its outcome can be attributed to the same dueling pool. Cache
+replacement satisfies this spatial condition; prefetching does not because a
+prefetch can benefit a different set. Second, the policy contrast must be
+\emph{reseed-identifiable}, so reshuffling leaders does not erase the measured
+advantage. A stateless reward is sufficient but not necessary: a stateful reward
+with state-invariant contrast remains auditable. We argue that each condition is
+necessary and demonstrate both boundaries; a full sufficiency theorem remains
+future work.
 
-We validate the guarantees in a fully-released \emph{synthetic competence harness}
-whose i.i.d.\ per-decision reward meets both conditions. The estimator tracks ground
-truth ($R^2{=}0.997$), the steady-state floor stays within $0.64\%$ of the fallback
-under attack, detection costs one audit window, and the clean-workload tax is
-$0.35\%$. The headline (over $50$ seeds): under an adaptive mimicry adversary
-\emph{within a declared, secret-intact domain}, an input-distribution monitor
-detects \emph{none} of the attacks ($0/50$, Wilson $95\%$ upper bound $0.07$) while
-Bouncer detects \emph{all} ($50/50$, lower bound $0.93$), because it scores realized
-competence where an input monitor is blind to it by construction. A separate leak
-ablation isolates what the sampler's \emph{secrecy} adds: against a leak-aware regional
-adversary, detection holds up to a moderate leak and then collapses sharply (in the
-$0.6$--$0.8$ leaked-fraction band, well before the assignment is fully
-known)---while a sub-resolution \emph{slow-bleed} adversary evades the audit's resolution
-altogether (a named, open vulnerability). We then probe the boundary on real
-ChampSim deployments on SPEC\,CPU2017. As an L1D prefetcher module Bouncer caps a
-corrupted prefetcher at the prefetch-off floor but over-gates a genuinely-helpful
-one, and swapping to the controller's own reward does \emph{not} fix it, because a
-prefetcher's reward cannot be localized to a set. As an LLC \emph{replacement}
-module it \emph{is} set-local, yet exposes the second condition: a cache's reward
-is path-dependent, so its policy contrast is not \emph{reseed-identifiable} and the
-secret reseed that buys mimicry resistance
-\emph{confounds} the per-window estimate (fixed leaders resolve it; the prior
-``$\dhat\!\approx\!0$'' was a missing-callback software artifact, now fixed). The
-synthetic results are the quantitative claims; the ChampSim study is a
-real-simulator \emph{boundary} study, not a clean-case validation or a full sweep.
+In a released, seeded synthetic harness satisfying both conditions, the estimator
+tracks ground truth ($R^2{=}0.997$), the attacked steady-state floor remains within
+$0.64\%$ of the fallback, detection takes two audit windows at the operating point,
+and the clean-workload tax is $0.35\%$. Across $50$ seeds, Bouncer detects all
+mimicry attacks ($50/50$; Wilson $95\%$ lower bound $0.93$), whereas an
+input-distribution monitor detects none ($0/50$; upper bound $0.07$). A leak
+ablation shows detection collapse between $0.6$ and $0.8$ leaked assignment
+fraction, while a slow-bleed attack exposes the finite-resolution limit.
+
+ChampSim experiments serve as boundary studies rather than full-system validation:
+prefetch reward is not set-local, and secret reseeding confounds a path-dependent
+cache-replacement reward. An illustrative 16-bit representation of the released
+Tier-A dimensions requires about $404$\,bytes ($0.15\%$ of a 256\,KB static
+random-access memory). Register-transfer-level area, energy, and timing remain
+unmeasured.
 \end{abstract}
 
 \section{Introduction}
@@ -125,10 +100,11 @@ run.
 fallback on a hidden slice of the hardware; trust it only while it is measurably
 winning.} A few randomly chosen \emph{sets} (address buckets in the cache) run the
 learned controller, a few run the fallback, and the assignment is a hardware
-secret reshuffled each epoch (a fixed interval). Because
-the winner is \emph{measured}, the system's expected regret against the
-fallback is provably bounded; because the assignment is \emph{secret}, an attacker cannot look good on
-the hidden test while degrading the victim.}
+secret reshuffled each epoch (a fixed interval). Because the winner is
+\emph{measured}, expected regret is bounded under the stated assumptions. With
+representative within-domain sampling, an intact secret, and temporal independence,
+sustained audit evasion by a degrading strategy becomes exponentially unlikely; no
+single-window guarantee is claimed.}
 \label{fig:concept}
 \end{figure}
 
@@ -154,15 +130,13 @@ be done cheaply, provably, and without trusting the inputs. The mechanism
 \emph{set-dueling}---running two candidate policies on different sets and comparing
 them---a technique already in commercial caches: we secretly dedicate a randomly
 chosen handful of sets to run the learned controller and another handful to run the
-safe fallback, compare the reward they actually earn, and let the rest of the cache
-follow whichever is winning. If the
-learned controller stops winning, the gate reverts to the fallback. Two properties
-turn this from a heuristic into a guarantee. Because the winner is \emph{measured},
-not predicted, we prove a floor: the system's \emph{expected} regret against the fallback,
-over any run, is at most a small, quantified amount. And because the set
-assignment is a hardware \emph{secret}, reshuffled each epoch, an attacker cannot tell
-which accesses are being scored---so it cannot look good on the hidden test while
-degrading the victim.
+safe fallback, compare the reward they earn, and let the rest of the cache follow
+the current winner. If the learned controller stops winning, the gate reverts to
+the fallback. Measurement yields an expected-regret bound. Secrecy supplies a
+different property: under the per-domain sampling and temporal assumptions of
+\Cref{prop:mimicry}, a degrading strategy is exponentially unlikely to evade the
+audit for many consecutive windows. A single realized window has no such
+guarantee.
 
 The central finding is \emph{where this works and where it does not}. Secret
 set-dueling can attribute reward to the right policy only if that reward is
@@ -222,29 +196,34 @@ exactly those the guarantees rest on---and what is \emph{demonstrated} on a real
 
 
 \section{Formal setting}\label{sec:setting}
-A learned controller $C$ is invoked at decision points $t=1,2,\dots$. At each it
-observes microarchitectural state (the hardware's internal counters and flags) $x_t\in\mathbb{R}^d$, emits action
-$a_t\in\mathcal{A}$, and after a short horizon the environment yields a
-\emph{bounded} reward $r_t\in[0,\rmax]$ (prefetch hit$\times$timeliness, cache
-hit, $-$latency, branch correct). $C$ was trained/validated on a distribution
-$D_{val}$ of $(x,a,r)$. A fixed safe fallback $\pizero$ has a known, attack-
-resistant competence floor.
+A learned controller $C$ is invoked at decision points $t=1,2,\dots$. At each
+point it observes microarchitectural state $x_t\in\mathbb{R}^d$ (the hardware's
+internal counters and flags), emits action $a_t\in\mathcal{A}$, and receives a
+bounded reward $r_t\in[0,\rmax]$ after a short horizon. Examples include prefetch
+hit$\times$timeliness, cache hit, a normalized latency-saving reward, and branch
+correctness. The controller was trained or validated on a distribution $D_{val}$
+of $(x,a,r)$. A fixed safe fallback $\pizero$ has a known, attack-resistant
+competence floor.
 
 \begin{definition}[Competence advantage]
-Over a window $W$,
-$\Dw = \frac{1}{|W|}\sum_{t\in W}\big(r_t^{C}-r_t^{\pizero}\big).$
+Index audit windows by $w$, and let $W_w$ be the decision points in window $w$.
+For policy $\pi$, define the normalized window reward
+$\bar r_w^\pi:=|W_w|^{-1}\sum_{t\in W_w}r_t^\pi$. The competence advantage is
+$\Delta_w:=\bar r_w^C-\bar r_w^{\pizero}$.
 \end{definition}
 $r_t^{\pizero}$ is counterfactual---one cannot run both policies on the same
 decision---which is the central estimation challenge \Cref{sec:tierb} solves.
+Unless stated otherwise, the CUSUM, gate, and regret bound below use audit-window
+units: rewards are the normalized $\bar r_w$, and durations are numbers of windows.
 
 \begin{definition}[Off-policy condition]
-The system is \emph{off-policy} at $W$ iff $\Dw<\tau$ for a trust threshold
+The system is \emph{off-policy} in window $w$ iff $\Delta_w<\tau$ for a trust threshold
 $\tau\ge 0$. $\tau{=}0$ means ``learned no longer beats the floor''; $\tau{>}0$
 gives margin and hysteresis.
 \end{definition}
 
 This one scalar unifies the two threats: an adversarial push toward $C$'s
-decision boundary and a benign distribution shift both manifest as $\Dw$ falling.
+decision boundary and a benign distribution shift both manifest as $\Delta_w$ falling.
 The auditor detects the condition; a lightweight triage (\Cref{sec:triage})
 guesses the cause to pick the response.
 
@@ -259,9 +238,9 @@ condition of \Cref{rem:stateless} (a set-local, stateful reward can still defeat
 reseeded audit, as the real replacement study shows).
 \end{definition}
 
-Set-locality is the enabling condition for the entire mechanism: it is precisely
-what makes $\dhat$ (\Cref{sec:tierb}) a clean signal rather than a mis-attributed
-one. Cache \emph{replacement} (deciding which cached block to evict) satisfies the spatial-attribution requirement exactly
+Set-locality prevents $\dhat$ (\Cref{sec:tierb}) from mixing rewards earned by
+different sets. It is necessary for spatial attribution, but not sufficient for a
+faithful competence estimate. Cache \emph{replacement} (deciding which cached block to evict) satisfies the spatial-attribution requirement exactly
 (the eviction on $s$ is rewarded by hits/misses on $s$); PC-indexed predictors
 satisfy it too---though, as \Cref{rem:stateless} and \Cref{sec:eval-champsim}
 show, replacement's reward is \emph{stateful}, so a secret reseeded audit does
@@ -272,54 +251,69 @@ recovers a faithful $\dhat$ for it. We therefore present Bouncer as a mechanism 
 the \emph{set-local} class, with replacement as the canonical instance and
 prefetching as the demonstrated boundary.
 
-\begin{remark}[Set-locality is necessary, not sufficient---a reseed-identifiability
-condition]\label{rem:stateless}
-The unbiasedness in \Cref{def:setlocal} can still fail when the reward is
-\emph{stateful}---e.g.\ a cache hit on $s$ depends on which blocks prior evictions on
-$s$ retained. Reseeding the leader assignment each epoch (the source of mimicry
-resistance, \Cref{prop:mimicry}) keeps every sampled set in its short-run, cold state,
-so the estimator sees the contrast $r_C-r_F$ under the reseed-induced state
-distribution $\mathcal{D}_{rs}$ rather than at steady state. The audit is faithful when the
-\emph{signed} reseed contrast $\hat g:=\mathbb{E}_{s\sim\mathcal{D}_{rs}}[r_C(s)-r_F(s)]$ lands on
-the same side of the trust threshold as the true competence gap $\Delta$---formally, when
-$\mathrm{sign}(\hat g-\tau)=\mathrm{sign}(\Delta-\tau)$ with a margin $|\hat g-\tau|\ge\gamma/2$
-large enough to clear the CUSUM reference $K$, so the gate's $\tau$-decision is preserved. Call
-this \emph{reseed-identifiability}. The \emph{signed} form matters: a state-dependent contrast
-that reseeding drives to the wrong side of $\tau$ (e.g.\ a true gap $+0.3$ read as $-0.3$) would
-reverse the gate, which is exactly the failure this rules out. It is \emph{not} statelessness. A (near-)stateless reward satisfies it trivially, but so
-does any reward whose \emph{contrast} is state-invariant: an additive warmup
-$r_C(k)=\mu_C-b e^{-ck},\,r_F(k)=\mu_F-b e^{-ck}$ has contrast $\mu_C-\mu_F$ at every
-state $k$ and stays auditable despite being stateful, whereas a \emph{multiplicative}
-warmup $r_C(k)=\mu_C(1-e^{-ck})$ has contrast $(\mu_C-\mu_F)(1-e^{-ck})$ that the reseed
-attenuates to noise (\Cref{sec:eval-e3warmup}). Our synthetic harness's i.i.d.\
-per-decision reward (A1) is stateless and so trivially reseed-identifiable; real cache
-replacement is set-local but its reward behaves like the multiplicative case, so the
-reseeded audit collapses while fixed leaders recover the gap (\Cref{sec:eval-champsim}).
-A secret, reseeded competence audit thus requires set-locality \emph{and} a
-reseed-identifiable contrast; a (near-)stateless reward is the clean sufficient case.
-\end{remark}
+These are controller-side attribution conditions, not a substitute for statistical
+representativeness. The pool estimator targets the decision-weighted $\Delta_w$
+only when the sampled sets represent the domain's traffic, or when the estimator is
+weighted accordingly. \Cref{prop:mimicry} states this requirement as within-domain
+exchangeability up to bias $\beta$; the synthetic harness enforces it by drawing the
+same number $m$ of decisions per set. Without such a premise, even a stateless,
+set-local reward can yield a biased $\dhat$ under skewed traffic.
+
+\begin{definition}[Reseed-identifiability]\label{rem:stateless}
+Let $\mathcal{D}_{rs}$ denote the short-run state distribution induced by
+reseeding leaders. Given representative sampling, define the signed reseed contrast
+$\hat g:=\mathbb{E}_{s\sim\mathcal{D}_{rs}}[r_C(s)-r_F(s)]$. A set-local audit is
+\emph{reseed-identifiable} at threshold $\tau$ when reseeding preserves the trust
+decision,
+\[
+\mathrm{sign}(\hat g-\tau)=\mathrm{sign}(\Delta-\tau),
+\]
+with enough separation from $\tau$ for the detector to resolve the decision.
+\end{definition}
+
+Stateful reward can violate this condition: a cache hit on set $s$ depends on the
+blocks retained by earlier evictions, while reseeding repeatedly returns sampled
+sets to short-run state. The signed definition matters because a contrast moved to
+the wrong side of $\tau$ would reverse the gate.
+
+Statelessness removes this state-history failure mode, but it does not remove the
+representativeness requirement above. Nor is statelessness necessary. An additive
+warmup $r_C(k)=\mu_C-b e^{-ck}$, $r_F(k)=\mu_F-b e^{-ck}$ has the state-invariant
+contrast $\mu_C-\mu_F$ and remains identifiable. A multiplicative warmup
+$r_C(k)=\mu_C(1-e^{-ck})$ has contrast
+$(\mu_C-\mu_F)(1-e^{-ck})$, which reseeding attenuates (\Cref{sec:eval-e3warmup}).
+The balanced, independent synthetic harness satisfies both representativeness and
+reseed-identifiability. Real cache replacement is set-local but exhibits the
+multiplicative failure: reseeded estimates collapse while fixed leaders recover the
+gap (\Cref{sec:eval-champsim}).
 
 \section{Threat model}\label{sec:threat}
 \textbf{In scope.} A co-located tenant/process sharing $C$ that issues arbitrary
-memory accesses and knows the Bouncer design (Kerckhoffs); its goal is to DoS the
-victim or steer $C$ into a covert/side channel. Online-learning poisoning is an
-extension---the GATED state freezes learning. \textbf{Out of scope.}
-Physical/fault attacks and direct weight tampering (the base model assumes
-weights fixed at deploy). \textbf{Online-learning poisoning is explicitly out of
-scope for the base model:} an attacker who corrupts $C$'s \emph{weights} during
-TRUSTED operation (the phase where the learned controller is in charge) so that $C$ looks competent on the secret leaders but harms the
-victim is not addressed here---freezing learning at GATED stops further poisoning
-but does not undo it, and PROBING re-trust would restore a poisoned policy.
-Defending learned \emph{state} (vs.\ the steered-\emph{input} threat we do treat)
-is future work. \textbf{The secret.} A per-epoch RNG seed assigning the dueling
-sets (which cache sets are secretly audited), never exposed through any architectural channel.
+memory accesses and knows the Bouncer design (Kerckhoffs). Its goal is denial of
+service (DoS) or steering $C$ into a covert or side channel.
 
-\textbf{The adaptive adversary (headline).} The headline attack is \emph{mimicry}: the adversary keeps the Tier-A statistics (the input-monitoring signals) in-distribution while degrading $C$. Two distinct defenses apply, and we are careful not to conflate them. Because Bouncer scores \emph{realized competence} rather than inputs, this attack is caught regardless of secrecy---an input monitor's failure against it is \emph{definitional} (\Cref{sec:eval-p4}), which is what the $50/50$-vs-$0/50$ gap measures. \emph{Secrecy} defends the next move: an attacker who could \emph{identify} the dueling sets would spare them and pass the audit, so the randomized, reseeded sampler is what keeps that move out of reach (\Cref{prop:mimicry}); the leak ablation quantifies exactly how much secrecy buys as the assignment leaks.
+\textbf{Out of scope.} Physical and fault attacks, direct weight tampering, and
+online-learning poisoning are outside the base model, which fixes weights at
+deployment. GATED freezes learning and stops further updates, but it neither
+repairs a policy poisoned during TRUSTED operation nor prevents PROBING from
+restoring it. Defending learned \emph{state}, rather than the steered-input threat
+studied here, remains future work.
+
+\textbf{The secret.} A hardware random-number generator (RNG) supplies a
+per-epoch seed that assigns the dueling sets. The assignment is not exposed
+through an architectural channel.
+
+\textbf{The adaptive adversary (headline).} The headline \emph{mimicry} attack
+keeps Tier-A's input statistics in-distribution while degrading $C$. Measuring
+realized competence, rather than inputs, is what exposes this attack; the
+$50/50$-versus-$0/50$ experiment isolates that distinction (\Cref{sec:eval-p4}).
+Secrecy addresses a separate move: an attacker who identifies the dueling sets can
+spare them and pass the audit. The leak ablation measures this secrecy dependence.
 
 \textbf{Realizability---what we do and do not demonstrate.} Bouncer's guarantees
 bound the cost of \emph{any} in-domain competence degradation \emph{however it
 arises}: benign distribution shift or adversarial steering are the same scalar
-event ($\Dw{<}\tau$) to the auditor. We realize the mimicry/steering adversary in
+event ($\Delta_w{<}\tau$) to the auditor. We realize the mimicry/steering adversary in
 the synthetic competence harness, where the latent stress~$u$ is the controllable
 knob; the real-ChampSim study (\Cref{sec:eval-champsim}) drives the auditor with an
 \emph{injected, controlled, labelled} competence degradation---a deliberately-bad
@@ -332,32 +326,35 @@ degradation is a faithful stand-in regardless of how a real degradation would be
 induced.
 
 \section{Architecture}\label{sec:arch}
-Bouncer is two-tier because cheap signals are spoofable and the unspoofable
-signal is expensive (\Cref{fig:arch}). \Cref{fig:arch} shows the layout: cheap always-on tripwires (Tier-A) feed a read-only tap and gate an expensive competence confirmer (Tier-B), with nothing on the datapath critical path (the timing-limiting logic that sets clock speed). The cheap tripwires run always; they gate
-the expensive confirmer.
+Bouncer is two-tier because cheap input signals are spoofable and direct
+competence confirmation costs more. Cheap, always-on tripwires (Tier-A) raise the
+duty cycle of a competence confirmer (Tier-B; \Cref{fig:arch}). The estimator and
+gate logic are epoch-grained and off the cache-access critical path; the proposed
+per-access pool-tag lookup and output multiplexer are accounted for separately in
+\Cref{sec:overhead}.
 
 \begin{figure}[t]
 \centering
 \includegraphics[width=\columnwidth]{arch.pdf}
-\caption{Two-tier auditor. Cheap always-on Tier-A tripwires gate an expensive
-Tier-B competence confirmer; taps are read-only and nothing sits on the datapath
-critical path.}
+\caption{Two-tier auditor. Always-on Tier-A tripwires raise the duty cycle of the
+Tier-B competence confirmer. The estimator and gate logic are epoch-grained; the
+per-access pool-tag lookup and output multiplexer remain (\Cref{sec:overhead}).}
 \label{fig:arch}
 \end{figure}
 
-\textbf{Gate state machine.} The gate is a four-state machine that decides where the learned controller $C$ runs. \emph{TRUSTED}: $C$ active everywhere, Tier-A on,
-Tier-B on a slow background duty cycle (fraction of time it runs). Any Tier-A CUSUM (a cumulative-sum change detector) firing $\to$
-\emph{SUSPECT}. \emph{SUSPECT}: $C$ still active, Tier-B duty cycle raised (more
-dueling sets, shorter window); the Tier-B $\dhat$ CUSUM firing $\to$
-\emph{GATED}; Tier-A clearing for $T_{clear}$ $\to$ TRUSTED. \emph{GATED}:
-$\pizero$ active everywhere \emph{except the $n_L$ Leader-L sets, which keep running
-$C$ so $\dhat$ stays measurable}, online learning frozen, optional attribute/throttle;
-after a dwell $T_{dwell}$ $\to$ \emph{PROBING}. \emph{PROBING}: $C$ re-enabled on
-a small audited region only, Tier-B measures $\dhat$ there; $\dhat\ge\tau+\Delta_{hys}$
-for $T_{reprobe}$ $\to$ TRUSTED, else $\to$ GATED with exponential backoff on
-$T_{dwell}$. Hysteresis ($\tau$ to enter, $\tau+\Delta_{hys}$ to leave) plus a
-minimum dwell prevent thrash; PROBING makes re-trust \emph{measured}, not timed,
-defeating an attacker who waits out a fixed cooldown.
+\textbf{Gate state machine.} A four-state finite-state machine (FSM) determines
+where $C$ runs.
+\emph{TRUSTED} runs $C$ everywhere and Tier-B at a low background duty cycle; a
+Tier-A cumulative-sum (CUSUM) detector can move it to \emph{SUSPECT}.
+\emph{SUSPECT} still runs $C$ everywhere but raises Tier-B's duty cycle; a Tier-B
+alarm moves it to \emph{GATED}, while $T_{clear}$ clear windows restore TRUSTED.
+\emph{GATED} runs $\pizero$ except on Leader-L, preserving a measurable $\dhat$,
+and freezes online learning. After $T_{dwell}$ windows it enters \emph{PROBING},
+which re-enables $C$ only on a small secret audited region. PROBING restores TRUSTED
+after $T_{reprobe}$ estimates satisfy $\dhat\ge\tau+\Delta_{hys}$; otherwise it
+returns to GATED with exponential dwell backoff. The entry threshold $\tau$, exit
+threshold $\tau+\Delta_{hys}$, and minimum dwell prevent thrashing and make re-trust
+measured rather than timer-based.
 
 A design subtlety the build surfaced (\Cref{fig:fsm}): a \emph{pure} mimicry
 attack keeps Tier-A silent, so if SUSPECT were the only route to GATED the attack
@@ -369,7 +366,7 @@ correctness.
 \begin{figure}[t]
 \centering
 \includegraphics[width=\columnwidth]{fsm.pdf}
-\caption{The trust-gate FSM. Hysteresis and a minimum dwell prevent thrash;
+\caption{The trust-gate state machine. Hysteresis and a minimum dwell prevent thrash;
 PROBING makes re-trust measured, not timed. The dashed path lets background
 Tier-B gate a pure-mimicry attack that keeps Tier-A silent.}
 \label{fig:fsm}
@@ -384,57 +381,66 @@ experiences). Set-dueling---racing two policies on small dedicated sample pools-
 silicon~\cite{qureshi2007dip,jaleel2010rrip}; Bouncer repurposes it from policy
 selection to policy trust. The estimator is
 \begin{equation}
-\dhat_W = \bar r_L - \bar r_F,
+\dhat_w = \bar r_{L,w} - \bar r_{F,w},
 \end{equation}
-the mean reward rate on the sampled $L$ vs $F$ sets over window $W$. Because
+the mean reward rate on the sampled $L$ and $F$ sets in audit window $w$. Because
 Leader-L sets \emph{ran} $C$ and Leader-F sets \emph{ran} $\pizero$, $\dhat$ is a
 \emph{measured}, non-counterfactual quantity.
 
-\textbf{Concentration $\to$ detection latency (the key tradeoff).} With $m$
-decisions per set per window and bounded rewards, $\mathrm{Var}(\bar
-r_{\text{pool}})\le \rmax^2/(4mn)$, so
+\textbf{Concentration $\to$ detection latency (the key tradeoff).} Suppose each
+set contributes $m_{\mathrm{eff}}$ effectively independent bounded reward samples
+per window and sampled-set means are independent across the two pools. Then
+$\mathrm{Var}(\bar r_{\text{pool}})\le \rmax^2/(4m_{\mathrm{eff}}n)$, so
 \begin{equation}\label{eq:var}
-\mathrm{Var}(\dhat_W)\;\lesssim\;\frac{\rmax^2}{4m}\Big(\tfrac{1}{n_L}+\tfrac{1}{n_F}\Big)
+\mathrm{Var}(\dhat_w)\;\le\;\frac{\rmax^2}{4m_{\mathrm{eff}}}\Big(\tfrac{1}{n_L}+\tfrac{1}{n_F}\Big)
 \;=:\;\sigd^2 .
 \end{equation}
-To resolve a competence gap of size $\tau$ one needs $\sigd\ll\tau$. Smaller
+The i.i.d.\ synthetic harness has $m_{\mathrm{eff}}=m=64$; correlation reduces
+$m_{\mathrm{eff}}$, and boundedness alone does not provide the $1/(mn)$ reduction.
+To resolve a margin around $\tau$ one needs $\sigd$ smaller than that margin. Smaller
 pools or shorter windows give a noisier $\dhat$, a higher CUSUM threshold $H$ to
 hold the false-alarm rate, a longer detection delay $D$, and a larger safety-
 floor slack (\Cref{lem:floor}). This chain---\emph{pool size $\to$ estimator
 variance $\to$ CUSUM threshold $\to$ detection delay $\to$ regret floor}---is the
 central design dependency; every hyperparameter lives on it.
 
-\textbf{Detector.} A one-sided lower CUSUM (cumulative-sum change detector) on $\dhat_W$ catches a downward shift
-below $\tau$:
+\textbf{Detector.} Let $\gamma>0$ be a design margin and set the reference value
+$K=\tau+\gamma/2$. A one-sided lower cumulative-sum (CUSUM) detector on $\dhat_w$
+catches a downward shift below $\tau$:
 \begin{equation}
-C^-_t=\max\!\big(0,\,C^-_{t-1}+(K-\dhat_W)\big),\quad K=\tau+\tfrac{\gamma}{2},
+C^-_w=\max\!\big(0,\,C^-_{w-1}+(K-\dhat_w)\big),
 \end{equation}
-alarming when $C^-_t>H$, and resetting on alarm (repeated-CUSUM, so it re-arms
+alarming when $C^-_w>H$, and resetting on alarm (repeated CUSUM, so it re-arms
 for the next change rather than latching after a long excursion). Standard
 quickest-detection theory~\cite{lorden1971reacting,moustakides1986optimal}
 motivates the CUSUM as the near-optimal detector for a downward shift under a
 false-alarm constraint (optimality is exact only for a known post-change law;
-here $\dhat_W$ is an estimated, variance-inflated statistic, so we treat it as a
-well-motivated detector); we work the ARL (average run length between false alarms)/delay constants in \Cref{sec:guarantees}.
+here $\dhat_w$ is an estimated, variance-inflated statistic, so we treat it as a
+well-motivated detector). \Cref{sec:guarantees} gives the average-run-length (ARL)
+and delay constants.
 
 \section{Tier-A: cheap tripwires}\label{sec:tiera}
-All Tier-A signals update on a sampled $1/k$ of decisions, a few adds/compares
-each, in $\le$ low-KB SRAM (a few kilobytes of on-chip memory), and \emph{never gate on their own}---they only spend
-Tier-B budget, so their false positives cost a little energy, never correctness.
+Tier-A signals update on a sampled $1/k$ of decisions and \emph{never gate on
+their own}: they only raise Tier-B's duty cycle. Their false positives therefore
+cost confirmation work, not correctness. The released prototype uses the dense
+statistics described below; \Cref{sec:overhead} reports an illustrative quantized
+hardware budget rather than a synthesized implementation.
 
 \textbf{$S_{in}$ (input covariate shift).} A frozen reference sketch of $D_{val}$
-features: a random projection $P\in\mathbb{R}^{d\times p}$ ($p{\approx}8$) feeding
-per-component quantile sketches; online, a windowed energy distance vs the
-reference. Cheap, high-sensitivity, and \emph{spoofable}---the adversary can hold
-marginals fixed---which is exactly why it cannot be the trust signal.
+features: a random projection $P\in\mathbb{R}^{d\times p}$ ($p{=}8$) with the
+projected validation mean and standard deviation. Online, it measures the squared
+standardized displacement of the projected window mean. This statistic is
+\emph{spoofable}---the adversary can hold its monitored marginals fixed---which is
+why it cannot be the trust signal.
 
 \textbf{$S_{dec}$ (decision-confidence collapse).} If $C$ exposes value/Q/logits,
 monitor action-entropy collapse, max-$Q$ margin, and (for online learners)
 temporal-difference-error magnitude (TD-error, the reinforcement-learning surprise signal). Pythia's reward and the confidence signals of SHiP and perceptron (two learned cache/branch controllers) are already computed in silicon~\cite{wu2011ship,jimenez2001perceptron}, so $S_{dec}$ is
 nearly free there.
 
-\textbf{$S_{res}$ (innovation residual).} A 16-weight linear forward model
-$g:(x_t,a_t)\to\hat r_t$ fit on $D_{val}$; online residual $e_t=r_t-\hat r_t$;
+\textbf{$S_{res}$ (innovation residual).} A linear forward model
+$g:(x_t,a_t)\to\hat r_t$ fit on $D_{val}$ ($d+2$ coefficients for the features,
+action, and bias; $18$ at $d{=}16$); online residual $e_t=r_t-\hat r_t$;
 two-sided CUSUM (a cumulative-sum drift detector) on $e_t$. This catches ``the world responds differently than at
 validation'' even when input marginals look clean---the architectural analogue of
 a Kalman innovation (the gap between a predicted and an observed signal). It is the signal that separates a competence-aware monitor
@@ -443,26 +449,35 @@ from an input-only one.
 \section{Guarantees}\label{sec:guarantees}
 \subsection{Safety floor / bounded regret}
 \begin{assumption}\label{asm}
-\textup{(A1)} per-decision reward $\in[0,\rmax]$; \textup{(A2)} a \emph{drop episode} is a
-\emph{maximal run} of consecutive windows with true competence $\Delta_t<\tau$ ($K=\tau+\gamma/2$),
-and over such an episode the \emph{expected number of fully-open windows}---$C$ running everywhere
-(TRUSTED/SUSPECT), the initial detection delay \emph{plus any false re-trust excursions}---is
-$\le D$. We treat this as an \emph{assumption on the FSM that we characterize empirically, not a
-closed-form bound}: \Cref{sec:eval-retrust} measures $D$ \emph{through the real controller} and
-finds $D\approx$ the initial delay ($\approx H/(K-\Delta_t)$, Lorden/Siegmund) with $\approx\!0$
-false re-trusts for the reseeded, near-i.i.d.\ audit (fully-open fraction $\le\!0.07$). It is
-\emph{not} horizon-independent in general: a temporally-\emph{correlated} (stateful) audit strings
-together the $T_{reprobe}$ crossings a false re-trust needs, inflating $D$---the same
-reseed-identifiability boundary---which we name as a limitation rather than bound; \textup{(A3)} the per-window false-alarm \emph{probability}
-is $\le\alpha=1/\mathrm{ARL}_0$ (a marginal bound; \emph{no} independence across windows is
-assumed); \textup{(A4)} a gate switch transient costs $\le c_{sw}$; \textup{(A5)} there are
-$N_{ep}$ drop episodes spanning $T_{att}\le T$ windows over a horizon of $T$ windows;
-\textup{(A6)} the sets that keep running $C$ during a drop are chosen by the \emph{secret}
-sampler---the $n_L$ Leader-L sets always, plus in PROBING a \emph{uniform} secret subset
-(fraction $\rho_{aud}$) of the followers, redrawn each epoch---so every set carries $C$ with
-probability $\le\phi_P$ \emph{independent of its traffic} ($\phi_G$ while GATED, $\phi_P$ while
-PROBING).
+\textup{(A1)} Each normalized window reward lies in $[0,\rmax]$.
+
+\textup{(A2)} A \emph{drop episode} is a maximal run of windows with
+$\Delta_w<\tau$. During each episode, the expected number of \emph{fully-open}
+windows---$C$ running everywhere in TRUSTED or SUSPECT, including the initial
+detection delay and any false re-trust excursions---is at most $D$.
+
+\textup{(A3)} The marginal false-alarm probability in each window is at most
+$\alpha=1/\mathrm{ARL}_0$; no independence across windows is assumed.
+
+\textup{(A4)} The total transient regret attributable to one false-alarm episode,
+including all gate-state transitions it induces, is at most $c_{sw}$.
+
+\textup{(A5)} A horizon of $T$ windows contains $N_{ep}$ drop episodes spanning
+$T_{att}\le T$ windows.
+
+\textup{(A6)} During a drop, the sets that keep running $C$ are chosen by the
+secret sampler: the $n_L$ Leader-L sets always, plus in PROBING a uniform secret
+follower subset of fraction $\rho_{aud}$, redrawn each epoch. Thus each set carries
+$C$ with probability at most $\phi_P$, independent of its traffic ($\phi_G$ while
+GATED and $\phi_P$ while PROBING).
 \end{assumption}
+
+A2 is an empirical assumption about the finite-state machine (FSM), not a
+closed-form delay bound. \Cref{sec:eval-retrust} measures it through the implemented
+controller. In the reseeded, near-i.i.d.\ harness, false re-trust is approximately
+zero and $D$ is close to the initial-delay estimate $H/(K-\Delta_w)$. Temporal
+correlation can inflate $D$; this temporal premise is distinct from the signed-mean
+reseed-identifiability condition of \Cref{rem:stateless}.
 
 \textbf{Audit exposure (from the construction).} A fixed slice of the resource keeps running the controller $C$ even during a drop, and this slice sets the audit-exposure cost. The $n_L$ Leader-L sets run $C$ in
 \emph{every} gate state (they must, so $\dhat$ stays measurable and PROBING re-trust is
@@ -476,10 +491,10 @@ number of windows inside drop episodes.
 
 \begin{figure}[t]\centering
 \includegraphics[width=\columnwidth]{exposure.pdf}
-\caption{Which sets keep running $C$ under attack (schematic, not to scale). Leader-L
-and Leader-F never change; PROBING additionally re-enables $C$ on a $\rho_{aud}$
-audited follower fraction. This is exactly $\phi_G$ and $\phi_P$ of \Cref{lem:floor}'s
-audit-exposure term.}
+\caption{Which sets keep running $C$ during a drop (schematic, not to scale).
+Leader assignments remain fixed within an epoch and are redrawn at the next.
+GATED runs $C$ only on Leader-L ($\phi_G$); PROBING also runs $C$ on a uniform
+secret follower subset ($\phi_P$ total exposure).}
 \label{fig:exposure}
 \end{figure}
 
@@ -488,43 +503,50 @@ Under \Cref{asm}, for an \emph{arbitrary} per-set traffic distribution, the expe
 against the fallback---over the secret sampler, the detection delay, and the false-alarm
 events---obeys
 \begin{equation}\label{eq:floor}
-\mathbb{E}\!\Big[\sum_t\!\big(r_t^{\pizero}-r_t^{\mathrm{Bouncer}}\big)\Big]
+\mathbb{E}\!\Big[\sum_{w=1}^{T}\!\big(\bar r_w^{\pizero}-\bar r_w^{\mathrm{Bouncer}}\big)\Big]
 \;\le\; \underbrace{N_{ep}\,D\,\rmax}_{\text{detection + re-trust}}
 \;+\; \underbrace{\phi_P\,T_{att}\,\rmax}_{\text{audit exposure}}
 \;+\; \underbrace{\alpha\,T\,c_{sw}}_{\text{false alarm}}.
 \end{equation}
-Every term is an expected value, and the bound uses only the \emph{marginal} assumptions
-A2, A3, A6 and linearity of expectation---\emph{no} independence across windows. The middle term
+The bound uses A1--A6 and linearity of expectation; its counting arguments require
+only the marginal conditions in A2, A3, and A6, not independence across windows. The middle term
 is the price of continuous, \emph{measured} auditability; it grows only at the dueling fraction
 $\phi_P$ of the attack duration, not at full resource.
 \end{lemma}
 \begin{proof}[Proof sketch]
-Partition windows and take expectations termwise. \emph{(i) Audit exposure.} During a drop the
-sets still running $C$ are the Leader-L sets (GATED) plus, in PROBING, the uniform secret audit
-subset. Their regret is the \emph{traffic} on those sets, \emph{not} their count; A1--A5 alone do
-not bound per-set traffic, so on any single window a hot set tagged for $C$ can cost a full
-$\rmax$ (\Cref{sec:eval-floortraffic}). A6 is what controls it: each set carries $C$ with
-probability $\le\phi_P$ \emph{independent of its traffic}, so for any fixed per-window traffic
-vector $w$ ($\sum_s w_s=1$), $\mathbb{E}[\text{exposure}]=\sum_s w_s\Pr[s\text{ runs }C]\,\rmax
-\le\phi_P\rmax$; summing over the $T_{att}$ drop windows gives $\phi_P T_{att}\rmax$. \emph{(ii)
-Detection and re-trust.} Within an episode $C$ runs everywhere on its \emph{fully-open} windows---the
-initial detection delay \emph{plus} any false re-trust excursions; by A2 their expected count is
-$\le D$, so the expected fully-open regret is $\le N_{ep}D\rmax$ (linearity over episodes). This is
-where a false re-trust is charged: A2's $D$ counts it, and \Cref{sec:eval-retrust} measures it (small in the reseeded regime; inflated by a correlated audit). \emph{(iii) False alarms.} By A3 the expected number of false alarms is
-$\sum_{t=1}^{T}\Pr[\text{alarm}_t]\le\alpha T$ (linearity; marginals suffice, no independence),
-each costing $\le c_{sw}$. \emph{(iv)} Trusted windows with $C\ge\pizero$ contribute non-positive
-regret. Summing (i)--(iii) yields \cref{eq:floor}.
+Partition windows and take expectations termwise.
+
+\emph{(i) Audit exposure.} During a drop, Leader-L and the uniform secret
+PROBING subset still run $C$. Their regret depends on the \emph{traffic} on those
+sets, not their count. A hot set tagged for $C$ can therefore cost a full $\rmax$
+in one window (\Cref{sec:eval-floortraffic}). Under A6, however, each set carries
+$C$ with probability at most $\phi_P$, independent of its traffic. For any fixed
+traffic vector $q$ with $\sum_s q_s=1$,
+$\mathbb{E}[\text{exposure}]=\sum_s q_s\Pr[s\text{ runs }C]\rmax
+\le\phi_P\rmax$. Summing over drop windows gives $\phi_PT_{att}\rmax$.
+
+\emph{(ii) Detection and re-trust.} A2 counts every fully-open window in an
+episode, including false re-trust excursions. Their expected regret is therefore
+at most $N_{ep}D\rmax$.
+
+\emph{(iii) False alarms.} By A3, the expected number of false-alarm episodes is
+$\sum_{w=1}^{T}\Pr[\text{alarm}_w]\le\alpha T$; linearity suffices. A4 bounds the
+total transient regret of each episode by $c_{sw}$.
+
+\emph{(iv)} Windows in which the open controller outperforms the fallback
+contribute non-positive regret. Summing (i)--(iii) proves \cref{eq:floor}.
 \end{proof}
 
-\textbf{A high-probability refinement, for the exposure term only.} The per-window exposures
-need \emph{not} be independent---traffic may adapt to gate history---but each lies in
-$[0,\rmax]$, and its conditional mean given all prior windows is $\le\phi_P\rmax$: the window's
-secret draw is uniform and independent of the past (A6), and the input-only adversary's traffic
-is blind to it. Azuma--Hoeffding for bounded differences (each of width $\rmax$) therefore
-tightens the middle term to the same high-probability envelope independence would give: with
-probability $\ge1-\delta_s$,
+\textbf{A high-probability refinement, for exposure only.} For a fixed sequence
+of $T_{att}$ drop windows, let $X_w\in[0,\rmax]$ be exposure regret. Traffic may
+adapt to gate history, so the $X_w$ need not be independent. Under A6, however,
+$\mathbb{E}[X_w\mid\mathcal{F}_{w-1}]\le\phi_P\rmax$: the current secret draw is
+uniform and independent of the past, and the input-only adversary is blind to it.
+Thus $X_w-\mathbb{E}[X_w\mid\mathcal{F}_{w-1}]$ is a martingale difference whose
+conditional range has width $\rmax$. Hoeffding--Azuma gives, with probability at
+least $1-\delta_s$,
 \begin{equation}\label{eq:floorhp}
-\textstyle\sum_{t}(\text{exposure regret})_t \;\le\; \phi_P T_{att}\rmax \;+\; \rmax\sqrt{\tfrac{T_{att}}{2}\ln\tfrac1{\delta_s}},
+\textstyle\sum_{w}(\text{exposure regret})_w \;\le\; \phi_P T_{att}\rmax \;+\; \rmax\sqrt{\tfrac{T_{att}}{2}\ln\tfrac1{\delta_s}},
 \end{equation}
 an $o(T_{att})$ slack that vanishes per-window over a sustained attack (empirically the envelope
 covers the worst-case concentrated-traffic total with coverage $1.0$; \Cref{sec:eval-floortraffic}).
@@ -557,73 +579,64 @@ that a \emph{global} $\dhat$ carries \emph{no} guarantee against a redistributiv
 attack.
 
 \begin{proposition}[Mimicry resistance, per-domain]\label{prop:mimicry}
-Fix a contested domain $R$ (e.g.\ a victim co-tenant's cache footprint) and run
-the dueling pools \emph{within} $R$ each epoch (a fixed audit window): draw Leader-L and the follower sets of $R$
-uniformly at random from $R$, unobservable to the adversary. Assume the
-within-$R$ set outcomes are exchangeable up to a heterogeneity bias
-$|b_R|\le\beta$ (an explicit assumption; the misspecification sweep of
-\Cref{sec:eval} is its empirical proxy), and that the adversary holds all aggregate
-Tier-A statistics at their validation values. Two forms. \emph{(i) Expectation.} Any
-input-only strategy with $\mathbb{E}[\dhat_R]\ge\tau$ forces
-$\mathbb{E}[\text{reward on the }R\text{ followers}]\ge r^{\pizero}+\tau-\beta$: the
-victim cannot be degraded below the floor \emph{in expectation} while holding the
-\emph{expected} audit at $\tau$. \emph{(ii) Sustained realized evasion.} A
-\emph{single} window's realized $\dhat_R\ge\tau$ carries no such implication:
-conditioning on it selects favorable audit noise (with a two-set pool and
-anticorrelated rewards, $\mathbb{E}[r_{\text{foll}}\mid\dhat_R\ge\tau]$ can sit at
-$0$ while the unconditional means are equal; \Cref{sec:eval-prop1}). What secrecy
-buys is a \emph{sustained} guarantee, under one explicit temporal premise:
-\emph{assume the per-window $\dhat_R$ values are independent given the strategy}
-(the fresh secret reseed makes the \emph{assignments} independent, but this premise
-additionally requires the reward process not to depend on gate history---it holds
-for the harness's i.i.d.\ per-decision reward, and an adaptive, gate-history-dependent
-strategy can violate it; \Cref{tab:discharge}). Then, since
-$\dhat_R\in[-\rmax,\rmax]$ (a range of width $2\rmax$), a truly degrading
-strategy---one with $\mathbb{E}[\dhat_R]\le\tau-\epsilon$---keeps the $W$-window
-average of $\dhat_R$ at or above $\tau$ only with probability
-$\le e^{-W\epsilon^2/(2r_{\max}^2)}$ (Hoeffding with the correct $2\rmax$ range).
-And a no-alarm block \emph{contains} the high-average event: because the CUSUM's
-$\max(0,\cdot)$ floor only raises the statistic, no alarm within $W$ windows (the
-implemented detector alarms only on the strict $C_t>H$) forces
-$\sum_t(K-\dhat_{R,t})\le H$, i.e.\ the block average of $\dhat_R$ is at least
-$K-H/W\ge\tau$ whenever $W\ge 2H/\gamma$. Hence for any $W\ge 2H/\gamma$,
-$\Pr[\text{no alarm in }W\text{ windows}]\le\Pr[\text{block average}\ge\tau]\le
-e^{-W\epsilon^2/(2r_{\max}^2)}$: sustained realized evasion by a degrading adversary
-is exponentially unlikely in the audit length. Under a leaked fraction $f$ of the within-$R$
-assignment, the adversary may spare $f\,n_L$ Leader-L sets, biasing $\dhat_R$
-upward by $\le f\,(\bar r^{\text{clean}}-\bar r^{\text{att}})$; the
-\emph{unprotected} $(1-f)$ of the degradation still enters $\dhat_R$, so the gate
-fires once the unprotected degradation pushes $\dhat_R$ below the CUSUM reference $K=\tau+\gamma/2$---i.e.\ $(1-f)(\bar r^{\text{clean}}-\bar r^{\text{att}})\gtrsim\Delta^{\text{clean}}_R-K$, where $\Delta^{\text{clean}}_R$ is the \emph{un-attacked} competence advantage on $R$ (up to $O(\sigma_{\Delta,R})$ estimator noise, a realized per-window event; empirically the crossing falls between $f{=}0.6$, where $\dhat_R\!\approx\!0.084<K$ and detection holds, and $f{=}0.8$, where $\dhat_R\!\approx\!0.227>K$ and it evades),
-i.e.\ detection is intact while the leaked fraction stays modest (empirically up
-to $f\!\approx\!0.6$, \Cref{sec:eval-p4}) and collapses sharply in the
-$0.6$--$0.8$ band, well before $f{=}1$ (not a gradual roll-off toward $1$).
+Fix a contested domain $R$, such as a victim's cache footprint. In every epoch,
+draw Leader-L and Leader-F uniformly without replacement within $R$; the remaining
+sets are followers, and the assignment is hidden from the adversary. Let
+$\mu_{0,R}:=\mathbb{E}[\bar r_{F,R}]$ be the fallback pool's expected reward.
+Assume that controller rewards on Leader-L and follower sets are exchangeable up
+to a bias $|b_R|\le\beta$, and that the adversary holds aggregate Tier-A
+statistics at their validation values.
+
+\emph{(i) Expectation.} Any input-only strategy with
+$\mathbb{E}[\dhat_R]\ge\tau$ satisfies
+\[
+\mathbb{E}[\bar r_{\mathrm{foll},R}^{C}]
+\ge \mu_{0,R}+\tau-\beta .
+\]
+This is an unconditional expectation statement, not a guarantee conditional on a
+single realized audit.
+
+\emph{(ii) Sustained realized evasion.} Consider a block of $W$ windows. Assume
+the $\dhat_{R,w}$ are independent conditional on the strategy and that
+$W^{-1}\sum_{w=1}^{W}\mathbb{E}[\dhat_{R,w}\mid\text{strategy}]
+\le\tau-\epsilon$. Fresh secret assignments alone do not imply this temporal
+premise; gate-history-dependent reward processes can violate it. Because
+$\dhat_{R,w}\in[-\rmax,\rmax]$, for any $W\ge2H/\gamma$,
+\[
+\Pr[\text{no alarm in the block}]
+\le \Pr[W^{-1}\textstyle\sum_w\dhat_{R,w}\ge\tau]
+\le e^{-W\epsilon^2/(2r_{\max}^2)} .
+\]
 \end{proposition}
 \begin{proof}[Proof sketch]
-\emph{(i)} Within $R$ the Leader-L and follower sets are an exchangeable partition under the
-secret uniform draw, so their reward means satisfy $\mathbb{E}[\bar
-r_L]=\mathbb{E}[\bar r_{\text{foll}}]+b_R$ with $|b_R|\le\beta$. An adversary
-blind to the partition cannot apply a set-dependent perturbation distinguishing
-them, so $\mathbb{E}[\dhat_R]\ge\tau$ forces $\mathbb{E}[\bar
-r_{\text{foll}}]\ge r^{\pizero}+\tau-\beta$. This is an \emph{unconditional}
-identity; it may \emph{not} be applied on the realized event $\{\dhat_R\ge\tau\}$,
-which selects the noise (\Cref{sec:eval-prop1} reproduces the failure).
-\emph{(ii)} Under the stated temporal premise the per-window $\dhat_R$ are
-independent and bounded in $[-\rmax,\rmax]$, so Hoeffding (range $2\rmax$) gives
-$\Pr[\text{block average}\ge\mathbb{E}[\dhat_R]+\epsilon]\le
-e^{-2W\epsilon^2/(2\rmax)^2}=e^{-W\epsilon^2/(2\rmax^2)}$. For the CUSUM
-containment: on the no-alarm event no reset occurs, so the recurrence
-$C_t=\max(0,C_{t-1}+(K-\dhat_{R,t}))\ge\sum_{s\le t}(K-\dhat_{R,s})$ holds
-throughout the block, and no alarm by window $W$---$C_t\le H$ for all $t\le W$,
-since the implemented detector alarms only on the strict $C_t>H$---forces
-$WK-\sum_t\dhat_{R,t}\le H$, i.e.\ the block
-average is at least $K-H/W$, which is $\ge\tau$ for $W\ge 2H/\gamma$. The no-alarm event
-is therefore contained in the high-average event, to which the concentration bound
-applies. (Note this replaces an earlier, incorrect ``once the average dips, the
-CUSUM fires within $2H/\gamma$ windows'' step: an average below $\tau$ does not make
-every subsequent increment at least $\gamma/2$.) \emph{(Leak.)} Leaked knowledge of fraction $f$ lets the
-adversary exempt $f\,n_L$ Leader-L sets; the remaining $(1-f)$ fraction carries the
-degradation into $\mathbb{E}[\dhat_R]$, detectable once the unprotected degradation exceeds the clean margin, $(1-f)(\bar r^{\text{clean}}-\bar r^{\text{att}})\gtrsim\Delta^{\text{clean}}_R-K$ (up to $O(\sigma_{\Delta,R})$ noise).
+\emph{(i)} Exchangeability gives
+$\mathbb{E}[\bar r_L^C]=
+\mathbb{E}[\bar r_{\mathrm{foll},R}^{C}]+b_R$. Since
+$\mathbb{E}[\dhat_R]=\mathbb{E}[\bar r_L^C]-\mu_{0,R}\ge\tau$ and
+$|b_R|\le\beta$, rearrangement proves the stated floor. Conditioning instead on
+$\{\dhat_R\ge\tau\}$ would select favorable audit noise
+(\Cref{sec:eval-prop1}).
+
+\emph{(ii)} Hoeffding's inequality for independent, not necessarily identical,
+variables of range $2\rmax$ gives the high-average bound
+$e^{-W\epsilon^2/(2\rmax^2)}$. On a no-alarm block, no reset occurs and
+\[
+C_w=\max(0,C_{w-1}+K-\dhat_{R,w})
+\ge\sum_{j=1}^{w}(K-\dhat_{R,j}).
+\]
+The strict alarm rule is $C_w>H$, so no alarm gives $C_w\le H$. At the end of
+the block this implies
+$W^{-1}\sum_w\dhat_{R,w}\ge K-H/W\ge\tau$ when $W\ge2H/\gamma$.
+Thus the no-alarm event is contained in the high-average event.
 \end{proof}
+
+\textbf{Partial leakage (empirical scope).} The leak ablation uses a homogeneous
+regional degradation model in which sparing a fraction $f$ of Leader-L sets
+approximately removes the same fraction of degradation. At the operating point,
+$\dhat_R\approx0.084<K$ at $f{=}0.6$ and $0.227>K$ at $f{=}0.8$, matching the
+observed collapse in that band (\Cref{sec:eval-p4}). This is not a general
+$f$-linear theorem: leaked sets could be a nonrepresentative subset of traffic or
+harm.
 
 \textbf{What this does and does not cover.} (i) \emph{Global $\dhat$ is not
 enough.} A purely redistributive adversary that degrades the victim region while
@@ -636,25 +649,28 @@ load-bearing.} The whole argument rests on the adversary being blind to the
 within-$R$ assignment---which is why the secrecy ablation (\Cref{sec:eval-p4}) is
 the headline experiment.
 
-\textbf{The coverage hole (an explicit slow-bleed attack on the budget).} A budgeted auditor has a finest resolvable competence drop, and an adversary can hide harm below it forever. The
-proposition is genuinely scoped, not merely hedged: it covers a \emph{declared}
-domain audited at finite resolution. From the concentration bound, the within-$R$
-gap resolvable with leader density $\rho$ is $\delta_R = k\,\sigma_{\Delta,R} =
-k\,r_{\max}/\sqrt{2m\rho|R|}$, and---crucially---the leader count to audit at
-resolution $\delta_R$ is $n_{L,R}\ge k^2 r_{\max}^2/(2m\,\delta_R^2)$,
-\emph{independent of $|R|$}. So under a fixed budget $B$ there is a finest
+\textbf{The coverage hole (an explicit slow-bleed attack on the budget).} A
+budgeted auditor has a finest resolvable competence drop. Let
+$\rho:=n_{L,R}/|R|$ be the per-pool leader density, $k$ the chosen standard-error
+multiplier, and $B$ the available per-pool leader budget. Under the effective-
+independence premise of \cref{eq:var}, the within-$R$ resolvable gap is
+$\delta_R=k\,\sigma_{\Delta,R}
+=k r_{\max}/\sqrt{2m_{\mathrm{eff}}\rho|R|}$, requiring
+$n_{L,R}\ge k^2r_{\max}^2/(2m_{\mathrm{eff}}\delta_R^2)$ leaders, independent of
+$|R|$. A fixed budget $B$ therefore induces a finest
 resolution $\delta_R^{\min}(B)$, and a redistributive adversary can pick a region
 small enough (or trickle harm slowly enough) that its per-window competence drop
 stays \emph{below} $\delta_R^{\min}(B)$ forever---an undeclared, sub-resolution
 ``coverage hole'' that the safety-floor lemma, proven only over the \emph{union of
-audited domains}, does not bound. This is the same hole the secrecy ablation walks
-on its $f$ axis (TPR $1.0\!\to\!0$ as $f\!\to\!1$). \emph{We therefore claim
+audited domains}, does not bound. Finite resolution and assignment leakage are
+distinct failure axes: the former hides small harm even with an intact secret,
+whereas the latter lets an attacker spare audited sets. \emph{We therefore claim
 mimicry resistance only for declared domains audited at resolution
 $\delta_R^{\min}(B)$ with an intact secret---not general, any-region security}; the
-slow-bleed attack is a real, un-closed vulnerability that bounds the contribution
-honestly. \Cref{fig:hole} demonstrates it against the deployed auditor: a constant
-per-window harm kept below $\delta_R^{\min}$ ($h{=}0.06$) bleeds a victim region for
-the entire horizon---cumulative harm grows monotonically and unboundedly in $T$---
+slow-bleed attack is an open vulnerability. \Cref{fig:hole} demonstrates it
+against the deployed auditor: constant per-window harm $h{=}0.06$ kept below
+$\delta_R^{\min}$ bleeds a victim region for the entire horizon; cumulative harm
+grows linearly as the horizon $T$ increases,
 while the measured gap $\hat\Delta_R$ holds above the trust threshold ($0.205\!\ge\!\tau$) and the CUSUM (the cumulative-sum drift detector) never fires.
 
 \begin{figure}[t]\centering
@@ -663,7 +679,7 @@ while the measured gap $\hat\Delta_R$ holds above the trust threshold ($0.205\!\
 dueling). (a) a slow-bleed at $h{<}\delta_R^{\min}$ accumulates unbounded victim
 harm while $\hat\Delta_R\!\ge\!\tau$ and no alarm fires; (b) it evades at every
 horizon, so total harm $\propto T$. The closed-form floor is
-$\delta_R^{\min}(B){=}k\sigma_R\!\propto\!1/\sqrt{B}$ ($0.19,0.13,0.094,0.066$ for
+$\delta_R^{\min}(B){=}k\sigma_{\Delta,R}\!\propto\!1/\sqrt{B}$ ($0.19,0.13,0.094,0.066$ for
 per-pool leader counts $n_{L,R}{=}2,4,8,16$): more leader budget shrinks the hole
 but never closes it.}
 \label{fig:hole}
@@ -683,20 +699,22 @@ misclassification only mis-selects between equally-safe responses.
 \section{Per-controller instantiation}\label{sec:instantiation}
 \Cref{tab:instances} maps Bouncer onto four controller classes, ordered by
 \emph{set-locality}. \textbf{Cache replacement} leads: its hit/miss reward is
-attributed to the very set whose eviction it decided, so the dueling $\dhat$ is a
-clean, localized competence signal---the home turf. \textbf{Branch/perceptron}
-predictors are PC-indexed (keyed by program-counter address) and likewise local. \textbf{Prefetching} is
+attributed to the set whose eviction it decided, giving the required spatial
+attribution; representative sampling and reseed-identifiability are still needed.
+\textbf{Branch/perceptron} predictors are indexed by program counter (PC), so the
+decision and correctness reward are structurally local to a PC bucket, but
+reseed-identifiability on real predictors is untested. \textbf{Prefetching} is
 \emph{not} set-local---a prefetch on set $s$ rewards a different set $s'$, so the
 faithful reward cannot be dualized (\Cref{sec:eval-champsim}); it is the
 cautionary boundary. The \textbf{memory scheduler} is the hardest: no clean
-set-sampling on a shared command bus (the single channel to DRAM) forces a \emph{model-based} $\dhat$, which
+set-sampling on a shared command bus to dynamic random-access memory (DRAM) forces
+a \emph{model-based} $\dhat$, which
 weakens \Cref{prop:mimicry}.
 
 \begin{table}[t]\centering\footnotesize
-\caption{Per-controller instantiation, ordered by set-locality (whether reward and
-decision share a dueling set). Predictors are set-local by structure; their
-reseed-identifiability is untested for real predictors; a \emph{synthetic} stateful-predictor
-model shows a stateful reward \emph{whose contrast scales with the erased state} confounds the reseeded audit, shrinking $\dhat$ to most of the gap being lost (only $8\%$ retained) as warmup lengthens, while a state-invariant contrast survives (\Cref{fig:warmup}).}
+\caption{Candidate controller instantiations. Set-locality asks whether a decision
+and its reward share a dueling bucket; real-predictor reseed-identifiability remains
+untested.}
 \label{tab:instances}
 \begin{tabular}{@{}lclll@{}}
 \toprule
@@ -711,81 +729,83 @@ RL mem.\ scheduler & partial & $-$lat./$+$BW & FR-FCFS & banks/chan.\\
 \end{table}
 
 \section{Methodology}\label{sec:method}
-Bouncer's guarantees rest on bounded reward, a partitionable resource, and a secret uniform
-sampler (assumptions A1--A6, \Cref{eq:var}, \Cref{lem:floor,prop:mimicry}), plus---for the audit
-to be \emph{faithful}---set-locality and reseed-identifiability (\Cref{def:setlocal,rem:stateless});
-given these, we argue the guarantees are \emph{environment-agnostic}. We therefore validate the \emph{mechanism}
-in \emph{one} faithful, controllable synthetic harness---instantiated three ways
-in \Cref{sec:eval}(P3)---that models a learned controller, a safe fallback, benign
-drift, and three adversaries, and \emph{also} build the same auditor as a real
-prefetcher module (a component that predicts and pre-loads memory) inside ChampSim (a cycle-accurate CPU simulator), targeting the L1 data cache and run on the SPEC\,CPU2017 benchmark programs (\Cref{sec:eval-champsim}).
-\emph{The controlled quantitative claims (latency, floor, mimicry survival,
-secrecy) come from the harness; the ChampSim integration reports real IPC (instructions per cycle, the systems throughput metric) on a
-3-trace SPEC suite as a proof of deployment, not a full sweep.} The harness models the
-prefetcher setting as the anchor: a
-resource of $n_{sets}{=}2048$ sets; a latent per-decision \emph{stress}
-$u\in[0,1]$ (how far the input is pushed toward $C$'s boundary) through which both
-drift and steering act and which the auditor never observes; controller reward
-$\mu_C(u)=\rmax\,\mathrm{clip}(0.8-0.7u)$ collapsing under stress and a flat
-floor $\mu_0=0.5\rmax$; bounded rewards drawn so $\mathrm{Var}\le\rmax^2/4m$
-exactly. A linear transfer $\mathrm{IPC}=0.6+1.4\,\bar r$ maps mean reward to throughput, which lets us report the
-systems metrics. \emph{These two maps are not load-bearing for the qualitative
-guarantees:} \Cref{sec:eval-e3} re-runs the floor and both headline P4 results
-across a family---two collapse shapes (clip, logistic) at two slopes, an
-alternative IPC map, a shifted fallback floor $q_0\in[0.4,0.6]$, and a joint
-$\mu_C{\times}$IPC change---and finds the qualitative guarantees invariant; only
-the exact percentages move. Detection \emph{power} is the one quantity that is not
-constant, but its behavior is set by the drift signal-to-noise ratio (SNR), not the estimator resolution. For
-\emph{any} genuine off-policy episode ($\Dw<\tau$) the one-sided CUSUM (a sequential change-detector) drift is
-$K-\Dw\ge\gamma/2=0.05$, which at the tau boundary is $1.6\,\sigd$ on the background/TRUSTED
-pool ($n_{bg}{=}8$, $\sigd{=}0.031$) and $3.2\,\sigd$ only at full duty ($n_L{=}32$,
-$\sigd{=}0.016$) after Tier-A escalates (per-domain audits see less). So detection is a matter
-of \emph{latency}, not deadline-free power: every off-policy gap eventually gates, but the
-fixed-deadline TPR falls as $\Dw\!\to\!\tau$ (\Cref{fig:rlatency}: at $\Dw{=}0.04$, TPR$=0.03$ by
-$10$ windows but $1.0$ by $20$). What grows as $\Dw$ rises toward $\tau$ is the detection
-\emph{latency} $D\approx H/(K-\Dw)$, up to $\sim\!13$ windows. We pin the \Cref{sec:tierb} operating point at
-$n_L{=}n_F{=}32$, $m{=}64$ ($|W|\!\approx\!1.3{\times}10^5$ decisions),
-$\tau{=}0.05$, $K{=}0.10$, $H{=}0.8$. Conditions are clean, benign-drift, and
-three attacks (broad DoS, adaptive mimicry, regional covert); baselines are
-no-auditor, input-OOD-only ($S_{in}$), oracle-$\Delta$, and always-fallback. The
-harness and the ChampSim skeleton are released.
+The formal results are conditional. Lemma 1 uses A1--A6; Proposition 1 additionally
+uses within-domain representativeness and a temporal premise; estimator sizing in
+\cref{eq:var} uses effective independence. Faithful attribution also requires
+set-locality and reseed-identifiability (\Cref{def:setlocal,rem:stateless}). We map
+each premise to evidence or assumption below rather than treating the environment
+as irrelevant.
 
-\textbf{Hypothesis discharge.} \Cref{tab:discharge} maps every premise of
-\Cref{lem:floor} (A1--A6) and \Cref{prop:mimicry} to where it is established,
-measured, or assumed---and, crucially, records the \emph{one} premise---reseed-identifiability
-of the contrast (\Cref{rem:stateless})---that the real-systems study shows \emph{fails} for a real
-cache, the substance of the set-locality refinement.
+Controlled quantitative claims---latency, floor, mimicry survival, and secrecy---
+come from one synthetic harness that satisfies these premises and is instantiated
+three ways in P3. A separate ChampSim integration runs the auditor as a level-1
+data-cache prefetcher and last-level-cache replacement module on SPEC\,CPU2017
+traces. It is a real-simulator boundary study, not a full benchmark sweep
+(\Cref{sec:eval-champsim}).
+
+The harness uses $n_{sets}{=}2048$ sets and $m{=}64$ independent decisions per set
+per window. An unobserved stress $u\in[0,1]$ drives drift and steering through
+$\mu_C(u)=\rmax\,\mathrm{clip}(0.8-0.7u)$; the fallback is
+$\mu_0=0.5\rmax$, or $q_0:=\mu_0/\rmax=0.5$. The map
+$\mathrm{IPC}(\bar r)=0.6+1.4\bar r$ converts normalized reward to instructions per
+cycle (IPC). \Cref{sec:eval-e3} varies both maps and $q_0\in[0.4,0.6]$; only the
+tested qualitative behavior, not a universal transfer-function claim, is asserted.
+
+The operating point is $n_L{=}n_F{=}32$, $m{=}64$
+($|W|\approx1.3{\times}10^5$ decisions), $\tau{=}0.05$, $K{=}0.10$, and
+$H{=}0.8$. At the boundary, CUSUM drift is $1.6\,\sigd$ on the background pool
+($n_{bg}{=}8$) and $3.2\,\sigd$ at full duty ($n_L{=}32$). The R-latency sweep
+therefore reports detection latency and fixed-deadline true-positive rate rather
+than claiming deadline-free power (\Cref{fig:rlatency}). Conditions include clean
+behavior, benign drift, and broad, mimicry, and regional attacks. Baselines are
+no auditor, input out-of-distribution (OOD) monitoring through $S_{in}$,
+oracle-$\Delta$, and always-fallback.
+
+\textbf{Hypothesis discharge.} \Cref{tab:discharge} maps each premise to where it
+is established, measured, or assumed. It also records which premises the
+real-simulator studies do not satisfy.
 
 \begin{table}[t]\centering\footnotesize
 \caption{Hypothesis discharge: where each premise is established (E), measured (M),
-or assumed (A). Reseed-identifiability (\Cref{rem:stateless}) is the load-bearing refinement---it holds by
-construction in the harness and \emph{fails, measured,} on a real cache.}
+or assumed (A). The harness satisfies the statistical premises by construction;
+the real-cache study measures a reseed-identifiability failure.}
 \label{tab:discharge}
 \begin{tabular}{@{}p{0.30\columnwidth}p{0.62\columnwidth}@{}}
 \toprule
 Premise & Discharged \\
 \midrule
 A1 bounded reward $\in[0,\rmax]$ & E/M: synthetic by construction; real hit/miss $\in\{0,1\}$. \\
+Representative within-domain sampling & A/E: equal $m$ per set in the harness; required, or replaced by traffic weighting, for $\dhat$ to target decision-weighted $\Delta_w$. \\
+Effective independence for \cref{eq:var} & A/E: i.i.d.\ Bernoulli draws in the harness give $m_{\mathrm{eff}}=m$; correlated streams require a smaller effective sample size. \\
 Reseed-identifiability of the contrast (\Cref{rem:stateless}) & A (synthetic: i.i.d.\ reward, holds by construction); \textbf{fails, measured, on a real cache} (\Cref{sec:eval-champsim}: reseeded $\dhat\!\approx\!0$ vs fixed-leader $0.23$). \\
-A2 \emph{expected} fully-open windows/episode $\le D$ & A (assumed; \emph{approximated} by the Lorden/Siegmund mean delay $H/(K-\Delta)$, not an upper bound); M: P0/P1 (1-window), R-latency sweep, false re-trust bound (\Cref{sec:eval-retrust}). \\
+A2 \emph{expected} fully-open windows/episode $\le D$ & A (assumed; $H/(K-\Delta)$ is a mean-delay approximation, not an upper bound); M: P1, R-latency, and false re-trust (\Cref{sec:eval-retrust}). \\
 A3 marginal false-alarm prob.\ $\le 1/\mathrm{ARL}_0$ & A (assumed; \emph{approximated} by Siegmund's ARL, the mean run length between false alarms); M: P2 ROC (true- vs false-positive curve), sensitivity sweep. \\
-A4 switch transient $\le c_{sw}$ & A (analytical); M: P1 one-window dip $\le D\rmax$. \\
+A4 false-alarm-episode transient $\le c_{sw}$ & A (analytical accounting assumption). \\
 A5 $N_{ep}$ episodes over $T$ & A (definitional, counts episodes). \\
 A6 secret \emph{uniform} audit subset & E: construction (\Cref{sec:tierb}); M: PROBING exposure is $\phi_P$-uniform, index-independent (\Cref{sec:eval-floortraffic}: $0.062$/$0.064$ low/high index vs $0.985$ for a sorted prefix). \\
 Prop.\ 1(ii) temporal premise (per-window $\dhat_R$ independent given the strategy) & A: holds in the synthetic harness (i.i.d.\ per-decision reward + fresh reseeds); \textbf{violable} by gate-history-dependent adversaries and correlated audits (\Cref{sec:eval-retrust}); \emph{not} inferable from reseeding alone. \\
-Prop.\ 1 finite resolution $\delta_R^{\min}(B)$ & E: \Cref{eq:var}; the sub-resolution slow-bleed is the named open hole (M: \Cref{fig:hole}). \\
-Prop.\ 1 intact secret (leak $f{=}0$) & E/M: secrecy ablation (P4), TPR collapses sharply in the $f{=}0.6$--$0.8$ band (the clean-margin crossing), well before $f{=}1$. \\
+Prop.\ 1 finite resolution $\delta_R^{\min}(B)$ & E under \cref{eq:var}'s effective-independence premise; M: sub-resolution slow-bleed (\Cref{fig:hole}). \\
+Prop.\ 1 intact secret (leak $f{=}0$) & A in the proposition; M: homogeneous-degradation leak ablation, with collapse in the $f{=}0.6$--$0.8$ band. \\
 \bottomrule
 \end{tabular}
 \end{table}
 
 \section{Evaluation}\label{sec:eval}
+The evaluation has four blocks. P0--P2 validate the estimator, causal gate, and
+cost trade-off at the pinned synthetic operating point. P3--P4 test transfer
+across synthetic controller abstractions and the constructed mimicry/leak
+attacks. The following stress tests isolate assumptions and failure boundaries.
+We finish with the formal regressions and the ChampSim boundary studies.
+
 \subsection{P0: the estimator tracks ground truth}
-The estimator $\dhat_W$ tracks the ground-truth competence gap $\Dw$ closely as a benign drift carries competence from positive through zero to negative, shown in \Cref{fig:p0}(a). The fit is $R^2{=}0.997$ with RMSE $0.0141\!\approx\!\sigd{=}0.0156$. This is a
+The estimator $\dhat_w$ tracks the ground-truth competence gap $\Delta_w$ closely
+as a benign drift carries competence from positive through zero to negative
+(\Cref{fig:p0}(a)). The fit is $R^2{=}0.997$, with root-mean-square error
+$0.0141\approx\sigd{=}0.0156$. This is a
 \emph{controlled-harness} fidelity at the synthetic operating point ($m{=}64$); on
 a real trace with far fewer samples per bucket the estimator is correspondingly
 noisier (\Cref{sec:eval-champsim}). \Cref{fig:p0}(b)
-confirms the concentration bound \cref{eq:var}: across a pool-size sweep the
+checks the concentration bound \cref{eq:var} in the i.i.d.\ harness: across a pool-size sweep the
 empirical std of $\dhat$ stays just below the bound at $0.85$--$0.98\times$ it, a tight upper
 envelope (the bound uses $\tfrac14\!\ge\!p(1-p)$).
 
@@ -793,31 +813,37 @@ envelope (the bound uses $\tfrac14\!\ge\!p(1-p)$).
 \includegraphics[width=\columnwidth]{p0_tracking.pdf}\\[2pt]
 \includegraphics[width=0.62\columnwidth]{p0_variance.pdf}
 \caption{P0. (top) $\dhat$ tracks ground-truth $\Delta$ ($R^2{=}0.997$);
-(bottom) empirical $\mathrm{std}(\dhat)$ matches the bound \cref{eq:var}.}
+(bottom) empirical $\mathrm{std}(\dhat)$ remains just below the variance upper
+bound \cref{eq:var} in the i.i.d.\ harness.}
 \label{fig:p0}
 \end{figure}
 
-\subsection{P1: the safety floor holds}
-Under attack, Bouncer holds the controller to the fallback floor and re-trusts once the attack ends; \Cref{fig:floor} makes the constructive hedge real. Under a poisoning attack (on at window 90, off at 200) the \emph{unguarded} controller crashes far below the fallback floor. Bouncer detects in \textbf{one window} here (the worked mean
-delay is $D\!\approx\!1.8$ windows; one window is the best case at this high SNR, the signal-to-noise ratio of the duel),
-floors to $\pizero$, and---crucially---\emph{re-trusts} 14 windows after the
-attack ends via PROBING, not a fixed timer. Bouncer holds the \emph{steady-state} floor violation to a reported $0.64\%$ (the worst single GATED window; \Cref{fig:floor}), and
-\Cref{lem:floor} \emph{predicts} its mechanism: the audit-exposure term is exactly the
-Leader-L sets that keep running $C$ under attack, so the \emph{mean} floor violation over the
-attacked GATED windows is
-$\phi_G(q_0-\mu_C^{att})\,\mathrm{slope}/\mathrm{IPC}_{\pizero}=0.579\%$, matching the measured
-$0.580\%$ (a design constant forward-predicting the measurement to within $0.002$ points); the reported
-$0.64\%$ is the worst single window, $\sim\!2.4\sigma$ of per-window noise above that mean. The only larger excursion is the lone pre-detection window, which dips
-$36\%$ below the floor: exactly the bounded $\le D\rmax$ term of \Cref{lem:floor}, and the
-price of a one-window detection delay. Bouncer recovers performance to $0.55$ (returning to
-the \emph{fallback} floor, not to clean, since the attack genuinely removed $C$'s value), the clean tax stays at $0.9965$ (above the $0.99$ target; the tax is exactly the $n_F$ Leader-F sets
-that permanently run $\pizero$), and the bottom panel shows cumulative regret going
-\emph{negative} (Bouncer beats the floor by capturing $C$'s upside when trusted), the measured
-worst-case positive excursion staying under the corrected three-term plug-in value of
-\Cref{lem:floor} ($12.4$ IPC$\cdot$win; a conditional illustration---$D$ is the $H/(K-\Delta)$
-mean estimate, valid where re-trust $\approx0$, \Cref{sec:eval-retrust}). Parking the Leader-L sets on $\pizero$ during GATED
-would zero the exposure term but blind the \emph{measured} re-trust PROBING relies on; we keep
-the auditable design and pay the reported $0.64\%$.
+\subsection{P1: detection, steady floor, and re-trust}
+The attack begins at window 90 and ends at 200. The unguarded controller falls
+well below the fallback, while Bouncer detects after \textbf{two} causally routed
+audit windows and then uses $\pizero$. After the attack ends, PROBING re-trusts
+$C$ after 15 windows; this recovery is measured rather than timer-only.
+
+During attacked GATED windows, only the Leader-L fraction $\phi_G=32/2048$
+continues to run $C$. The predicted mean IPC-floor violation is therefore
+\[
+  \phi_G\!\left(q_0-\mu_C^{att}/\rmax\right)
+  \frac{1.4}{\mathrm{IPC}(q_0)}
+  =0.579\%,
+\]
+where $q_0=0.5$, $\mu_C^{att}/\rmax=0.156$, and
+$\mathrm{IPC}(q_0)=1.3$. The measured attacked-GATED mean is $0.580\%$ and the
+worst window is $0.64\%$. This is a mechanism calculation under the synthetic
+IPC map, not a universal floor predictor.
+
+The two pre-gate windows produce the larger transient dip ($36.5\%$ at its
+worst). That cost belongs to the fully-open term in \Cref{lem:floor}. Once
+gated, performance returns to $0.55$: the fallback floor, not clean performance,
+because the attack removed $C$'s value. On clean input, the performance ratio is
+$0.9965$; the permanent cost is the Leader-F sets that run $\pizero$.
+The loose three-term expected-regret plug-in is $12.4$ IPC$\cdot$windows. The
+smaller realized-gap/occupancy expression is reported later only as a descriptive
+tracker, not as a bound.
 
 \begin{figure}[t]\centering
 \includegraphics[width=\columnwidth]{p1_safety_floor.pdf}
@@ -827,7 +853,10 @@ re-trusts after it ends; the unguarded controller crashes below the floor.}
 \end{figure}
 
 \subsection{P2: ROC, the §\ref{sec:tierb} chain, and overhead}
-The competence detector catches every attack while almost never firing on benign behavior, on \emph{both} broad and mimicry attacks: \Cref{fig:p2roc}, an ROC curve (true-positive rate against false-positive rate), shows it achieving $\mathrm{TPR}{=}1.0$ (true-positive rate, the fraction of attacks caught) at $\mathrm{FPR}{\le}0.05$ (false-positive rate, benign runs wrongly flagged), while the
+The competence detector catches every tested attack while almost never firing on
+benign episodes. \Cref{fig:p2roc} shows a true-positive rate (TPR) of $1.0$ at
+false-positive rate (FPR) at most $0.05$ on the broad and constructed mimicry
+attacks, while the
 input-OOD detector $S_{in}$ works on the broad attack but collapses to
 $\mathrm{TPR}{=}0$ under mimicry. Shrinking the dueling pool trades measurement noise for detection latency, tracking the analytic $D\!\approx\!H/(K-
 \Delta)$. \Cref{fig:p2}(a) traces the
@@ -835,10 +864,9 @@ $\mathrm{TPR}{=}0$ under mimicry. Shrinking the dueling pool trades measurement 
 $0.016\!\to\!0.125$, the calibrated $H$ rises $0.05\!\to\!0.35$, and detection
 latency rises $0\!\to\!3.4$ windows. There is a clear knee near $n{\approx}8$: above it detection is
 gap-limited and pool-insensitive, so larger pools only add overhead;
-\Cref{fig:p2}(b) is the resulting overhead/latency Pareto frontier (best achievable overhead for each latency). The full
-\Cref{sec:overhead} budget is $\sim\!336$\,bytes, $\sim\!0.13\%$ of a 256\,KB
-SRAM (on-chip static memory) (on-chip static memory), and adds no latency to the cache-access critical path (the timing-limiting sequence of operations) by construction (analytical;
-RTL timing future work).
+\Cref{fig:p2}(b) is the resulting overhead/latency Pareto frontier. The
+illustrative 16-bit storage budget in \Cref{sec:overhead} is $404$\,bytes, or
+$0.154\%$ of a 256\,KB SRAM. It is not an RTL area, energy, or timing result.
 
 \begin{figure}[t]\centering
 \includegraphics[width=0.78\columnwidth]{p2_roc.pdf}
@@ -854,59 +882,59 @@ mimicry.}
 \label{fig:p2}
 \end{figure}
 
-\subsection{P3: generality and triage}
-The same auditor wraps three controller classes (\Cref{fig:p3}(a)): a prefetcher
-and a replacement policy with secret set-dueling, and a memory scheduler with a
-model-based $\dhat$. The steady-state floor holds for all three ($\le 0.7\%$
-violation) under both broad attack and drift; the scheduler pays for its weaker
-estimator with longer latency and lost mimicry resistance. The auditor also separates attack from drift, so it can label why the floor is threatened (\Cref{fig:p3}(b)). The triage reaches $100\%$ \emph{5-fold cross-validation} accuracy (a standard train/test split into five folds) over 120 episodes on \emph{auditor-observable} features; here the abruptness signal is the slope of the estimated $\dhat$, not of ground truth. A drop-one-feature ablation shows the result is robust to removing \emph{any} single feature, including the modeled co-tenant-correlation signal. So the separability comes from the genuine signature gap (gradual input-shift drift vs.\ abrupt boundary-seeking attack), not from one label-correlated input.
+\subsection{P3: synthetic controller abstractions and triage}
+In the controlled harness, we instantiate the same auditor around abstract
+prefetcher-, replacement-, and scheduler-like controllers (\Cref{fig:p3}(a)).
+The first two use secret set-dueling; the scheduler uses a model-based $\dhat$.
+Across these abstractions, the steady-state floor violation remains at most
+$0.7\%$ under broad attack and drift. The scheduler's weaker estimator increases
+latency and does not inherit Proposition 1.
+
+The constructed attack and drift episodes are also separable with
+auditor-observable features (\Cref{fig:p3}(b)). Five-fold cross-validation over
+$120$ episodes reaches $100\%$ accuracy; abruptness is computed from estimated
+$\dhat$, not ground truth. Accuracy remains $100\%$ when any one feature is
+removed. This establishes separability in the evaluated synthetic episode family,
+not general attack attribution.
 
 \begin{figure}[t]\centering
 \begin{subfigure}{\columnwidth}\includegraphics[width=\linewidth]{p3_generality.pdf}\caption{}\end{subfigure}\\
 \begin{subfigure}{\columnwidth}\includegraphics[width=\linewidth]{p3_triage.pdf}\caption{}\end{subfigure}
-\caption{P3. (a) the floor holds across controller classes; (b) attack-vs-drift
-triage (acc $1.0$).}
+\caption{P3 synthetic abstractions. (a) The floor holds across three harness
+instantiations; (b) attack and drift are separable within the constructed episode
+family (five-fold accuracy $1.0$).}
 \label{fig:p3}
 \end{figure}
 
 \subsection{P4: mimicry survival and the secrecy ablation}\label{sec:eval-p4}
-This is the result the paper is built around (\Cref{fig:p4}). \textbf{(a)} Under
-an adaptive mimicry adversary that holds $S_{in}$ (the controller's input features) in-distribution while degrading
-$C$ (its realized competence), the input-OOD-only baseline (a monitor that only watches whether inputs look out-of-distribution) detects \emph{none} of the attacks ($0/40$
-episodes at every strength), while full Bouncer detects \emph{all} ($40/40$;
-clean false alarms $0/40$ for both). The input-OOD baseline fails by construction, not by bad luck: its $0/40$ is
-\emph{definitional}, because the mimicry adversary holds $S_{in}$ in-distribution by construction
-(the harness sets \texttt{suppress\_features}), so an input-marginal monitor cannot fire; the
-earned measurements are Bouncer's $40/40$ on realized reward and the secrecy ablation below.
-Across many independent seeds the gap holds with tight confidence intervals (\Cref{fig:ci}(a)): over $50$ seeds this is full-Bouncer TPR (true-positive rate, the fraction of attacks caught) $1.0$ (Wilson 95\% interval, a binomial confidence interval, $[0.93,1.0]$) vs.\
-input-OOD $0.0$ ($[0,0.07]$), with clean FPR $0.0$ ($[0,0.07]$) for both;
-detection latency is $1.0$ window $[1.0,1.0]$ (Bouncer fires within one measurement window), the steady floor violation is
-$0.641\%$ $[0.638,0.643]$, and the clean tax (the performance cost when nothing is wrong) is $0.99653$---all with tight 95\%
-intervals. Measuring \emph{realized competence} rather than input distribution is
-decisive. \textbf{(b)} The secrecy
-ablation realizes \Cref{prop:mimicry} empirically: against the strongest,
-redistributive covert adversary, with the dueling pools drawn \emph{within} the
-victim region (implemented as \emph{global} pools intersected with $R$, giving an
-effective in-region pool of $\sim\!4$ Leader-L sets, hence a few windows of latency;
-a named in-region pool is empty w.p.\ $0.013$ per window---$0.027$ for either
-pool---in which case that window's $\dhat_R$ reads $0$, so this \emph{approximates}
-\Cref{prop:mimicry}'s fixed nonempty within-$R$ construction rather than
-implementing it exactly), detection power holds and then falls off a cliff as the secret leaks---
-$\mathrm{TPR}{=}1.0$ for leaked fraction $f\le0.4$, $0.975$ at $f{=}0.6$,
-collapsing to $0.075$ at $f{=}0.8$ and $0$ at $f{=}1.0$, with latency rising
-$1.2\!\to\!\infty$ windows. Panel (a)'s gap over the input monitor is the competence
-signal itself---an input monitor is blind to a competence drop by construction, so its
-$0/50$ is definitional (\Cref{sec:eval-p4}); panel (b) is what isolates the role of
-\emph{secrecy}: this leak-aware regional adversary is caught only while the assignment
-stays hidden, and detection collapses sharply once the leak crosses the clean-margin
-threshold (the $0.6$--$0.8$ band; \Cref{prop:mimicry}).
+\textbf{Competence versus input monitoring.} The mimicry adversary holds
+$S_{in}$ in-distribution while degrading $C$. At each tested strength, the
+input-OOD baseline detects $0/40$ episodes and full Bouncer detects $40/40$, with
+$0/40$ clean false alarms for both. The input monitor's failure follows from the
+construction (\texttt{suppress\_features}); Bouncer's measured $40/40$ is the
+empirical result. Across $50$ seeds, Bouncer's true-positive rate (TPR) is $1.0$
+with Wilson $95\%$ interval $[0.93,1.0]$, versus input-OOD TPR $0.0$
+with interval $[0,0.07]$. Both clean false-positive rates (FPRs) are $0.0$
+$[0,0.07]$. Detection latency is $2.0$ windows $[2.0,2.0]$, steady floor
+violation is $0.641\%$ $[0.638,0.643]$, and clean performance ratio is
+$0.99653$.
+
+\textbf{What secrecy adds.} The regional experiment approximates Proposition 1's
+fixed, nonempty within-$R$ pools by intersecting global pools with $R$. This gives
+about four in-region Leader-L sets; a resulting pool is empty with probability
+$0.013$ per window ($0.027$ for either pool), in which case $\dhat_R$ is set to
+zero. Under this approximation and homogeneous regional degradation, TPR is $1.0$
+for leak fraction $f\le0.4$, $0.975$ at $f{=}0.6$, $0.075$ at $f{=}0.8$, and
+$0$ at $f{=}1.0$; latency rises from $2.2$ windows to infinity. Thus panel (a)
+isolates competence measurement, while panel (b) isolates secrecy in this tested
+regional model. It is empirical evidence, not a proof of an $f$-linear leak law.
 
 \begin{figure}[t]\centering
 \begin{subfigure}{0.49\columnwidth}\includegraphics[width=\linewidth]{p4_mimicry_survival.pdf}\caption{}\end{subfigure}
 \begin{subfigure}{0.49\columnwidth}\includegraphics[width=\linewidth]{p4_secrecy_ablation.pdf}\caption{}\end{subfigure}
-\caption{P4 (headline). (a) full Bouncer holds $\mathrm{TPR}{=}1$ under mimicry
-where input-OOD collapses to $0$; (b) detection power vs.\ the leaked fraction of
-the secret assignment (\Cref{prop:mimicry}).}
+\caption{P4. (a) In the constructed mimicry attack, Bouncer detects every episode
+while the input-OOD baseline is blind by construction. (b) Detection in the
+homogeneous regional model collapses as the secret assignment leaks.}
 \label{fig:p4}
 \end{figure}
 
@@ -925,7 +953,7 @@ The headline numbers are not single-seed artifacts (\Cref{fig:ci}(a), $N{=}50$,
 Wilson 95\% intervals above), nor a knife-edge operating point: sweeping the trust
 threshold $\tau$ and CUSUM threshold $H$ over a $6{\times}6$ grid
 (\Cref{fig:ci}(b)), most cells achieve $\le 3$-window detection with
-clean FPR $\le 5\%$ and no missed episodes (\textbf{28/36})---a broad robust plateau around the
+clean FPR $\le 5\%$ and no missed episodes (\textbf{22/36})---a broad plateau around the
 chosen $(\tau{=}0.05,H{=}0.8)$. Detection degrades gracefully and predictably
 toward the plateau edges (small $H$ raises false alarms; large $\tau$ raises
 misses), exactly as the \Cref{sec:tierb} chain predicts.
@@ -938,15 +966,18 @@ Leader-F pools are exchangeable only in expectation---the $\beta$-bias regime of
 \Cref{prop:mimicry}. Sweeping $\sigma_{het}$ from $0$ to $0.30$
 (\Cref{fig:robust}), mimicry detection stays at TPR $1.0$ and clean FPR at $0$,
 the steady floor holds ($0.60$--$0.64\%$), and detection latency degrades only
-gently ($1.0\!\to\!1.7$ windows)---because secret \emph{reseeding} re-randomizes
+gently ($2.0\!\to\!2.7$ windows)---because secret \emph{reseeding} re-randomizes
 which physical sets are leaders each epoch, averaging the heterogeneity bias down.
-The guarantees are thus not an artifact of the i.i.d.\ reward model.
+This supports robustness to the tested fixed cross-set heterogeneity. It does not
+test temporal dependence or remove the effective-independence premise of
+\cref{eq:var}.
 
 \begin{figure}[t]\centering
 \includegraphics[width=0.62\columnwidth]{robust_env.pdf}
 \caption{Graceful degradation when the i.i.d.-set assumption is violated: under
 set heterogeneity $\sigma_{het}$ up to $0.30$, mimicry TPR stays $1.0$ and the
-floor holds; only detection latency drifts up ($1.0\!\to\!1.7$ windows).}
+floor holds; detection latency drifts from $2.0$ to $2.7$ windows. Temporal
+dependence is not varied.}
 \label{fig:robust}
 \end{figure}
 
@@ -956,8 +987,9 @@ reward, but only when the policy \emph{contrast} depends on the state the reseed
 isolate the two regimes on a predictor-like controller whose accuracy ramps with consecutive
 windows on a policy (\Cref{fig:warmup}). With \emph{multiplicative} warmup
 ($\mathrm{acc}=\mu(1-e^{-ck})$, so the contrast scales with the warmup state), the secret
-per-epoch reseed keeps both pools cold and $\dhat$ attenuates from $97\%$ to $8\%$ of the true
-gap ($0.29\!\to\!0.02$ of a $0.30$ gap over $1/c{=}0.3\!\to\!20$ windows), while \emph{fixed}
+per-epoch reseed makes almost every sampled slice cold and $\dhat$ attenuates
+from $95\%$ to $5\%$ of the fixed-leader estimate
+($0.285\!\to\!0.015$ over $1/c{=}0.3\!\to\!20$ windows), while \emph{fixed}
 leaders recover the full gap ($0.30$). With \emph{additive} warmup ($\mathrm{acc}=\mu-b e^{-ck}$,
 contrast state-invariant at $0.30$), the reward is equally stateful yet the reseeded $\dhat$
 \emph{survives} at $0.30$ ($\pm0.001$) across the same warmup range---a stateful reward that
@@ -969,11 +1001,11 @@ window grain remains untested (\Cref{tab:instances}).
 
 \begin{figure}[t]\centering
 \includegraphics[width=0.62\columnwidth]{warmup_predictor.pdf}
-\caption{Stateful predictor (accuracy warms up over consecutive windows on a policy). As the
-warmup timescale $1/c$ lengthens, the secret reseed keeps both pools cold so $\dhat$ attenuates
-toward noise, while fixed leaders recover the true $0.30$ gap. This synthetic model \emph{matches}
-the ChampSim replacement reseed-confound on one trace; it isolates the mechanism but is not a
-proof of generality to real predictors.}
+\caption{Synthetic warm-up model. With a multiplicative warm-up contrast, secret
+reseeding returns almost every sampled slice to the cold state and attenuates
+$\dhat$; fixed leaders recover the $0.30$ gap. An equally stateful additive
+warm-up with state-invariant contrast remains identifiable. This isolates a
+mechanism; it is not evidence about real predictors.}
 \label{fig:warmup}
 \end{figure}
 
@@ -992,13 +1024,13 @@ budget per cell). Detection \emph{power} is the one quantity that is not constan
 off-policy episode ($\Dw<\tau$) the one-sided CUSUM (a sequential change detector) accumulates a drift
 $K-\Dw\ge\gamma/2=0.05$, which at the boundary is $1.6\,\sigd$ on the background/TRUSTED pool
 ($n_{bg}{=}8$, $\sigd{=}0.031$) and $3.2\,\sigd$ only at full duty ($n_L{=}32$, $\sigd{=}0.016$)
-after Tier-A escalation; per-domain audits see less. Every off-policy gap therefore
-\emph{eventually} gates within the horizon, but the quantity that actually varies is the
+after Tier-A escalation; per-domain audits see less. Every tested off-policy gap
+gates within the 40-window horizon, but the quantity that actually varies is the
 detection \emph{latency} $D\approx H/(K-\Dw)$, up to $H/(K-\tau)\approx 16$ windows at the
 boundary, so the \emph{fixed-deadline} TPR falls as $\Dw\!\to\!\tau$. We measure this directly
 (\Cref{fig:rlatency}): sweeping the true gap across the off-policy range, the latency rises from
-$1$ to $13$ windows tracking $H/(K-\Dw)$, and the by-$10$-window TPR drops from $1.0$ at a deep
-drop to $0.03$ at $\Dw{=}0.04$ (recovering to $1.0$ by $20$ windows). Latency, not deadline-free
+$2$ to $13.9$ windows tracking $H/(K-\Dw)$, and the by-$10$-window TPR drops from $1.0$ at a deep
+drop to $0$ at $\Dw{=}0.04$ (recovering to $1.0$ by $20$ windows). Latency, not deadline-free
 TPR, is the supported result. \emph{Scope:} this establishes robustness to the \emph{shape} of the
 collapse curve, the IPC map, and the floor location; the Tier-A feature/confidence
 maps are not swept (the headline competence-beats-input result is a Tier-B
@@ -1006,9 +1038,9 @@ property).
 
 \begin{figure}[t]\centering
 \includegraphics[width=\columnwidth]{e3_sensitivity.pdf}
-\caption{Transfer-function sensitivity. Across collapse-curve shapes (a), the
+\caption{Transfer-function sensitivity. Across the tested collapse-curve shapes (a), the
 competence-beats-input mimicry result (b) and the secrecy-ablation shape (c) are
-invariant; (d) the competence detector eventually gates on every off-policy gap
+stable; (d) the competence detector gates on every tested off-policy gap
 (within-episode TPR${=}1.0$ vs.\ input-OOD $0$), because the CUSUM drift $K-\Dw\ge1.6\,\sigd$
 (background) throughout; what grows toward the $\tau$ boundary is the detection \emph{latency}
 $D\approx H/(K-\Dw)$, so the fixed-deadline TPR falls (\Cref{fig:rlatency}).}
@@ -1017,11 +1049,12 @@ $D\approx H/(K-\Dw)$, so the fixed-deadline TPR falls (\Cref{fig:rlatency}).}
 
 \begin{figure}[t]\centering
 \includegraphics[width=0.62\columnwidth]{rlatency.pdf}
-\caption{Detection latency vs.\ competence gap (positive form of \Cref{fig:e3}(d)). Every gap
-eventually gates (full-duty drift $3.8$--$28\,\sigd$; $1.9$--$14\,\sigd$ background), but the
-detection \emph{latency} rises from $1$ to $13$ windows toward the $\tau$ boundary, tracking
+\caption{Detection latency vs.\ competence gap (positive form of \Cref{fig:e3}(d)). Every tested
+gap gates within 40 windows (full-duty drift $3.8$--$28\,\sigd$;
+$1.9$--$14\,\sigd$ background), but detection latency rises from $2$ to $13.9$
+windows toward the $\tau$ boundary, tracking
 the deterministic-drift limit $H/(K-\Dw)$, so the fixed-deadline TPR falls (TPR by $10$ windows
-drops to $0.03$ at $\Dw{=}0.04$, recovering to $1.0$ by $20$).}
+drops to $0$ at $\Dw{=}0.04$, recovering to $1.0$ by $20$).}
 \label{fig:rlatency}
 \end{figure}
 
@@ -1030,72 +1063,67 @@ Two timing-based evasions test threat-model completeness (\Cref{fig:adaptive}). 
 (\Cref{fig:adaptive}(a)): a very slow, stealthy degradation tuned to keep the
 per-window change tiny. It cannot evade---a one-sided CUSUM (a running-sum change detector) integrates the
 \emph{level} $(K-\dhat)$, not the slope, so once $\dhat<K$ it accumulates
-regardless of how slowly it arrived. Bouncer gates $7$ windows after the true
-$\Delta{<}\tau$ crossing (vs.\ $1$ for an abrupt attack); the slow descent only
+regardless of how slowly it arrived. Bouncer gates $8$ windows after the true
+$\Delta{<}\tau$ crossing (vs.\ $2$ for an abrupt attack); the slow descent only
 \emph{delays} detection, and the steady floor still holds ($0.68\%$).
 \textbf{PROBING-exploit} (\Cref{fig:adaptive}(b)): a closed-loop attacker that
 watches the audit's decision (its gate) and backs off during the GATED/PROBING states to pass the audit, resuming
 when the TRUSTED state returns---the ``wait out the cooldown'' strategy. Because re-trust is
 \emph{measured} (PROBING audits $\dhat$) and the dwell backs off exponentially,
-the victim is harmed in only a small fraction of windows ($8.6\%$) and the attacker spends $\sim\!11
-\times$ more windows idle than effective; there is no fixed cooldown to wait out.
+the victim is harmed in $16.9\%$ of windows and the attacker spends $83.1\%$ of
+the horizon backed off; there is no fixed cooldown to wait out. These are
+finite-horizon measurements of this constructed strategy, not a general bound.
 
 \begin{figure}[t]\centering
 \begin{subfigure}{\columnwidth}\includegraphics[width=\linewidth]{adaptive_boiling.pdf}\caption{}\end{subfigure}\\[-1pt]
 \begin{subfigure}{\columnwidth}\includegraphics[width=\linewidth]{adaptive_probing.pdf}\caption{}\end{subfigure}
 \caption{Adaptive timing adversaries. (a) boiling-frog is still gated (a CUSUM
 integrates level, not slope); (b) the PROBING-exploit attacker is bounded to a small
-harmed-window fraction ($8.6\%$) by measured re-trust + dwell backoff.}
+harmed-window fraction ($16.9\%$) by measured re-trust and dwell backoff.}
 \label{fig:adaptive}
 \end{figure}
 
 \subsection{Theory validation}
-\Cref{fig:theory}(a) checks the worked CUSUM constants (CUSUM: a sequential change detector) on an i.i.d.\ Gaussian
-signal across a threshold sweep: the empirical $\mathrm{ARL}_0$ (mean time to a false alarm) and detection
-delay match Siegmund's approximation \cref{eq:siegmund} (geometric-mean ratio
-$0.998$, e.g.\ $\mathrm{ARL}_0$ empirical $927$ vs.\ theory $938$ at $H{=}5\sigma$;
-a small $H$-dependent bias remains). This sweep is a \emph{formula sanity check}
-covering the small-drift, heavy-overshoot regime where the $1.166$ correction
-matters; the deployed detector runs in the opposite, strong-drift regime
-($(K-\Delta)/\sigd\!\approx\!28$ at $n_L{=}32$), where the delay collapses to the
-deterministic limit $D\!\approx\!H/(K-\Delta)$ and $\mathrm{ARL}_0$ is
-astronomically large (so $\alpha\!\approx\!0$). \Cref{fig:theory}(b) shows that every corrected plug-in envelope covers the measured worst positive regret at short attacks, with the tight form tracking the data. It has two panels. Panel~(a) sweeps $N_{ep}$ at short attacks
-($L_{att}{=}60$): the old two-term $N_{ep}D\rmax$, the corrected three-term loose, and the
-\emph{tight} form (realized gap $q_0-\mu_C^{att}$ with $\phi_G$/$\phi_P$ occupancy) all
-envelope the measured worst-case positive regret ($\alpha T c_{sw}\!\approx\!0$ here); at
-$N_{ep}{=}6$ the two-term reads $15.1$, tight $9.5$, measured $5.9$ IPC$\cdot$win (IPC: instructions per cycle, a throughput measure), the tight
-plug-in tracking the data (all three are conditional plug-in illustrations of \cref{eq:floor}
-with $D\approx H/(K-\Delta)$, valid where re-trust $\approx0$; \Cref{sec:eval-retrust}). Panel~(b) sweeps the attack length $L_{att}$. Because the
-audit-exposure regret grows linearly in $L_{att}$ while the two-term $N_{ep}D\rmax$ is
-constant, the two-term is \emph{violated} for long attacks (measured $25.8$ vs two-term $7.6$
-at $L_{att}{=}960$), whereas the corrected three-term \emph{loose} plug-in of \Cref{lem:floor}
-continues to envelope. This loose form instantiates \Cref{lem:floor}'s \emph{expected}-regret
-guarantee with the $D\approx H/(K-\Delta)$ mean estimate (a conditional plug-in, not a per-run
-worst case; these single-seed runs sit under it comfortably). On a single
-persistent drop the two-term is exceeded nearly five-fold (measured $11.9$ vs $2.52$;
-\texttt{exp\_floor\_longattack.py}), while the loose three-term plug-in ($123.6$) still dominates. The
-\emph{tight} form (realized gap and GATED/PROBING occupancy) hugs the measurement at the mean
-level ($12.3$ vs $11.9$ here); because it uses the \emph{mean} detection delay it is a
-\emph{mean-level} envelope---it holds in expectation, not with high probability---so weak-drop
-configurations can exceed it by one to two windows. The loose three-term form is the
-\emph{expectation} guarantee \cref{eq:floor}; only its \emph{exposure} term additionally carries a
-high-probability envelope \cref{eq:floorhp} (the detection and false-alarm terms are bounded in
-expectation, not with high probability).
+\Cref{fig:theory}(a) checks the CUSUM constants on an i.i.d.\ Gaussian signal.
+Across the threshold sweep, empirical average run length and detection delay
+match Siegmund's approximation \cref{eq:siegmund}: the geometric-mean
+empirical/theory ratio is $0.998$, and at $H=5\sigma$ the false-alarm run length
+is 927 empirically versus 938 analytically. This is a formula sanity check. The
+deployed synthetic operating point is in a stronger-drift regime, where
+$H/(K-\Delta)$ is a useful mean-delay approximation.
 
-\subsection{Traffic-weighted exposure: the counterexample, a routing bug, and the repair}\label{sec:eval-floortraffic}
+\Cref{fig:theory}(b) separates the proved loose form from a descriptive tracker.
+For six short attack episodes, measured worst positive regret is $8.72$
+IPC$\cdot$windows; the two-term expression is $15.14$, the realized-gap/occupancy
+tracker is $9.48$, and the loose three-term plug-in is $47.42$. With three
+episodes of length 960, audit exposure makes the two-term expression fail:
+measured regret is $27.21$ versus $7.57$, while the tracker is $27.58$ and the
+loose plug-in is $265.87$.
+
+The persistent-drop regression is deliberately more adversarial. Across three
+seeds, measured positive regret is $12.34$--$12.39$; the descriptive tracker is
+$12.29$ and therefore slightly \emph{under-predicts}. The obsolete two-term
+expression is $2.52$, while the loose three-term plug-in is $123.6$. We do not
+call the tracker a bound: it combines realized occupancy and
+gap with the approximate mean delay $H/(K-\Delta)$. The Lemma proves only the
+loose expectation form under A2--A6. Its numeric instantiation remains
+conditional on using the measured/assumed episode-level $D$; only the exposure
+term has the separate high-probability envelope in \cref{eq:floorhp}.
+
+\subsection{Traffic-weighted exposure}\label{sec:eval-floortraffic}
 The audit-exposure term is traffic-weighted, and A6---a \emph{secret uniform} sampler---is what
-bounds it in expectation. Three measurements (\texttt{exp\_floor\_traffic.py}, on the real
-\texttt{SetDueling} routing). \emph{The counterexample.} Put all of a window's traffic on one
+bounds it in expectation. The released routing experiment establishes three
+points. \emph{One-window concentration.} Put all of a window's traffic on one
 hot set: the ordinary event that the sampler tags it Leader-L (probability $\phi_G$) makes the
 entire window run $C$, so the realized one-window regret is $\rmax$---a $15.6\times$ violation of
 the naive per-window $\phi_P\rmax$ allowance. This is why the bound must be an \emph{expectation},
-not a per-window worst case. \emph{A routing bug A6 rules out.} If PROBING audited a \emph{fixed}
+not a per-window worst case. \emph{Why uniform sampling matters.} If PROBING audited a \emph{fixed}
 (sorted-index) prefix of the followers, a low-index hot set would be exposed with probability
 $1-n_L/n_{sets}=0.984$, not $\phi_P$---a $15.4\times$ violation of the \emph{expectation} that no
-secrecy can fix. We found and removed exactly this: the audit subset is now a uniform secret
+secrecy can fix. The released audit subset is instead a uniform secret
 subset (\texttt{set\_dueling.is\_audited}), and a hot set's PROBING exposure is $0.062$ at low
 index and $0.064$ at high index, both $\approx\phi_P{=}0.064$ and index-independent (versus
-$0.985$/$0.017$ for the sorted prefix). \emph{The repair holds.} With the uniform sampler the
+$0.985$/$0.017$ for the sorted prefix). \emph{Horizon-level concentration.} With the uniform sampler the
 expected per-window exposure is $\le\phi_P\rmax$ for \emph{any} traffic (measured per-window mean
 $0.064$ under worst-case concentration), and over independently reseeded windows the exposure
 total stays under the Hoeffding envelope $\phi_P T_{att}\rmax+\rmax\sqrt{(T_{att}/2)\ln(1/\delta_s)}$
@@ -1110,7 +1138,7 @@ true CUSUM delay, not a one-window surrogate---an error a reviewer caught in an 
 \emph{With the reseeded, near-i.i.d.\ audit} a sustained true drop yields $\approx\!0$ false
 re-trusts across drop depths (the audit reads $\Delta<\tau$ and rarely strings together
 $T_{reprobe}$ crossings), so the fully-open fraction is just the initial-detection/SUSPECT
-transient---$0.019$ (deep) to $0.067$ (near $\tau$), and $D\approx$ the initial delay. This is
+transient---$0.025$ (deep) to $0.073$ (near $\tau$), and $D\approx$ the initial delay. This is
 \emph{not} horizon-independent in general: a temporally-\emph{correlated} audit produces
 runs of crossings, so false re-trust occurs and the fully-open fraction climbs with the correlation
 $\rho$---$0.008$ at $\rho{=}0$ to $0.225$ at $\rho{=}0.95$, again through the real controller.
@@ -1128,28 +1156,28 @@ illustrations} of \cref{eq:floor}---valid where re-trust $\approx0$ as measured 
 $H/(K-\Delta)$ a mean estimate rather than an upper bound---not standalone worst-case bounds.
 
 \subsection{Realized evasion is selection-biased; sustained evasion is not}\label{sec:eval-prop1}
-\Cref{prop:mimicry}'s two forms are separated by a failure mode a reviewer identified and we
-reproduce (\texttt{exp\_prop1\_selection.py}). \emph{The counterexample.} Two exchangeable sets
+\Cref{prop:mimicry}'s expectation and sustained-evasion forms are separated by a
+selection effect. \emph{Counterexample.} Two exchangeable sets
 with rewards $\{1,0\}$ randomly permuted, one secretly Leader-L, fallback $0.2$, $\tau{=}0.5$,
 $\beta{=}0$: unconditionally $\mathbb{E}[r_L]{=}\mathbb{E}[r_{\text{foll}}]{=}0.5$ (the identity
 holds), yet conditioned on a single window's realized evasion the follower always drew the $0$---
 $\mathbb{E}[r_{\text{foll}}\mid\dhat_R\ge\tau]{=}0.000$ with $P(\text{evade}){=}0.50$, far below
-the old claim's $0.7$ floor. Conditioning on evasion \emph{selects} the noise; the old
-single-window realized statement was false, and we retract it. \emph{The repair, measured.} Over
+the putative $0.7$ floor. Conditioning on evasion \emph{selects} the noise, so
+the expectation statement does not imply a single-window realized floor. Over
 $W$ independently reseeded windows, the probability that this construction's $W$-window average
 $\dhat_R$ stays $\ge\tau$ decays under the Hoeffding envelope $e^{-W\epsilon^2/(2r_{\max}^2)}$
-(range $2\rmax$; an earlier draft printed the range-$\rmax$ exponent, which a $W{=}100$
-Rademacher example violates by $84.8\times$---the released regression now asserts the corrected constant)
+(range $2\rmax$; a $W{=}100$ Rademacher regression rejects the stronger,
+incorrect range-$\rmax$ exponent by $84.8\times$)
 ($0.50\!\to\!0.04$ measured from $W{=}1\!\to\!16$ vs.\ envelope $0.88\!\to\!0.14$), which is
-\Cref{prop:mimicry}(ii). The regression also exercises the proposition's CUSUM step on the
-\emph{implemented} detector: it reproduces the retracted ``fires within $2H/\gamma$''
-counterexample (prefix average below $\tau$, no alarm), verifies the
+\Cref{prop:mimicry}(ii). The same regression exercises the implemented CUSUM:
+a prefix-average-below-$\tau$ stream need not alarm within $2H/\gamma$, but it verifies the
 no-alarm$\Rightarrow$block-mean containment both on random degrading streams and
 \emph{exhaustively} (every path of a three-point reward support from three starting
 statistics, $2{,}068$ no-alarm paths, including an exact $C{=}H$ boundary path, which
 correctly does not alarm under the strict-$>$ semantics), and computes an \emph{exact}
 (dynamic-program) no-alarm probability for an in-support two-point degrading stream
-($0.0038$, matched by Monte Carlo on the detector and under the corrected envelope $0.726$). \emph{Why the leak ablation was unaffected:} at the pinned operating
+($0.0038$, matched by Monte Carlo on the detector and below the corrected envelope $0.726$).
+\emph{Operating-point check.} At the pinned operating
 point ($n_L{=}32$ sets, $m{=}64$ decisions, independent per-set rewards) the single-window
 follower selection bias is $\approx\!0$ ($0.004$); the catastrophe requires cross-set
 anticorrelation \emph{plus} a tiny pool, and the CUSUM integrates over windows regardless.
@@ -1157,8 +1185,8 @@ anticorrelation \emph{plus} a tiny pool, and the CUSUM integrates over windows r
 \begin{figure}[t]\centering
 \begin{subfigure}{\columnwidth}\includegraphics[width=\linewidth]{th_arl.pdf}\caption{}\end{subfigure}\\
 \begin{subfigure}{0.62\columnwidth}\includegraphics[width=\linewidth]{th_regret.pdf}\caption{}\end{subfigure}
-\caption{Theory. (a) ARL matches Siegmund; (b) the safety-floor bound envelopes
-measured regret.}
+\caption{Theory. (a) ARL matches Siegmund; (b) measured regret versus the
+two-term expression, loose three-term plug-in, and descriptive tracker.}
 \label{fig:theory}
 \end{figure}
 
@@ -1180,11 +1208,10 @@ per-IP stride prefetcher, the fallback prefetch-\emph{off}, the reward the per-s
 cache-hit rate, and the attack a cache-polluting corruption (the dueling
 ``sets'' here are virtual block-address buckets, $\mathrm{blk}\bmod 2048$, not
 physical L1D sets). It compiles and runs
-on SPEC\,CPU2017 with \textbf{no added work on the cache-access critical path by
-construction} (the confirmer, CUSUM (a running change detector), reseed, and FSM are off the critical path (the timing-limiting logic) and epoch-grained; the
-per-access cost is only a $2$-bit pool-tag lookup and output mux---the same kind
-of table read DIP/DRRIP already carry; RTL timing is future work,
-\Cref{sec:overhead}). The real $\dhat$ is far noisier than the
+on SPEC\,CPU2017. The confirmer, CUSUM, reseed, and FSM execute off the
+cache-access path at window granularity. A 2-bit pool-tag lookup and output
+multiplexer remain per access; their RTL timing is not measured
+(\Cref{sec:overhead}). The real $\dhat$ is far noisier than the
 synthetic one, so we ran at a looser operating point (only $m\!\approx\!19$ accesses/bucket/window land, so $\dhat$
 swings in $[-0.8,+0.7]$) ($\tau{=}0$,
 $H{=}0.25$) than the synthetic $(\tau{=}0.05,H{=}0.8,m{=}64)$; we disclose this
@@ -1317,25 +1344,32 @@ case---though a real cache's stateful reward is a further boundary; see
 \end{figure}
 
 \section{Overhead budget}\label{sec:overhead}
-The audit adds negligible area and no critical-path latency, as the \emph{analytical} overhead budget in \Cref{tab:overhead} shows (an RTL-level measurement is future work). Set-dueling counters reuse the existing ATD (auxiliary tag directory, a shadow tag array)/sampler; the Tier-A sketches and the 16-weight forward model sit in
-adjacent SRAM and update on a sampled $1/k$ of decisions; the CUSUM detectors are
-two registers and a comparator each. The budget totals $\sim\!336$\,bytes ($\sim\!0.13\%$ of a 256\,KB SRAM); we do not model dynamic energy (it scales with the Tier-B duty cycle, but we give no number). Because the confirmer is sampled, off-path, and epoch-grained, it adds \textbf{no added latency on the cache-access critical path by construction} (analytically; RTL timing is future work), the non-negotiable constraint. The only per-access work is
-the $2$-bit pool-tag lookup and output mux (a table read comparable to existing
-DIP/DRRIP set-dueling), not the estimator or gate logic.
+Table~\ref{tab:overhead} is an illustrative storage count, not a synthesized
+implementation. It assigns 16 bits to each coefficient or reference statistic
+and matches the released dimensions: a dense $16{\times}8$ projection plus eight
+means and standard deviations for $S_{in}$; 18 feature/action/bias coefficients
+for $S_{res}$; four two-sided CUSUMs; and 64 set-dueling counters. The total is
+$404$ bytes, or $0.154\%$ of a 256\,KB SRAM.
+
+The Python model uses floating point, so the numerical fidelity of this
+quantization is untested. Dynamic energy, RTL area, and timing are also unmeasured.
+The estimator, CUSUM, and FSM are architecturally off the access path, but the
+per-access 2-bit pool-tag lookup and output multiplexer remain. Consequently we
+claim an off-path organization, not a measured zero-latency result.
 
 \begin{table}[t]\centering\footnotesize
-\caption{Overhead budget (analytical).}
+\caption{Illustrative 16-bit storage budget; not synthesized.}
 \label{tab:overhead}
 \begin{tabular}{@{}lll@{}}
 \toprule
 Component & Storage & Per-decision work\\
 \midrule
 Set-dueling counters & 64\,B (reuse ATD) & reuse existing\\
-$S_{in}$ RP + quantile sketch & 224\,B & $\le$ few adds on $1/k$\\
-$S_{res}$ forward model $g$ & 32\,B & 16 MACs on $1/k$\\
+$S_{in}$ dense projection + mean/std & 288\,B & 128 MACs on $1/k$\\
+$S_{res}$ forward model $g$ & 36\,B & 18 MACs on $1/k$\\
 CUSUM detectors ($\times 4$) & 16\,B & 2 add/cmp each\\
 \midrule
-\textbf{Total} & \textbf{$\sim$336\,B} & off critical path\\
+\textbf{Total} & \textbf{404\,B} & estimator/gate off path\\
 \bottomrule
 \end{tabular}
 \end{table}
@@ -1362,7 +1396,10 @@ ChampSim L1D module (\Cref{sec:eval-champsim}) shows the mechanism survives a
 cycle-accurate simulator and bounds a corrupted prefetcher to the safe floor
 across a 3-trace SPEC suite; a full SPEC/GAP sweep with a timeliness-aware reward,
 and the production controllers of \Cref{tab:instances}, is the natural next step.
-\textbf{Reward \emph{localizability}, not just fidelity, is decisive.} A reward whose credit lands in the same cache set as the decision is what makes auditing faithful. The per-set
+\textbf{Faithful attribution needs all three conditions.} Representative
+within-domain sampling aligns the duel with deployed traffic; set-locality aligns
+each decision with its credited outcome; and reseed-identifiability preserves
+the policy contrast after leaders are shuffled. The per-set
 cache-hit reward over-gates a genuinely helpful prefetcher on roms
 (\Cref{sec:eval-champsim}, $11\%$ tax); swapping to the controller's \emph{own}
 accuracy$\times$timeliness reward does \emph{not} fix it ($11.2\%\!\to\!9.7\%$),
@@ -1383,6 +1420,8 @@ study adds a second condition: set-locality is necessary but not sufficient,
 because a real cache is set-local yet \emph{stateful}, so the secret reseed that
 buys mimicry resistance confounds its per-window measurement---a tension that a
 \emph{reseed-identifiable} contrast resolves (\Cref{rem:stateless}).
+Both controller-side conditions presuppose that the within-domain sample is
+representative of deployed traffic, or is explicitly traffic-weighted.
 
 For a controller in that class, Bouncer repurposes the set-dueling substrate into
 a secret competence audit, gates an expensive confirmer behind cheap tripwires,
@@ -1391,7 +1430,8 @@ false-alarm---tied to the constants of the CUSUM detector. The payoff: for
 declared domains audited at resolution $\delta_R^{\min}(B)$ with the secret intact,
 Bouncer bounds the \emph{expected} competence regret, in the controller's own reward, against its
 vetted fallback, under benign drift and an adaptive mimicry adversary alike, for
-$\sim\!336$\,bytes and no added datapath latency (analytical). The robustness is
+$404$ bytes in an illustrative 16-bit storage count. RTL area, energy, timing,
+and quantized numerical fidelity are not evaluated. The robustness is
 neither free nor unconditional: the competence signal is what beats an input monitor, and its
 resistance to a \emph{leak-aware} attacker is purchased by the secrecy of the dueling sets---we
 quantify the price of losing that secrecy, and we name the sub-resolution slow-bleed adversary
@@ -1421,9 +1461,12 @@ an exhaustive semantic audit of every claim. We check rendered strings rather th
 because floating-point results shift by $1$--$2$ ulps across numpy builds (the committed \texttt{hardening/manifests/} sha256 files are a
 provenance record of one such build, not a portability claim). The harness invariants
 (single-assignment-per-window; reseed) are checked by \texttt{experiments/test\_invariants.py}
-(stage 0). The real ChampSim studies reproduce via
-\texttt{champsim\_plugin/setup\_champsim.sh} (prefetcher floor) and
-\texttt{champsim\_plugin/run\_e1\_replacement.sh} (replacement boundary). \Cref{lem:floor} has
+(stage 0). The ChampSim figures in \texttt{run\_all} are regenerated from
+committed JSON/CSV logs, not from a fresh simulator run.
+\texttt{champsim\_plugin/setup\_champsim.sh} builds and runs the \texttt{lbm}
+prefetcher case; \texttt{run\_e1\_replacement.sh} runs the single-trace
+replacement case. Neither script regenerates the full three-trace suite in one
+command. \Cref{lem:floor} has
 two standalone regressions: \texttt{experiments/exp\_floor\_longattack.py} (the long-attack
 audit-exposure envelope) and \texttt{experiments/exp\_floor\_traffic.py} (the traffic-weighting
 counterexample and the expectation/high-probability repair).
@@ -1440,8 +1483,8 @@ PDF (machine-dependent: $\sim$5 minutes on a fast laptop, $\sim$20 minutes in a 
 sandbox; CPython 3.11, pinned numpy/scipy/matplotlib/pandas); all RNG is
 explicitly seeded, so results are deterministic.
 \texttt{champsim\_plugin/setup\_champsim.sh} clones and builds ChampSim, installs
-the Bouncer modules, fetches public SPEC\,CPU2017 traces, and reproduces the
-prefetcher safety-floor study; \texttt{champsim\_plugin/run\_e1\_replacement.sh}
+the Bouncer module, fetches a public SPEC\,CPU2017 \texttt{lbm} trace, and runs
+that prefetcher case; \texttt{champsim\_plugin/run\_e1\_replacement.sh}
 reproduces the \Cref{sec:eval-champsim} replacement boundary study
 (\Cref{fig:e1repl}) on \texttt{623.xalancbmk} (C++17 toolchain + vcpkg). The standalone auditor additionally builds with
 \texttt{c++ -std=c++17 bouncer.cc -o bouncer\_selftest}.

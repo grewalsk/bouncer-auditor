@@ -12,7 +12,7 @@ consecutive windows on a policy) but differ in how the *contrast* depends on sta
 
   * MULTIPLICATIVE warmup:  r_C(k)=mu_C*(1-e^{-ck}),  r_F(k)=mu_F*(1-e^{-ck})
         contrast = (mu_C-mu_F)*(1-e^{-ck})  -- SCALES with the warmup state.
-    Under reseeding every slice stays cold (k~1), so the contrast is attenuated toward
+    Under reseeding almost every sampled slice returns to the cold state (k~1), so the contrast is attenuated toward
     ~(mu_C-mu_F)*c -> 0 as the warmup timescale 1/c lengthens. NOT reseed-identifiable.
     Fixed leaders warm up and recover the true gap. (This is the cache/replacement case.)
 
@@ -38,7 +38,11 @@ B_ADD = 0.20                     # additive cold-start deficit (shared by both p
 
 
 def _run(kind, c, reseed, W=160, n_sets=2048, n_L=32, m=64, seed=0):
-    """One trajectory. kind in {'mult','add'}. Returns per-window Delta-hat."""
+    """One trajectory. ``k`` counts consecutive windows in a leader pool.
+
+    A slice that is not sampled in the current window leaves both policy histories; if it
+    later reappears, it therefore restarts at ``k=1``. ``kind`` is ``mult`` or ``add``.
+    """
     rng = np.random.default_rng(seed)
     consec = np.zeros(n_sets)     # consecutive windows the slice has run its current leader policy
     pol = np.full(n_sets, -1)     # last-window policy per slice: -1 none, 0=F, 1=C
@@ -49,10 +53,14 @@ def _run(kind, c, reseed, W=160, n_sets=2048, n_L=32, m=64, seed=0):
         if reseed and t > 0:
             perm = rng.permutation(n_sets)
             lC, lF = perm[:n_L], perm[n_L:2 * n_L]
-        # warmup counter: increment if this slice ran the same policy last window, else reset to 1
+        # Increment only when a slice ran the same sampled policy in the immediately
+        # preceding window. Non-leaders leave the modeled policy and reset to cold.
+        next_consec = np.zeros(n_sets)
+        next_pol = np.full(n_sets, -1)
         for arr, p in [(lC, 1), (lF, 0)]:
-            consec[arr] = np.where(pol[arr] == p, consec[arr] + 1, 1)
-        newpol = pol.copy(); newpol[lC] = 1; newpol[lF] = 0; pol = newpol
+            next_consec[arr] = np.where(pol[arr] == p, consec[arr] + 1, 1)
+            next_pol[arr] = p
+        consec, pol = next_consec, next_pol
         warm = 1 - np.exp(-c * consec)
         if kind == "mult":                          # contrast scales with warm state
             accC = MU_C * warm[lC]

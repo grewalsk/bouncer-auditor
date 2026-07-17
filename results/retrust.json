@@ -6,42 +6,42 @@
   "real": [
     {
       "target": 0.04,
-      "open_frac_mean": 0.06712962962962964,
+      "open_frac_mean": 0.07268518518518519,
       "retrust_mean": 0.0
     },
     {
       "target": 0.0,
-      "open_frac_mean": 0.04212962962962963,
+      "open_frac_mean": 0.047685185185185185,
       "retrust_mean": 0.0
     },
     {
       "target": -0.1,
-      "open_frac_mean": 0.019444444444444445,
+      "open_frac_mean": 0.024999999999999998,
       "retrust_mean": 0.0
     }
   ],
   "correlated": [
     {
       "rho": 0.0,
-      "open_frac_mean": 0.0078125,
+      "open_frac_mean": 0.0083125,
       "retrust_per_1000": 0.25,
       "T": 2000
     },
     {
       "rho": 0.5,
-      "open_frac_mean": 0.02890625,
+      "open_frac_mean": 0.02940625,
       "retrust_per_1000": 1.78125,
       "T": 2000
     },
     {
       "rho": 0.8,
-      "open_frac_mean": 0.10743749999999999,
+      "open_frac_mean": 0.10790625000000001,
       "retrust_per_1000": 5.25,
       "T": 2000
     },
     {
       "rho": 0.95,
-      "open_frac_mean": 0.22471875,
+      "open_frac_mean": 0.22512500000000002,
       "retrust_per_1000": 5.5625,
       "T": 2000
     }
@@ -49,28 +49,28 @@
   "noise_sweep": [
     {
       "rho": 0.95,
-      "open_frac_mean": 0.00565625,
+      "open_frac_mean": 0.00615625,
       "retrust_per_1000": 0.0,
       "T": 2000,
       "noise": 0.015625
     },
     {
       "rho": 0.95,
-      "open_frac_mean": 0.021531250000000002,
+      "open_frac_mean": 0.02203125,
       "retrust_per_1000": 0.71875,
       "T": 2000,
       "noise": 0.03125
     },
     {
       "rho": 0.95,
-      "open_frac_mean": 0.09568750000000001,
+      "open_frac_mean": 0.09618750000000001,
       "retrust_per_1000": 3.0625,
       "T": 2000,
       "noise": 0.05
     },
     {
       "rho": 0.95,
-      "open_frac_mean": 0.22471875,
+      "open_frac_mean": 0.22512500000000002,
       "retrust_per_1000": 5.5625,
       "T": 2000,
       "noise": 0.1

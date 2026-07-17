@@ -5,19 +5,17 @@ The released system keeps the n_L Leader-C sets running C in EVERY gate state
 re-trust is measured, not timed. A persistent drop therefore bleeds an
 audit-exposure regret the old two-term bound N_ep*D*r_max + alpha*T*c_sw does not
 count. This script (i) reproduces the reviewer's counterexample to the two-term
-bound and (ii) verifies the corrected three-term bound envelopes it:
+bound and (ii) verifies that the corrected loose three-term bound envelopes it:
 
   audit-exposure fractions   phi_G = n_L / n_sets            (GATED: only Leader-C runs C)
                              phi_P = phi_G + rho_aud*(1 - (n_L+n_F)/n_sets)   (PROBING: + audited region)
   LOOSE   Sigma (r^pi0 - r^Bouncer) <= N_ep*D*r_max + phi_P*T_att*r_max + alpha*T*c_sw
-  TIGHT   replace r_max by the realized gap (q0 - mu_C^att) and split the
+  PLUG-IN replace r_max by the realized gap (q0 - mu_C^att) and split the
           post-detection occupancy: phi_G on GATED windows, phi_P on PROBING.
-          NOTE: the tight form uses the MEAN detection delay D=H/(K-Delta); it is a
-          MEAN-LEVEL envelope (holds in expectation), NOT a high-probability or
-          deterministic bound. The guarantee is the LOOSE three-term EXPECTATION bound
-          (only its exposure term additionally has a high-probability envelope). Weak-drop
-          configs (Delta near tau) can exceed the mean-D tight form by 1-2 windows; the
-          strict assertion below holds at the deep-drop operating point (stress=0.92).
+          This is a descriptive tracker, not a bound: it inserts the mean-delay
+          approximation D=H/(K-Delta), and an individual seeded trajectory can exceed it.
+          The guarantee under the stated premises is the LOOSE expectation bound (only its
+          exposure term additionally receives a high-probability envelope).
 
 Deterministic: all RNG explicitly seeded. Emits results/floor_longattack.json.
 """
@@ -58,7 +56,8 @@ def run(T, onset, seed):
 
     # corrected LOOSE (r_max=1 per exposed window, phi_P worst-case exposure), in IPC units
     corrected_loose = env.ipc_slope * (fb.detection_term + PHI_P * T_att * 1.0) + fb.false_alarm_term
-    # TIGHT (realized gap, realized GATED/PROBING occupancy), in IPC units
+    # Descriptive plug-in tracker (realized gap and occupancy), in IPC units. It is
+    # intentionally not asserted as an envelope because D is only a mean approximation.
     tight = env.ipc_slope * gap * (fb.detection_term + PHI_G * n_gated + PHI_P * n_prob)
     return dict(T=T, onset=onset, seed=seed, D=float(D), gap=float(gap), T_att=int(T_att),
                 phi_G=float(PHI_G), phi_P=float(PHI_P),
@@ -75,19 +74,20 @@ def main():
     cells = [run(1400, 50, s) for s in seeds]          # persistent drop, L_att = 1350
     long = run(2600, 5, 5)                             # longer horizon, the two-term breaks harder
 
-    # REGRESSION ASSERTIONS: two-term FALSE, corrected three-term VALID
+    # REGRESSION ASSERTIONS: two-term FALSE, corrected loose three-term envelope VALID.
     for r in cells:
         assert r["measured_pos"] > r["old_loose"], \
             f"two-term bound should be VIOLATED: measured {r['measured_pos']:.2f} <= old_loose {r['old_loose']:.2f}"
-        assert r["measured_pos"] <= r["tight"] + 1e-6, \
-            f"tight must envelope: measured {r['measured_pos']:.2f} > tight {r['tight']:.2f}"
         assert r["tight"] <= r["corrected_loose"] + 1e-6, \
-            f"loose must dominate tight: tight {r['tight']:.2f} > corrected_loose {r['corrected_loose']:.2f}"
+            f"loose must dominate plug-in tracker: tracker {r['tight']:.2f} > corrected_loose {r['corrected_loose']:.2f}"
+        assert r["measured_pos"] <= r["corrected_loose"] + 1e-6, \
+            f"corrected loose envelope failed: measured {r['measured_pos']:.2f} > loose {r['corrected_loose']:.2f}"
     assert long["measured_raw"] > long["old_loose"], "T=2600 raw must exceed the two-term bound"
-    assert long["measured_pos"] <= long["tight"] + 1e-6 <= long["corrected_loose"] + 2e-6
+    assert long["tight"] <= long["corrected_loose"] + 1e-6
+    assert long["measured_pos"] <= long["corrected_loose"] + 1e-6
 
     for r in cells:
-        print(f"  seed {r['seed']}: measured={r['measured_pos']:.2f}  tight={r['tight']:.2f}  "
+        print(f"  seed {r['seed']}: measured={r['measured_pos']:.2f}  plug-in={r['tight']:.2f}  "
               f"corrected_loose={r['corrected_loose']:.2f}  old_two_term={r['old_loose']:.2f}  "
               f"(n_gated={r['n_gated']} @ {r['per_gated']:.5f}, n_prob={r['n_prob']})")
     print(f"  T=2600: measured_raw={long['measured_raw']:.2f}  old_two_term={long['old_loose']:.2f}")
@@ -96,8 +96,9 @@ def main():
         note=("Corrected Lemma 1: the two-term bound N_ep*D*r_max + alpha*T*c_sw is FALSE for the "
               "released system because n_L Leader-C sets run C in every gate state (simulate.py:82); "
               "a persistent drop bleeds phi_G*gap per GATED window. The three-term bound with an "
-              "audit-exposure term phi_P*T_att*r_max envelopes it; the tight version uses the realized "
-              "gap and GATED/PROBING occupancy."),
+              "audit-exposure term phi_P*T_att*r_max envelopes it. The smaller plug-in tracker uses the "
+              "realized gap, GATED/PROBING occupancy, and a mean-delay approximation; it is descriptive "
+              "rather than a bound and can slightly under-predict individual seeded trajectories."),
         phi_G=PHI_G, phi_P=PHI_P, rho_aud=RHO_AUD,
         persistent=cells, long_horizon=long,
         summary=dict(

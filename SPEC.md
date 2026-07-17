@@ -55,18 +55,20 @@ reseeded each epoch from a hardware RNG, unobservable to software: Leader-L
 (`n_L` sets, run `C`), Leader-F (`n_F` sets, run `π₀`), Follower (rest, run the
 winner). Estimator `Δ̂_W = r̄_L − r̄_F` (measured, not counterfactual).
 
-Concentration → detection latency:
-`Var(Δ̂_W) ≲ (r_max²/4m)(1/n_L + 1/n_F) =: σ_Δ²`. The chain **pool size → σ_Δ →
+Under effectively independent bounded samples, concentration → detection latency:
+`Var(Δ̂_w) ≲ (r_max²/4m_eff)(1/n_L + 1/n_F) =: σ_Δ²`. Boundedness alone does
+not imply this scaling. The chain **pool size → σ_Δ →
 CUSUM threshold H → detection delay D → regret floor** is the central design
 dependency. Detector: one-sided lower CUSUM, `Cₜ⁻ = max(0, Cₜ₋₁⁻ + (K − Δ̂))`,
 `K = τ + γ_detect/2`, alarm at `Cₜ⁻ > H` (resets on alarm).
 
 ## 5. Tier-A: cheap tripwires
-- `S_in` — random projection + quantile sketch vs frozen `D_val` reference;
-  spoofable (marginals held fixed), high-sensitivity.
+- `S_in` — dense random projection with projected mean/std reference;
+  spoofable (monitored marginals held fixed), high-sensitivity.
 - `S_dec` — action-entropy collapse / max-Q margin / TD magnitude; nearly free
   where confidence is already in silicon.
-- `S_res` — 16-weight linear forward model `g:(x,a)→r̂`; two-sided CUSUM on the
+- `S_res` — 18-coefficient linear forward model `g:(x,a)→r̂` at `d=16`;
+  two-sided CUSUM on the
   innovation `e = r − r̂`; catches "the world responds differently than at
   validation" even when input marginals look clean.
 
@@ -74,11 +76,14 @@ Tier-A never gates on its own — it only escalates to SUSPECT (raises Tier-B du
 cycle), so its false positives cost energy, never correctness.
 
 ## 6. Guarantees (no POMDP)
-- **Lemma 1 (safety floor):** with bounded reward, detection delay ≤ D w.p.
-  ≥1−δ, false-alarm ≤ α/window, transient ≤ c_sw, N_ep drop episodes over T:
-  `Σ (rₜ^{π₀} − rₜ^{Bouncer}) ≤ N_ep·D·r_max + α·T·c_sw` w.p. ≥ 1−δ·N_ep. The two
-  slack terms are exactly the §4 knobs: `D ≈ H/(K−Δ_true)`, `α = 1/ARL₀` with
-  ARL₀ from Siegmund.
+- **Lemma 1 (safety floor):** with bounded normalized window reward, expected
+  fully-open windows per episode ≤ `D`, marginal false-alarm rate ≤ `α`, total
+  transient cost per false-alarm episode ≤ `c_sw`, and secret uniform audit
+  exposure ≤ `φ_P`:
+  `E[Σ_w(r̄_w^{π₀}−r̄_w^{Bouncer})] ≤ N_ep·D·r_max +
+  φ_P·T_att·r_max + α·T·c_sw`. Only the exposure term receives the separate
+  high-probability envelope. `H/(K−Δ_true)` is a mean-delay approximation, not
+  an upper bound on `D`.
 - **Prop. 1 (mimicry resistance):** with secret uniform Leader-L/F assignment,
   evading GATE while degrading the victim requires `C` to earn ≥ r^{π₀}+τ on a
   secret random subset — incompatible with degrading the exchangeable victim sets.
@@ -95,7 +100,10 @@ equally-safe responses.
 ## 8–12. Instantiation, overhead, evaluation, build plan, hyperparameters
 See `paper/bouncer.tex` §8–12 and `champsim_plugin/champsim_knobs.md`. Pinned
 operating point: `n_sets=2048, n_L=n_F=32, m=64, τ=0.05, K=0.10, H=0.8`. Targets
-met: <0.1% area, <1% energy, **0 ns** added datapath latency (~336 bytes total).
+Illustrative storage: 404 bytes at 16 bits per coefficient/statistic (0.154% of
+a 256 KB SRAM). The released Python uses floating point; quantized fidelity,
+RTL area, energy, and timing are unmeasured. Estimator/gate work is organized
+off path, but the per-access tag lookup and output mux remain.
 
 ## 13. Risks (each tied to an in-spec mitigation)
 - Counterfactual cost (memory scheduler) → model-based Δ̂, scoped last.

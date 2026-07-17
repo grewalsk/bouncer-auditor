@@ -80,8 +80,8 @@ def run_episode(comp: CompetenceModel, env: MicroArchEnv, bouncer: Bouncer,
                    r_win=r_win, delta_true=delta_true)
         # INVARIANT (single-assignment-per-window): snapshot the secret assignment
         # the estimator is about to consume; deployment below must route on the SAME
-        # one. bouncer.step no longer reseeds internally, so this holds by construction
-        # -- the assertion guards against regressions.
+        # one. Bouncer.step returns the PRE-update routing state and stores the
+        # post-audit transition in state_next, so the current window has no lookahead.
         _assign_est = bouncer.dueling.leaderC.copy()
         tel = bouncer.step(obs)
 
@@ -113,6 +113,7 @@ def run_episode(comp: CompetenceModel, env: MicroArchEnv, bouncer: Bouncer,
         rows.append(dict(
             t=t, delta_true=delta_true, delta_hat=tel["delta_hat"],
             state=tel["state"].name, C_active=tel["C_active"], probing=tel["probing"],
+            state_next=tel["state_next"].name,
             realized_rate=realized_rate, unguarded_rate=unguarded_rate,
             fallback_rate=fallback_rate,
             ipc_bouncer=env.ipc(realized_rate), ipc_unguarded=env.ipc(unguarded_rate),

@@ -1,5 +1,5 @@
 {
-  "note": "Corrected Lemma 1: the two-term bound N_ep*D*r_max + alpha*T*c_sw is FALSE for the released system because n_L Leader-C sets run C in every gate state (simulate.py:82); a persistent drop bleeds phi_G*gap per GATED window. The three-term bound with an audit-exposure term phi_P*T_att*r_max envelopes it; the tight version uses the realized gap and GATED/PROBING occupancy.",
+  "note": "Corrected Lemma 1: the two-term bound N_ep*D*r_max + alpha*T*c_sw is FALSE for the released system because n_L Leader-C sets run C in every gate state (simulate.py:82); a persistent drop bleeds phi_G*gap per GATED window. The three-term bound with an audit-exposure term phi_P*T_att*r_max envelopes it. The smaller plug-in tracker uses the realized gap, GATED/PROBING occupancy, and a mean-delay approximation; it is descriptive rather than a bound and can slightly under-predict individual seeded trajectories.",
   "phi_G": 0.015625,
   "phi_P": 0.0640625,
   "rho_aud": 0.05,
@@ -15,13 +15,13 @@
       "phi_P": 0.0640625,
       "old_loose": 2.5225225225225225,
       "corrected_loose": 123.6006475225225,
-      "tight": 12.301985247747746,
-      "measured_pos": 11.919161987304706,
-      "measured_raw": -6.318595886230453,
-      "n_gated": 1294,
+      "tight": 12.294460247747745,
+      "measured_pos": 12.38826751708987,
+      "measured_raw": -5.849490356445321,
+      "n_gated": 1293,
       "n_prob": 55,
-      "per_gated": 0.007534488165028495,
-      "per_prob": 0.03075899991122157
+      "per_gated": 0.007535730584683752,
+      "per_prob": 0.03072715065696025
     },
     {
       "T": 1400,
@@ -34,13 +34,13 @@
       "phi_P": 0.0640625,
       "old_loose": 2.5225225225225225,
       "corrected_loose": 123.6006475225225,
-      "tight": 12.301985247747746,
-      "measured_pos": 11.888934326171889,
-      "measured_raw": -6.358671569824241,
-      "n_gated": 1294,
+      "tight": 12.294460247747745,
+      "measured_pos": 12.342327880859386,
+      "measured_raw": -5.905278015136743,
+      "n_gated": 1293,
       "n_prob": 55,
-      "per_gated": 0.007509221544221526,
-      "per_prob": 0.03088193026455966
+      "per_gated": 0.00751169179634631,
+      "per_prob": 0.03057237104936079
     },
     {
       "T": 1400,
@@ -53,13 +53,13 @@
       "phi_P": 0.0640625,
       "old_loose": 2.5225225225225225,
       "corrected_loose": 123.6006475225225,
-      "tight": 12.301985247747746,
-      "measured_pos": 11.90628051757814,
-      "measured_raw": -6.327995300292955,
-      "n_gated": 1294,
+      "tight": 12.294460247747745,
+      "measured_pos": 12.373965454101572,
+      "measured_raw": -5.860310363769526,
+      "n_gated": 1293,
       "n_prob": 55,
-      "per_gated": 0.007527950705479622,
-      "per_prob": 0.030767350630326703
+      "per_gated": 0.007527445050421745,
+      "per_prob": 0.030729481090198876
     }
   ],
   "long_horizon": {
@@ -73,19 +73,19 @@
     "phi_P": 0.0640625,
     "old_loose": 2.522522522522523,
     "corrected_loose": 235.2615850225225,
-    "tight": 22.813657747747744,
-    "measured_pos": 22.427920532226583,
-    "measured_raw": 20.60557708740233,
-    "n_gated": 2490,
+    "tight": 22.806132747747743,
+    "measured_pos": 22.90129852294922,
+    "measured_raw": 21.078955078124967,
+    "n_gated": 2489,
     "n_prob": 104,
-    "per_gated": 0.007532906283336471,
-    "per_prob": 0.03072525904728817
+    "per_gated": 0.0075297703940306075,
+    "per_prob": 0.03090879000150239
   },
   "summary": {
     "old_two_term_loose": 2.5225225225225225,
-    "measured_pos_mean": 11.904792277018245,
-    "tight_mean": 12.301985247747746,
+    "measured_pos_mean": 12.36818695068361,
+    "tight_mean": 12.294460247747745,
     "corrected_loose_mean": 123.6006475225225,
-    "blended_exposure_frac": 0.01759984247590808
+    "blended_exposure_frac": 0.017601307492581604
   }
 }

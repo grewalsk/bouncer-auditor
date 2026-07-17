@@ -1,21 +1,23 @@
 """
-tier_a.py — Cheap, always-on tripwires (§5). Off the datapath critical path,
-updated on a sampled 1/k of decisions, a few adds/MACs each, <= low-KB SRAM.
+tier_a.py — Sampled Tier-A tripwires (§5). The architectural proposal places
+their updates off the access path; this floating-point reference model does not
+measure hardware area, energy, or timing.
 
 Tier-A never gates on its own — it only escalates the gate to SUSPECT, which
 raises Tier-B's duty cycle. Its false positives therefore cost a little energy,
 never correctness.
 
 Three signals:
-  S_in  — input covariate shift. Frozen reference random-projection + per-
-          component quantile sketch of D_val; online windowed energy distance
-          vs reference. High-sensitivity, but *spoofable* (adversary can hold
-          marginals fixed) — exactly the tripwire the mimicry adversary defeats.
+  S_in  — input covariate shift. Frozen dense random projection with reference
+          mean/std; online squared standardized displacement of the projected
+          window mean. Spoofable because an adversary can hold those monitored
+          marginals fixed — exactly the tripwire the mimicry adversary defeats.
   S_dec — decision-confidence collapse (entropy / max-Q margin / TD magnitude).
           Nearly free when the controller already computes confidence in HW
           (Pythia reward, SHiP/perceptron weighted-sum).
-  S_res — innovation residual. A 16-weight linear forward model r̂ = g(x,a) fit
-          on D_val; online residual e = r - r̂; two-sided CUSUM on e. Catches
+  S_res — innovation residual. A (d+2)-coefficient linear forward model
+          r̂ = g(x,a) fit on D_val (features + action + bias); online residual
+          e = r - r̂; two-sided CUSUM on e. Catches
           "the world responds differently than at validation" even when input
           marginals look clean — the architectural analogue of a Kalman
           innovation.
@@ -79,7 +81,7 @@ class ConfidenceCollapse:
 # S_res : forward-model innovation residual
 # ---------------------------------------------------------------------------
 class InnovationResidual:
-    """16-weight linear forward model r̂ = w·[x, a, 1] fit on D_val by least
+    """(d+2)-coefficient linear forward model r̂ = w·[x, a, 1] fit on D_val by least
     squares; online residual e = r - r̂. Two-sided CUSUM on e detects regime
     change invisible to input marginals."""
 
@@ -96,7 +98,6 @@ class InnovationResidual:
     def fit_reference(self, X_val: np.ndarray, a_val: np.ndarray, r_val: np.ndarray):
         Phi = self._design(X_val, a_val)
         self.w, *_ = np.linalg.lstsq(Phi, r_val, rcond=None)
-        # cap to ~16 weights by truncating feature dim if needed (the HW budget)
         self.ref_resid_std = float(np.std(r_val - Phi @ self.w)) + 1e-6
 
     def residual(self, X: np.ndarray, a: np.ndarray, r: np.ndarray) -> np.ndarray:

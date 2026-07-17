@@ -96,7 +96,8 @@ def regret_validation():
     The audit-exposure fractions (n_L Leader-C sets run C in every gate state, plus
     a rho_aud audited region in PROBING) make the bound three-term:
        LOOSE  N_ep*D*r_max + phi_P*T_att*r_max + alpha*T*c_sw
-       TIGHT  realized gap, split GATED/PROBING occupancy.
+       TRACKER  realized gap, split GATED/PROBING occupancy, and approximate
+                mean delay. This is descriptive, not a proved bound.
     The old two-term bound (no exposure) still envelopes SHORT attacks (L_att=60,
     where the N_ep sweep lives) but is VIOLATED for long attacks (the L_att sweep)."""
     comp = C.make_competence()
@@ -108,7 +109,7 @@ def regret_validation():
     phi_G = C.STD["n_L"] / C.STD["n_sets"]
     phi_P = phi_G + SimConfig.audited_region_frac * (1 - (C.STD["n_L"] + C.STD["n_F"]) / C.STD["n_sets"])
 
-    # --- N_ep sweep at L_att=60 (loose/tight/measured; tight = realized occupancy) ---
+    # --- N_ep sweep at L_att=60 (loose/tracker/measured) ---
     Neps = [1, 2, 3, 4, 5, 6]
     meas, bound, tight, corrected = [], [], [], []
     for Nep in Neps:
@@ -117,9 +118,7 @@ def regret_validation():
         meas.append(float(pos[-1]))
         det_term = Nep * D * env.ipc_slope * comp.r_max
         bound.append(float(det_term))                                          # old two-term (no exposure)
-        # tight form: realized occupancy -- phi_G per GATED window, phi_P per PROBING window
-        # (matches the paper's stated form; charging all post-detection windows at phi_G was
-        # the TMLR-R5-flagged formula/prose mismatch)
+        # Descriptive tracker: realized occupancy and gap with approximate mean D.
         n_gated = int((df["state"] == "GATED").sum())
         n_prob = int((df["state"] == "PROBING").sum())
         tight.append(float(env.ipc_slope * gap * (Nep * D + phi_G * n_gated + phi_P * n_prob)))
@@ -144,7 +143,8 @@ def regret_validation():
               f"{'  <-- two-term VIOLATED' if pos > la_two[-1] else ''}"
               f"  tight={la_tight[-1]:.2f}  corrected_loose={la_corr[-1]:.2f}")
 
-    # REGRESSION: measured <= tight <= corrected_loose everywhere; two-term breaks for long attacks
+    # In these two sweeps the tracker happens to cover; the separate persistent-drop
+    # regression demonstrates that it is not an envelope. The loose form must dominate.
     for i, Nep in enumerate(Neps):
         assert meas[i] <= tight[i] + 1e-6 <= corrected[i] + 2e-6, f"N_ep={Nep} ordering"
     for i, La in enumerate(Latts):
@@ -183,18 +183,18 @@ def main():
     ax = axes[0]
     ax.plot(reg["Nep"], reg["bound"], "s--", color="k", label=r"two-term $N_{ep}D\,r_{max}$")
     ax.plot(reg["Nep"], reg["corrected_loose"], "D:", color=C.PALETTE["unguarded"], label="corrected loose (+ exposure)")
-    ax.plot(reg["Nep"], reg["tight"], "^-", color=C.PALETTE["accent"], label="tight (Lemma 1 corollary)")
+    ax.plot(reg["Nep"], reg["tight"], "^-", color=C.PALETTE["accent"], label="descriptive tracker")
     ax.plot(reg["Nep"], reg["measured"], "o-", color=C.PALETTE["bouncer"], label="measured positive regret")
     ax.fill_between(reg["Nep"], reg["measured"], reg["tight"], color=C.PALETTE["grid"], alpha=0.6)
     ax.set_xlabel("genuine drop episodes $N_{ep}$ ($L_{att}{=}60$)")
     ax.set_ylabel("cumulative regret vs floor (IPC·win)")
-    ax.set_title("(a) short attacks: all bounds hold")
+    ax.set_title("(a) short attacks: loose form covers")
     ax.legend(loc="upper left", fontsize=6.2)
     ax = axes[1]
     la = reg["Latt"]
     ax.plot(la["L_att"], la["two_term"], "s--", color="k", label="two-term (const.)")
     ax.plot(la["L_att"], la["corrected_loose"], "D:", color=C.PALETTE["unguarded"], label="corrected loose")
-    ax.plot(la["L_att"], la["tight"], "^-", color=C.PALETTE["accent"], label="tight")
+    ax.plot(la["L_att"], la["tight"], "^-", color=C.PALETTE["accent"], label="tracker")
     ax.plot(la["L_att"], la["measured"], "o-", color=C.PALETTE["bouncer"], label="measured")
     ax.set_xlabel(f"attack length $L_{{att}}$ (windows, $N_{{ep}}{{=}}{la['N_ep']}$)")
     ax.set_ylabel("cumulative regret vs floor (IPC·win)")

@@ -284,8 +284,8 @@
   ],
   "delta_drop": 0.0,
   "overhead": {
-    "total_bits": 2688,
-    "total_bytes": 336.0,
+    "total_bits": 3232,
+    "total_bytes": 404.0,
     "table": [
       [
         "Set-dueling counters",
@@ -294,15 +294,15 @@
         "sampler"
       ],
       [
-        "S_in: RP matrix + quantile sketch",
-        1792,
-        "<= few adds on 1/k dec",
+        "S_in: dense projection + mean/std",
+        2304,
+        "128 MACs on 1/k dec",
         "adjacent SRAM"
       ],
       [
         "S_res: forward model g",
-        256,
-        "16 MACs on 1/k dec",
+        288,
+        "18 MACs on 1/k dec",
         "adjacent"
       ],
       [
@@ -312,8 +312,9 @@
         "adjacent"
       ]
     ],
-    "area_pct_est": 0.1282,
-    "energy_pct_target": "<1%",
-    "added_latency_analytical_ns": 0
+    "area_pct_est": 0.1541,
+    "energy_not_measured": true,
+    "access_path_timing_not_measured": true,
+    "proposed_quantization_bits": 16
   }
 }

@@ -1,15 +1,15 @@
 {
   "boiling_frog": {
-    "detection_latency_after_cross": 7.0,
-    "abrupt_latency": 1.0,
+    "detection_latency_after_cross": 8.0,
+    "abrupt_latency": 2.0,
     "steady_floor_violation": 0.006764770119936302,
     "cross": 112,
-    "gated": 119
+    "gated": 120
   },
   "probing_exploit": {
-    "harmed_frac": 0.08611111111111111,
-    "harmed_first_half": 0.08333333333333333,
-    "harmed_second_half": 0.08888888888888889,
-    "steady_floor_violation": 0.006200380821876023
+    "harmed_frac": 0.16944444444444445,
+    "harmed_first_half": 0.16666666666666666,
+    "harmed_second_half": 0.17222222222222222,
+    "steady_floor_violation": -0.0038158945195314008
   }
 }

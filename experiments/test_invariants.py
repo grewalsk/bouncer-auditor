@@ -52,6 +52,20 @@ def test_estimate_matches_deployment_pool():
     print("  [ok] bouncer.step does not reseed internally; estimator == deployment pool")
 
 
+def test_gate_transition_applies_next_window():
+    # An end-of-window oracle alarm may change the next state, but it cannot reroute
+    # rewards from the window that produced the alarm.
+    comp = C.make_competence()
+    _, b = C.make_bouncer("oracle", comp=comp, seed=6)
+    obs = dict(rC_per_set=np.full(2048, 0.1), rF_per_set=np.full(2048, 0.5),
+               feat_win=np.zeros((8, 16)), conf_win=np.full(8, 0.9),
+               a_win=np.ones(8), r_win=np.full(8, 0.1), delta_true=-0.4)
+    tel = b.step(obs)
+    assert tel["state"].name == "TRUSTED" and tel["C_active"], tel
+    assert tel["state_next"].name == "GATED" and not tel["C_active_next"], tel
+    print("  [ok] end-of-window alarm changes next-window routing only")
+
+
 def test_probing_audit_is_uniform_secret():
     # A6: the PROBING audit subset must be a uniform secret subset of followers, NOT a sorted
     # prefix. Check a low-index set is audited ~rho_aud (not ~1), index-independent.
@@ -92,11 +106,24 @@ def test_theory_envelopes():
     print(f"  [ok] theory helpers exercised (exposure_envelope={env:.2f}, false_alarm_envelope={fa:.3f})")
 
 
+def test_siegmund_zero_drift_limit():
+    # Regression for the removable singularity in the ARL expression. Expanding
+    # exp(-2 δ b) through second order gives b^2, not b^2/2.
+    from bouncer.cusum import siegmund_arl
+    K, H, sigma = 0.0, 2.0, 1.0
+    b = H / sigma + 1.166
+    got = siegmund_arl(K=K, H=H, mean_signal=K, sigma=sigma)
+    assert abs(got - b * b) < 1e-12, f"zero-drift ARL limit wrong: {got}"
+    print(f"  [ok] Siegmund zero-drift ARL limit = b^2 = {got:.6f}")
+
+
 if __name__ == "__main__":
     test_single_assignment_per_window()
     test_reseed_reshuffles()
     test_estimate_matches_deployment_pool()
+    test_gate_transition_applies_next_window()
     test_probing_audit_is_uniform_secret()
     test_implemented_phi_p_below_bound()
     test_theory_envelopes()
+    test_siegmund_zero_drift_limit()
     print("ALL INVARIANTS PASS")

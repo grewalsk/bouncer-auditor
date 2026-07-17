@@ -1,5 +1,6 @@
 #!/usr/bin/env bash
-# Regenerate every result, figure, and the compiled paper from scratch.
+# Regenerate every synthetic result, all figures, and the compiled paper. ChampSim
+# figures are rebuilt from committed logs; this script does not rerun ChampSim.
 # Deterministic: all RNG is explicitly seeded. Runtime machine-dependent: ~5 min on a fast
 # laptop, ~20 min in a constrained sandbox.
 #

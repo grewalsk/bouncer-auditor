@@ -3,11 +3,12 @@
 > A runtime monitor + trust gate that **bounds the *expected* cost of a learned
 > microarchitectural controller** against a known-safe heuristic — under
 > **adaptive mimicry** and **benign distribution shift** — with no
-> POMDP/belief-state machinery and no added latency on the cache-access critical
-> path (analytical; RTL timing future work).
+> POMDP/belief-state machinery. The estimator and gate are organized off the
+> access path; RTL area, timing, and energy are not measured.
 >
-> **The organizing insight — *set-locality* + *reseed-identifiability*.** A secret
-> per-set competence audit requires that a controller's *reward share a dueling set
+> **The organizing insight — *set-locality* + *reseed-identifiability*.** Given a
+> representative (or traffic-weighted) within-domain sample, a secret per-set
+> competence audit requires that a controller's *reward share a dueling set
 > with its decision* (set-locality) **and** that its policy contrast survive the
 > secret reseed (reseed-identifiable); statelessness is one sufficient case of the
 > latter. Cache **replacement** is the canonical clean case for set-locality (the
@@ -22,7 +23,7 @@ paper: the mechanism, two proven guarantees, a comprehensive simulation harness
 that validates the mechanism's quantitative claims in the synthetic harness, and a **real ChampSim integration** that runs the
 auditor inside a cycle-level simulator on SPEC CPU2017 traces.
 
-📄 **Paper:** [`paper/bouncer.pdf`](paper/bouncer.pdf) (34 pages, TMLR format) ·
+📄 **Paper:** [`paper/bouncer.pdf`](paper/bouncer.pdf) (33 pages, TMLR format) ·
 🔬 **Reproduce:** [`./run_all.sh`](run_all.sh) (machine-dependent: ~5 min on a fast machine, ~20 min in a constrained sandbox) ·
 🧩 **Real simulator:** [`champsim_plugin/`](champsim_plugin)
 
@@ -106,11 +107,11 @@ cheap always-on tripwires that **gate** an expensive competence confirmer.
 
 <p align="center"><img src="docs/img/arch.png" width="85%"></p>
 
-- **Tier-A (hot, off critical path, a few adds/decision).** Three cheap
-  tripwires: `S_in` (covariate-shift sketch — random projection + quantile
-  sketch vs a frozen `D_val` reference), `S_dec` (decision-confidence collapse —
+- **Tier-A (sampled, off-path prototype).** Three cheap
+  tripwires: `S_in` (dense random projection with projected mean/std reference),
+  `S_dec` (decision-confidence collapse —
   often free, since Pythia/SHiP/perceptron compute confidence in HW), and `S_res`
-  (a 16-weight linear forward-model **innovation** residual, the architectural
+  (an 18-coefficient linear forward-model **innovation** residual, the architectural
   analogue of a Kalman innovation). Tier-A **never gates on its own** — it only
   escalates, so its false positives cost a little energy, never correctness.
 - **Tier-B (warm, management core / firmware, epoch-grained).** The
@@ -163,8 +164,8 @@ detection and false-alarm terms are bounded in expectation. On any window where 
 is genuinely better and the gate is open, `Bouncer = C`.
 The two slack terms are the §3 knobs: in the reseeded regime where false re-trust ≈ 0
 (measured through the real controller in `exp_retrust.py`), A2's `D` reduces to the initial
-delay `D ≈ H/(K−Δ)`; a temporally-*correlated* (stateful) audit inflates `D` — a named
-limitation, tied to the reseed-identifiability boundary. `α = 1/ARL₀` comes from Siegmund's
+delay `D ≈ H/(K−Δ)`; a temporally correlated audit can inflate `D`. This temporal
+premise is distinct from reseed-identifiability. `α = 1/ARL₀` comes from Siegmund's
 CUSUM average-run-length theory — an approximation we validate empirically to a
 geometric-mean ratio of **0.998**, not a proven upper bound.
 
@@ -196,31 +197,33 @@ secrecy ablation realizes the claim empirically.)*
 
 ## 5. Results
 
-All numbers are produced by [`./run_all.sh`](run_all.sh) (deterministic, seeded).
+All synthetic numbers are produced by [`./run_all.sh`](run_all.sh) (deterministic,
+seeded). ChampSim figures are rebuilt from committed logs; the script does not
+rerun the full simulator suite.
 
 | Claim | Result | Where |
 |---|---|---|
 | Estimator tracks ground-truth competence | **R² = 0.997**, RMSE ≈ σ_Δ | P0 |
 | Concentration bound is tight | empirical std = 0.85–0.98× the bound | P0 |
-| Safety floor under attack | steady-state violation **0.64%** (worst window); detect in **1 window** | P1 |
+| Safety floor under attack | steady-state violation **0.64%** (worst window); detect in **2 windows** | P1 |
 | Clean-workload tax | IPC ratio **0.9965** (> 0.99 target) | P1 |
-| Re-trust is *measured*, not timed | recovers 14 windows after attack ends | P1 |
+| Re-trust is *measured*, not timed | recovers 15 windows after attack ends | P1 |
 | Competence detector vs input-OOD | TPR = 1.0 @ FPR ≤ 0.05 on broad **and** mimicry | P2 |
 | §3 chain (pool → σ → H → latency) | latency 0 → 3.4 windows, knee at n ≈ 8 | P2 |
-| Overhead (analytical) | **~336 bytes**, ~0.13% of a 256 KB SRAM, 0 ns on the access path (analytical) | P2 |
+| Storage proposal | **404 bytes**, 0.154% of a 256 KB SRAM at 16 bits/scalar; RTL/quantization untested | P2 |
 | Generality (3 controller classes) | floor holds ≤ 0.7% across all | P3 |
 | Attack-vs-drift triage | **100% 5-fold CV**, robust to dropping any feature | P3 |
 | **Mimicry survival (headline, N=50)** | full Bouncer **TPR 1.0 [0.93,1.0]** vs input-OOD **0.0 [0,0.07]** | P4 / CI |
 | **Secrecy ablation (Prop 1)** | TPR 1.0 (f ≤ 0.6) → 0.0 (f = 1.0) | P4 / CI |
-| Sensitivity (τ, H grid) | **28/36** cells: ≤3-win detect, FPR ≤ 5%, no misses | Sensitivity |
-| Misspecification robustness | i.i.d. violated (σ_het → 0.3): mimicry TPR stays 1.0, floor holds | RobustEnv |
+| Sensitivity (τ, H grid) | **22/36** cells: ≤3-win detect, FPR ≤ 5%, no misses | Sensitivity |
+| Fixed set heterogeneity | σ_het → 0.3: mimicry TPR stays 1.0 and floor holds; temporal dependence not tested | RobustEnv |
 | CUSUM ARL vs Siegmund theory | empirical/theory ratio **0.998** | Theory |
-| Lemma 1 plug-in envelopes | two-term (15.1) + occupancy tight (9.5) both cover measured 5.9 (conditional plug-ins, re-trust≈0 regime) | Theory |
+| Lemma 1 stress test | persistent measured 12.34–12.39; loose plug-in 123.6; descriptive tracker 12.29 slightly under-predicts | Theory |
 
 ### The two figures the paper is built around
 
 **Safety floor (Lemma 1).** Under a poisoning attack, the *unguarded* controller
-crashes far below the fallback floor; Bouncer detects in one window, floors to
+crashes far below the fallback floor; Bouncer detects in two windows, floors to
 `π₀`, and re-trusts after the attack ends via PROBING (not a timer).
 
 <p align="center"><img src="docs/img/p1_safety_floor.png" width="80%"></p>
@@ -243,8 +246,8 @@ isolated by the leak ablation (TPR collapses as the assignment leaks).
 
 The auditor is not only a simulation abstraction. It **compiles and runs inside
 ChampSim** as a real L1D **prefetcher module** (and a second **LLC replacement
-module**), with no added latency on the cache-access critical path (analytical), on SPEC
-CPU2017 traces.
+module**) on SPEC CPU2017 traces. The epoch-level estimator and gate are off the
+access path; a pool-tag lookup and output mux remain, and RTL timing is unmeasured.
 
 <p align="center"><img src="docs/img/champsim.png" width="92%"></p>
 
@@ -329,12 +332,13 @@ run_all.sh                regenerate every result, figure, and the PDF (runtime 
 pip install -r requirements.txt        # numpy scipy matplotlib pandas + a LaTeX toolchain
 ./run_all.sh
 
-# Real ChampSim integration (clones+builds ChampSim, fetches a public SPEC trace, runs the study)
+# Real ChampSim lbm case (the full 3-trace suite is not automated here)
 ./champsim_plugin/setup_champsim.sh
 ```
 
-All randomness is explicitly seeded, so the synthetic results are bit-for-bit
-reproducible. `run_all.sh` ends by compiling `paper/bouncer.pdf`.
+All randomness is explicitly seeded. Synthetic JSON is deterministic in the
+pinned environment; floating-point last bits and PDF metadata can vary across
+platforms. `run_all.sh` ends by compiling `paper/bouncer.pdf`.
 
 ---
 

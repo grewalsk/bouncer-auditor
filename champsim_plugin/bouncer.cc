@@ -24,6 +24,11 @@ int main() {
   const int T = 220, onset = 90, offset = 180;
   int first_gated = -1, retrust = -1;
   for (int t = 0; t < T; ++t) {
+    // The state present at the start of t routes window t. Evidence collected
+    // during t can change only the next window's state.
+    Gate routed = bnc.state();
+    if (routed == Gate::GATED && first_gated < 0 && t >= onset) first_gated = t;
+    if (routed == Gate::TRUSTED && t > offset && retrust < 0) retrust = t - offset;
     bool attack = (t >= onset && t < offset);
     double u = (attack ? 0.92 : 0.05) + Nz(rng);
     if (u < 0) u = 0; if (u > 1) u = 1;
@@ -40,11 +45,9 @@ int main() {
     // Tier-A escalation: here driven by a simple reward-drop proxy (the real
     // shim wires the S_in/S_dec/S_res sketches). attack -> escalate.
     bool escalate = attack;
-    Gate g = bnc.end_window(escalate, !escalate);
-    if (g == Gate::GATED && first_gated < 0 && t >= onset) first_gated = t;
-    if (g == Gate::TRUSTED && t > offset && retrust < 0) retrust = t - offset;
+    bnc.end_window(escalate, !escalate);
   }
-  std::printf("first GATED window      = %d  (attack onset %d -> latency %d)\n",
+  std::printf("first routed GATED win  = %d  (attack onset %d -> latency %d)\n",
               first_gated, onset, first_gated - onset);
   std::printf("re-trust latency        = %d windows after attack ended\n", retrust);
   std::printf("sigma_delta (n=32,m=64) = %.4f\n",

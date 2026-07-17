@@ -112,7 +112,8 @@ def hygiene_checks(tex):
 
 def main():
     tex = tex_text()
-    p0, p1, p4, th = load("p0.json"), load("p1.json"), load("p4.json"), load("theory.json")
+    p0, p1, p2, p4, th = (load("p0.json"), load("p1.json"), load("p2.json"),
+                           load("p4.json"), load("theory.json"))
     e1, e3, cs = load("e1_keystone.json"), load("e3_sensitivity.json"), load("champsim.json")
     fla = load("floor_longattack.json")
     rl = load("rlatency.json")
@@ -120,6 +121,8 @@ def main():
     ft = load("floor_traffic.json")
     rt = load("retrust.json")
     ps = load("prop1_selection.json")
+    sens = load("sensitivity.json")
+    adaptive = load("adaptive.json")
 
     # each check: (label, list of literal strings that MUST appear in the tex, provenance)
     checks = []
@@ -131,8 +134,10 @@ def main():
     chk("P0 R^2", "0.997", "p0.json")
     chk("P1 steady floor 0.64%", "0.64", f"p1.json floor_violation_steady={p1['floor_violation_steady']:.5f} (worst window; rounds to 0.64%)")
     chk("P1 clean tax", "0.9965", f"p1.json clean_tax={p1['clean_tax']:.5f}")
-    chk("P1 detection latency 1 window", ["one window", "1.0"], "p1.json detection_latency=1.0")
-    chk("P1 re-trust 14 windows", "14", "p1.json retrust_latency")
+    chk("P1 causal detection latency 2 windows", "two audit windows",
+        f"p1.json detection_latency={p1['detection_latency']:.1f}")
+    chk("P1 re-trust 15 windows", "after 15 windows",
+        f"p1.json retrust_latency={p1['retrust_latency']}")
 
     # --- Lemma 1 corrected bound (the R1 fix) ---
     chk("exposure fraction phi_G=1.56%", "1.56", "phi_G=n_L/n_sets")
@@ -141,15 +146,19 @@ def main():
     chk("floor prediction mean 0.579 vs 0.580", ["0.579", "0.580"], "phi_G design constant predicts the MEAN attacked-GATED floor 0.579 vs measured 0.580455 (0.64% is the worst window)")
 
     # --- Theory (literals DERIVED from JSON, not hard-coded; TMLR-R5) ---
-    th_two = f"{th['regret']['bound'][-1]:.1f}"
-    th_tight = f"{th['regret']['tight'][-1]:.1f}"
-    th_meas = f"{th['regret']['measured'][-1]:.1f}"
-    chk(f"theory two-term/tight/measured {th_two}/{th_tight}/{th_meas}",
-        [th_two, th_tight, th_meas],
-        f"theory.json N_ep=6 (tight = realized phi_G/phi_P occupancy)")
+    th_two = f"{th['regret']['bound'][-1]:.2f}"
+    th_tracker = f"{th['regret']['tight'][-1]:.2f}"
+    th_meas = f"{th['regret']['measured'][-1]:.2f}"
+    th_loose = f"{th['regret']['corrected_loose'][-1]:.2f}"
+    chk(f"theory two-term/tracker/measured/loose {th_two}/{th_tracker}/{th_meas}/{th_loose}",
+        [th_two, th_tracker, th_meas, th_loose],
+        "theory.json N_ep=6 (tracker is descriptive, not a bound)")
     chk("ARL 927 vs 938", ["927", "938"], "theory.json ARL sweep at H=5sigma")
-    chk("theory L_att two-term violated 25.8 vs 7.6",
-        ["25.8", "7.6"], f"theory.json Latt measured={th['regret']['Latt']['measured'][-1]:.1f} two_term={th['regret']['Latt']['two_term'][-1]:.1f}")
+    latt = th["regret"]["Latt"]
+    latt_vals = [f"{latt[k][-1]:.2f}" for k in
+                 ("measured", "two_term", "tight", "corrected_loose")]
+    chk("theory long-attack measured/two-term/tracker/loose",
+        latt_vals, "theory.json L_att=960")
 
     # --- E3 (the bug this script guards) ---
     tax_lo = min(1 - e3["invariants"]["clean_tax_range_mu"][1], 1 - e3["invariants"]["clean_tax_range_ipc"][1]) * 100
@@ -158,8 +167,26 @@ def main():
     chk("R-latency min drift bg 1.6 / full 3.2", [f"{rl['min_drift_bg_sigma']:.1f}", f"{rl['min_drift_full_sigma']:.1f}"],
         f"rlatency.json min-drift-at-tau bg={rl['min_drift_bg_sigma']:.2f} full={rl['min_drift_full_sigma']:.2f} sigma")
     att = [round(c["attenuation"] * 100) for c in wp["multiplicative_cells"]]
-    chk("warmup reseed confound 97->8pct (multiplicative)", [str(max(att)), str(min(att))],
+    chk(f"warmup reseed confound {max(att)}->{min(att)}pct (multiplicative)",
+        [str(max(att)), str(min(att))],
         f"warmup_predictor.json multiplicative reseeded attenuation {max(att)}%->{min(att)}% of gap; additive survives at 0.30")
+    latency_max = max(c["lat_mean"] for c in rl["cells"])
+    chk("R-latency near-boundary causal value", f"{latency_max:.1f}",
+        f"rlatency.json max latency={latency_max:.3f}")
+
+    # --- sensitivity, adaptive timing, and proposed storage ---
+    robust_cells = sum(lat <= 3 and fpr <= 0.05 and miss == 0
+                       for lrow, frow, mrow in zip(sens["latency"], sens["fpr"], sens["miss"])
+                       for lat, fpr, miss in zip(lrow, frow, mrow))
+    chk("sensitivity robust-cell count", str(robust_cells),
+        f"sensitivity.json robust_cells={robust_cells}/36")
+    chk("adaptive boiling/probing causal values",
+        [str(int(adaptive["boiling_frog"]["detection_latency_after_cross"])),
+         f"{adaptive['probing_exploit']['harmed_frac']*100:.1f}"],
+        "adaptive.json")
+    chk("illustrative storage budget", [f"{p2['overhead']['total_bytes']:.0f}",
+                                         f"{p2['overhead']['area_pct_est']:.3f}"],
+        "p2.json proposed 16-bit storage; RTL/quantization unmeasured")
 
     # --- Lemma 1 traffic-weighting counterexample (R1 fix) ---
     chk("floor-traffic 15.6x per-window violation", f"{ft['counterexample']['violation_factor']:.1f}",
@@ -207,8 +234,14 @@ def main():
     chk("ChampSim roms tax 11.2%", "11.2", f"champsim.json roms clean_tax={cs['traces']['roms']['clean_tax']}")
 
     # --- long-attack regression (the counterexample) ---
-    chk("long-attack measured 11.9 vs two-term 2.52",
-        ["11.9", "2.52"], f"floor_longattack.json measured={fla['summary']['measured_pos_mean']:.2f} two_term={fla['summary']['old_two_term_loose']:.2f}")
+    persistent = fla["persistent"]
+    long_vals = [f"{min(r['measured_pos'] for r in persistent):.2f}",
+                 f"{max(r['measured_pos'] for r in persistent):.2f}",
+                 f"{fla['summary']['old_two_term_loose']:.2f}",
+                 f"{fla['summary']['tight_mean']:.2f}",
+                 f"{fla['summary']['corrected_loose_mean']:.1f}"]
+    chk("persistent attack measured range/two-term/tracker/loose",
+        long_vals, "floor_longattack.json")
 
     fails = []
     for label, literals, prov in checks:

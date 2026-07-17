@@ -25,7 +25,9 @@ point (the knee of the §4 latency/overhead Pareto). They map directly to
 * `tierb_H=0.8` gives an astronomically large ARL₀ at this gap (the competence
   signal sits ~17σ above K), i.e. effectively zero false bounces; the §4 chain
   only binds for short windows / subtle regressions (`p2_latency_pool.pdf`).
-* Total auditor storage ≈ **336 bytes** (`p2.json`): RP matrix + quantile sketch
-  (S_in), 16-weight forward model (S_res), 4 CUSUM register pairs, and the
-  dueling counters (reused). ~0.13% of a 256 KB SRAM, **no added critical-path
-  latency by construction** (analytical; RTL timing future work).
+* Illustrative auditor storage is **404 bytes** (`p2.json`) at 16 bits/scalar:
+  a dense 16×8 random projection plus 16 projected means and standard deviations
+  (S_in), an 18-coefficient forward model (S_res), four CUSUM register pairs, and
+  the reused dueling counters. This is 0.154% of a 256 KB SRAM. The estimate is a
+  floating-point-reference state count; quantization, RTL area/energy, and timing
+  remain unmeasured.

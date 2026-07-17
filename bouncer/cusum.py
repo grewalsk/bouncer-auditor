@@ -106,8 +106,8 @@ def siegmund_arl(K: float, H: float, mean_signal: float, sigma: float) -> float:
     delta = (K - mean_signal) / sigma
     b = H / sigma + 1.166
     if abs(delta) < 1e-9:
-        # limit of the formula as δ -> 0 is b^2/2
-        return b * b / 2.0
+        # Taylor expansion of exp(-2δb) gives the δ -> 0 limit b^2.
+        return b * b
     expo = -2.0 * delta * b
     # In-control (δ<0) the exponential term dominates and ARL0 is astronomically
     # large; clamp the exponent to avoid overflow while preserving monotonicity.
