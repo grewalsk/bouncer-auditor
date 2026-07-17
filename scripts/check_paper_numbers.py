@@ -147,7 +147,7 @@ def main():
 
     # --- Theory (literals DERIVED from JSON, not hard-coded; TMLR-R5) ---
     th_two = f"{th['regret']['bound'][-1]:.2f}"
-    th_tracker = f"{th['regret']['tight'][-1]:.2f}"
+    th_tracker = f"{th['regret']['tracker'][-1]:.2f}"
     th_meas = f"{th['regret']['measured'][-1]:.2f}"
     th_loose = f"{th['regret']['corrected_loose'][-1]:.2f}"
     chk(f"theory two-term/tracker/measured/loose {th_two}/{th_tracker}/{th_meas}/{th_loose}",
@@ -156,7 +156,7 @@ def main():
     chk("ARL 927 vs 938", ["927", "938"], "theory.json ARL sweep at H=5sigma")
     latt = th["regret"]["Latt"]
     latt_vals = [f"{latt[k][-1]:.2f}" for k in
-                 ("measured", "two_term", "tight", "corrected_loose")]
+                 ("measured", "two_term", "tracker", "corrected_loose")]
     chk("theory long-attack measured/two-term/tracker/loose",
         latt_vals, "theory.json L_att=960")
 
@@ -219,9 +219,15 @@ def main():
     chk("prop1 exact-DP no-alarm prob + envelope (CUSUM containment, R7)",
         [f"{dpn['p_noalarm_exact']:.4f}", f"{dpn['corrected_envelope']:.3f}"],
         f"prop1_selection.json exact_dp p={dpn['p_noalarm_exact']:.6f} mc={dpn['p_noalarm_mc']:.6f} env={dpn['corrected_envelope']:.4f}")
-    chk("prop1 exhaustive no-alarm path count (R7)",
-        [f"{ps['cusum_block']['exhaustive']['n_noalarm_paths']:,}".replace(",", "{,}")],
-        f"prop1_selection.json exhaustive n_noalarm_paths={ps['cusum_block']['exhaustive']['n_noalarm_paths']} holds={ps['cusum_block']['exhaustive']['holds']}")
+    ex = ps["cusum_block"]["exhaustive"]
+    chk("prop1 float/exact-rational exhaustive path counts",
+        [f"{ex['n_noalarm_paths']:,}".replace(",", "{,}"),
+         str(ex["n_boundary_paths"]),
+         f"{ex['exact_rational_noalarm_paths']:,}".replace(",", "{,}"),
+         str(ex["exact_rational_boundary_paths"])],
+        f"prop1_selection.json float={ex['n_noalarm_paths']}/{ex['n_boundary_paths']} "
+        f"exact={ex['exact_rational_noalarm_paths']}/{ex['exact_rational_boundary_paths']} "
+        f"holds={ex['holds'] and ex['exact_rational_holds']}")
 
     # --- E1 keystone (means are PROTECTED) ---
     chk("E1 whole-cache 33.6% vs 4.8%",
@@ -238,7 +244,7 @@ def main():
     long_vals = [f"{min(r['measured_pos'] for r in persistent):.2f}",
                  f"{max(r['measured_pos'] for r in persistent):.2f}",
                  f"{fla['summary']['old_two_term_loose']:.2f}",
-                 f"{fla['summary']['tight_mean']:.2f}",
+                 f"{fla['summary']['tracker_mean']:.2f}",
                  f"{fla['summary']['corrected_loose_mean']:.1f}"]
     chk("persistent attack measured range/two-term/tracker/loose",
         long_vals, "floor_longattack.json")

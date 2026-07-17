@@ -210,7 +210,7 @@ rerun the full simulator suite.
 | Re-trust is *measured*, not timed | recovers 15 windows after attack ends | P1 |
 | Competence detector vs input-OOD | TPR = 1.0 @ FPR ≤ 0.05 on broad **and** mimicry | P2 |
 | §3 chain (pool → σ → H → latency) | latency 0 → 3.4 windows, knee at n ≈ 8 | P2 |
-| Storage proposal | **404 bytes**, 0.154% of a 256 KB SRAM at 16 bits/scalar; RTL/quantization untested | P2 |
+| Storage proposal | **406 bytes**, 0.155% of a 256 KB SRAM at 16 bits/scalar; RTL/quantization untested | P2 |
 | Generality (3 controller classes) | floor holds ≤ 0.7% across all | P3 |
 | Attack-vs-drift triage | **100% 5-fold CV**, robust to dropping any feature | P3 |
 | **Mimicry survival (headline, N=50)** | full Bouncer **TPR 1.0 [0.93,1.0]** vs input-OOD **0.0 [0,0.07]** | P4 / CI |

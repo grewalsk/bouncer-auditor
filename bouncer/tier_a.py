@@ -118,7 +118,7 @@ class InnovationResidual:
 class TierAConfig:
     feature_dim: int = 16
     sample_rate_inv_k: int = 8     # update on 1/k decisions
-    s_in_H: float = 0.30           # energy-distance CUSUM threshold
+    s_in_H: float = 0.30           # projected-displacement CUSUM threshold
     s_in_k: float = 0.02
     s_dec_H: float = 0.30
     s_dec_k: float = 0.02

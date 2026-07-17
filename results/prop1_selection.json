@@ -71,7 +71,11 @@
       ],
       "n_noalarm_paths": 2068,
       "n_boundary_paths": 654,
-      "holds": true
+      "holds": true,
+      "exact_rational_noalarm_paths": 2094,
+      "exact_rational_boundary_paths": 682,
+      "exact_rational_holds": true,
+      "float_count_is_conservative": true
     },
     "equality_at_H": {
       "fired": false,

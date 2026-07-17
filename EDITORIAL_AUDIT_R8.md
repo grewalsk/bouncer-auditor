@@ -44,19 +44,19 @@ an inaccurate claim recorded in Section 9, not silent scientific deletion.
 
 | Section | Before | After | Net | Revision and meaning-preservation result |
 |---|---:|---:|---:|---|
-| Abstract/front matter | 715 | 367 | -348 | Rebuilt as a five-paragraph claim map: formal result, controller-side conditions, synthetic evidence, ChampSim boundaries, and implementation scope. All load-bearing results remain; 1-window and 336-byte claims were corrected. |
+| Abstract/front matter | 715 | 378 | -337 | Rebuilt as a five-paragraph claim map: formal result, controller-side conditions, synthetic evidence, ChampSim boundaries, and implementation scope. All load-bearing results remain; the sustained-evasion premise is now explicit. |
 | Introduction | 1,136 | 1,110 | -26 | Reduced repeated motivation and kept the exact contribution/scope boundary. |
 | Formal setting | 620 | 647 | +27 | Added audit-window reward units, representative sampling, and an explicit reseed-identifiability definition. |
 | Threat model | 414 | 317 | -97 | Separated measurement, secrecy, denial-of-service, and poisoning assumptions; removed duplicate prose. |
 | Architecture | 305 | 292 | -13 | Simplified the state-machine narrative and distinguished off-path epoch work from remaining per-access routing. |
-| Tier-B | 279 | 313 | +34 | Added the missing effective-independence premise and standardized the audit-window index `w`. |
+| Tier-B | 279 | 318 | +39 | Added effective-independence and cross-set-uncorrelatedness premises and standardized the audit-window index `w`. |
 | Tier-A | 201 | 224 | +23 | Replaced the nonexistent quantile/energy-distance and 16-weight descriptions with the released dense-projection and 18-coefficient implementation. |
-| Guarantees | 1,888 | 1,520 | -368 | Split assumptions, proof steps, and scope. Defined false-alarm episode cost. Preserved the three-term Lemma, exposure-only Azuma refinement, and two-part Proposition. Removed unsupported leak/tight-bound generalizations. |
+| Guarantees | 1,888 | 1,546 | -342 | Split assumptions, proof steps, and scope. Defined false-alarm episode cost and the epoch-equals-window premise for the exposure refinement. Preserved the three-term Lemma and two-part Proposition. Removed unsupported leak/tight-bound generalizations. |
 | Triage | 135 | 135 | 0 | No substantive edit required. |
 | Controller instantiation | 170 | 141 | -29 | Scoped each abstraction and removed repeated acronym explanations. |
 | Methodology | 503 | 281 | -222 | Reorganized around formal premises, controlled evidence, operating point, and real-simulator boundary. Defined `q0` and the IPC mapping before numeric use. |
-| Evaluation | 4,678 | 4,184 | -494 | Added a roadmap; split P1; scoped P3/P4; corrected all causal values; compressed revision-history narration; separated proved loose bound from descriptive tracker. |
-| Overhead | 155 | 122 | -33 | Recomputed released dimensions as 404 B and explicitly labeled quantization/RTL timing/energy unmeasured. |
+| Evaluation | 4,678 | 4,307 | -371 | Added a roadmap; split P1; scoped P3/P4; corrected all causal values; disclosed tested grids and floating/exact arithmetic; separated proved loose bound from descriptive tracker. |
+| Overhead | 155 | 137 | -18 | A follow-up independent recount includes the confidence reference and residual scale and distinguishes three two-sided from one one-sided CUSUM: about 406 B; quantization/RTL timing/energy remain unmeasured. |
 | Related work | 1,066 | 866 | -200 | Shortened comparison prose, corrected practical-versus-idealized D3M scope, and removed unsupported hardware finality. |
 | Discussion | 294 | 302 | +8 | Made representative sampling, set-locality, and reseed-identifiability jointly visible. |
 | Conclusion | 252 | 280 | +28 | Matched body scope; added representative sampling and unmeasured implementation qualifications. |
@@ -68,65 +68,65 @@ an inaccurate claim recorded in Section 9, not silent scientific deletion.
 
 | Term | Definition / first use | Aliases removed | Status |
 |---|---|---|---|
-| Learned controller `C` | Controller under audit; `paper/bouncer.tex:199-214` | “learned policy” retained only descriptively | Defined |
-| Fallback `pi0` | Vetted comparison policy; `paper/bouncer.tex:199-214` | baseline/floor distinguished from reward | Defined |
-| Audit window | Set of decisions normalized to one reward unit; `paper/bouncer.tex:205-214` | epoch is reserved for an assignment lifetime | Defined |
-| Competence gap `Delta_w` | Window reward of `C` minus fallback; `paper/bouncer.tex:211-219` | uppercase `W` index removed from Tier-B equation | Defined |
-| Set-locality | Decision and credited outcome share a dueling set; `paper/bouncer.tex:230-251` | localizability used only as ordinary description | Defined |
-| Representative sampling | Pool estimator targets decision-weighted deployed traffic; `paper/bouncer.tex:253-260` | none | Defined |
-| Reseed-identifiability | Sign of the measured contrast survives secret reassignment; `paper/bouncer.tex:262-287` | “statelessness requirement” removed | Defined |
+| Learned controller `C` | Controller under audit; `paper/bouncer.tex:200-214` | “learned policy” retained only descriptively | Defined |
+| Fallback `pi0` | Vetted comparison policy; `paper/bouncer.tex:200-207` | baseline/floor distinguished from reward | Defined |
+| Audit window | Set of decisions normalized to one reward unit; `paper/bouncer.tex:209-218` | epoch is reserved for an assignment lifetime | Defined |
+| Competence gap `Delta_w` | Window reward of `C` minus fallback; `paper/bouncer.tex:209-218` | uppercase `W` index removed from Tier-B equation | Defined |
+| Set-locality | Decision and credited outcome share a dueling set; `paper/bouncer.tex:231-253` | localizability used only as ordinary description | Defined |
+| Representative sampling | Pool estimator targets decision-weighted deployed traffic; `paper/bouncer.tex:255-261` | none | Defined |
+| Reseed-identifiability | Sign of the measured contrast survives secret reassignment; `paper/bouncer.tex:263-289` | “statelessness requirement” removed | Defined |
 | Leader-L / Leader-F / follower | Secret policy pools; `paper/bouncer.tex:375-388` | Leader-C normalized to Leader-L in prose | Defined |
-| CUSUM | One-sided cumulative-sum detector; `paper/bouncer.tex:407-420` | repeated long expansions removed | Defined |
+| CUSUM | One-sided cumulative-sum detector; `paper/bouncer.tex:409-425` | repeated long expansions removed | Defined |
 | Tier-A / Tier-B | Tripwire and competence-confirmation tiers; `paper/bouncer.tex:323-362` | hot/warm labels removed | Defined |
-| Drop episode | Maximal run with `Delta_w < tau`; `paper/bouncer.tex:454-457` | attack episode kept only where labels are empirical | Defined |
-| Fully-open window | Controller runs on all followers in TRUSTED/SUSPECT; `paper/bouncer.tex:454-457` | detection delay alone no longer substituted for it | Defined |
-| Audit exposure | Resource share still running `C` during a drop; `paper/bouncer.tex:482-490` | “floor leakage” avoided | Defined |
-| Coverage hole | Harm below finite per-domain resolution; `paper/bouncer.tex:652-674` | leakage kept as a distinct failure axis | Defined |
-| Descriptive tracker | Realized gap/occupancy plus approximate mean delay; `paper/bouncer.tex:1095-1111` | “tight bound/envelope” removed | Defined |
+| Drop episode | Maximal run with `Delta_w < tau`; `paper/bouncer.tex:456-459` | attack episode kept only where labels are empirical | Defined |
+| Fully-open window | Controller runs on all followers in TRUSTED/SUSPECT; `paper/bouncer.tex:456-459` | detection delay alone no longer substituted for it | Defined |
+| Audit exposure | Resource share still running `C` during a drop; `paper/bouncer.tex:484-492` | “floor leakage” avoided | Defined |
+| Coverage hole | Harm below finite per-domain resolution; `paper/bouncer.tex:656-686` | leakage kept as a distinct failure axis | Defined |
+| Descriptive tracker | Realized gap/occupancy plus approximate mean delay; `paper/bouncer.tex:1108-1121` | “tight bound/envelope” removed | Defined |
 
 ## 4. Notation ledger
 
 | Symbol | Meaning | Domain / units | First use | Status |
 |---|---|---|---|---|
-| `r_t^pi` | Per-decision bounded reward | `[0,r_max]` | `paper/bouncer.tex:199-214` | Consistent |
-| `bar r_w^pi` | Window-normalized mean reward | reward/window | `paper/bouncer.tex:205-214` | Consistent |
-| `Delta_w` | Competence advantage | reward/window | `paper/bouncer.tex:211-219` | Consistent |
-| `dhat_w` | Dueling estimate of `Delta_w` | reward/window | `paper/bouncer.tex:383-399` | Consistent |
-| `m_eff` | Effective independent samples per set/window | positive real count | `paper/bouncer.tex:390-399` | Added premise |
-| `n_L,n_F` | Leader pool sizes | positive integers | `paper/bouncer.tex:375-389` | Consistent |
-| `sigma_Delta` | Standard-deviation upper bound | reward/window | `paper/bouncer.tex:390-405` | Conditional on `m_eff` |
-| `tau` | Trust threshold | reward/window | `paper/bouncer.tex:211-219` | Consistent |
-| `gamma` | Detector design margin | positive reward margin | `paper/bouncer.tex:407-413` | Defined before use |
-| `K` | CUSUM reference, `tau+gamma/2` | reward/window | `paper/bouncer.tex:407-413` | Consistent |
-| `H` | CUSUM alarm threshold | cumulative reward units | `paper/bouncer.tex:407-413` | Consistent |
-| `D` | Expected fully-open windows per drop episode | windows/episode | `paper/bouncer.tex:454-457` | Not conflated with mean-delay approximation |
-| `alpha` | Marginal false-alarm probability/window | probability | `paper/bouncer.tex:459-460` | Consistent |
-| `c_sw` | Total transient regret per false-alarm episode | reward | `paper/bouncer.tex:462-463` | Corrected |
-| `phi_G,phi_P` | GATED/PROBING exposure fractions | fraction in [0,1] | `paper/bouncer.tex:482-490` | Consistent |
-| `T_att` | Windows within drop episodes | nonnegative integer | `paper/bouncer.tex:489-490` | Consistent |
-| `R` | Contested/audited domain | nonempty set of resource slices | `paper/bouncer.tex:581-585` | Consistent |
-| `beta` | Exchangeability bias bound | nonnegative reward | `paper/bouncer.tex:585-594` | Consistent |
-| `epsilon` | Mean degradation margin | positive reward | `paper/bouncer.tex:599-608` | Consistent |
-| `delta_R^min(B)` | Finest auditable per-domain gap at budget `B` | reward | `paper/bouncer.tex:652-670` | Conditional on effective independence |
-| `q0` | Normalized fallback reward rate | [0,1] | `paper/bouncer.tex:742-760` | Defined before P1 arithmetic |
+| `r_t^pi` | Per-decision bounded reward | `[0,r_max]` | `paper/bouncer.tex:200-214` | Consistent |
+| `bar r_w^pi` | Window-normalized mean reward | reward/window | `paper/bouncer.tex:209-214` | Consistent |
+| `Delta_w` | Competence advantage | reward/window | `paper/bouncer.tex:209-218` | Consistent |
+| `dhat_w` | Dueling estimate of `Delta_w` | reward/window | `paper/bouncer.tex:383-400` | Consistent |
+| `m_eff` | Effective independent samples per set/window | positive real count | `paper/bouncer.tex:391-400` | Added premise |
+| `n_L,n_F` | Leader pool sizes | positive integers | `paper/bouncer.tex:376-390` | Consistent |
+| `sigma_Delta` | Standard-deviation upper bound | reward/window | `paper/bouncer.tex:391-406` | Conditional on `m_eff` and cross-set uncorrelatedness |
+| `tau` | Trust threshold | reward/window | `paper/bouncer.tex:220-224` | Consistent |
+| `gamma` | Detector design margin | positive reward margin | `paper/bouncer.tex:409-415` | Defined before use |
+| `K` | CUSUM reference, `tau+gamma/2` | reward/window | `paper/bouncer.tex:409-415` | Consistent |
+| `H` | CUSUM alarm threshold | cumulative reward units | `paper/bouncer.tex:409-415` | Consistent |
+| `D` | Expected fully-open windows per drop episode | windows/episode | `paper/bouncer.tex:456-459` | Not conflated with mean-delay approximation |
+| `alpha` | Marginal false-alarm probability/window | probability | `paper/bouncer.tex:461-462` | Consistent |
+| `c_sw` | Total transient regret per false-alarm episode | reward | `paper/bouncer.tex:464-465` | Corrected |
+| `phi_G,phi_P` | GATED/PROBING exposure fractions | fraction in [0,1] | `paper/bouncer.tex:484-492` | Consistent |
+| `T_att` | Windows within drop episodes | nonnegative integer | `paper/bouncer.tex:467-492` | Consistent |
+| `R` | Contested/audited domain | nonempty set of resource slices | `paper/bouncer.tex:585-592` | Consistent |
+| `beta` | Exchangeability bias bound | nonnegative reward | `paper/bouncer.tex:590-599` | Consistent |
+| `epsilon` | Mean degradation margin | positive reward | `paper/bouncer.tex:603-613` | Consistent |
+| `delta_R^min(B)` | Finest auditable per-domain gap at budget `B` | reward | `paper/bouncer.tex:656-674` | Conditional on effective independence |
+| `q0` | Normalized fallback reward rate | [0,1] | `paper/bouncer.tex:750-756` | Defined before P1 arithmetic |
 
 ## 5. Claim-evidence ledger
 
 | Claim | Type | Verdict | Evidence and reproduced number | Scope / qualification |
 |---|---|---|---|---|
-| Three-term Lemma 1 | Mathematical | SUPPORTED | Statement/proof at `paper/bouncer.tex:501-538`; persistent regression at `experiments/exp_floor_longattack.py:71-116` gives measured 12.34–12.39, obsolete two-term 2.52, loose plug-in 123.6 | Expected regret under A1–A6; numerical plug-in additionally uses measured/assumed `D` |
-| Exposure high-probability term | Mathematical | SUPPORTED | `paper/bouncer.tex:540-557`; reproduced T=240 envelope 38.87 with empirical coverage 1.0 | Exposure only; adaptive traffic must be blind to current uniform secret draw |
-| P1 causal detection | Empirical | SUPPORTED | `paper/bouncer.tex:819-846`; `results/p1.json` gives 2 windows and 15-window re-trust | Seeded synthetic operating point |
-| Steady floor arithmetic | Methodological | SUPPORTED | `paper/bouncer.tex:827-838`; calculation 0.578846%, measured mean 0.580455%, worst 0.635338% | Synthetic reward-to-IPC map, not a universal predictor |
-| Descriptive “tight” form | Mathematical/empirical | SCOPED | `paper/bouncer.tex:1095-1111` and `results/floor_longattack.json`: tracker 12.29 under measured 12.34–12.39 | Explicitly not a bound or expectation guarantee |
-| Proposition 1 expectation form | Mathematical | SUPPORTED | `paper/bouncer.tex:581-618` | Unconditional expectation; representative/exchangeable within-domain sampling and intact secret |
-| Proposition 1 sustained form | Mathematical | SUPPORTED | `paper/bouncer.tex:599-631`; exact DP 0.0038147 and exhaustive 2,068 no-alarm paths | Requires conditional temporal independence and average mean below `tau-epsilon` |
-| E3 drift and R-latency | Empirical | SUPPORTED | `paper/bouncer.tex:1016-1058`; `results/rlatency.json`: sigma 0.015625/0.03125, drift 3.2/1.6, latency 2.0→13.875, TPR@10 1→0, TPR@20 1 | Eight tested gaps, 40 seeds/cell, 40-window horizon |
-| Warm-up generality mechanism | Empirical/interpretive | SUPPORTED AS SCOPED | `paper/bouncer.tex:984-1008`; corrected run: multiplicative 95%→5%, additive remains 0.300 ±0.0013 | Synthetic slice model only; no real predictor evidence |
-| Fixed set-heterogeneity robustness | Empirical | SUPPORTED AS SCOPED | `paper/bouncer.tex:963-981`: TPR 1, floor 0.59–0.64%, latency 2.0→2.7 | Does not test temporal dependence or remove `m_eff` premise |
-| Adaptive timing result | Empirical | SUPPORTED AS SCOPED | `paper/bouncer.tex:1061-1083`; 8-window boiling latency, 16.9% harmed windows | Constructed finite-horizon strategies, not a theorem |
-| Tier-A implementation and storage | Methodological | SUPPORTED AS PROPOSAL | `bouncer/tier_a.py:1-100`; `experiments/exp_p2_overhead_roc.py:118-149`; 404 B, 0.1541% | Floating-point reference; quantization, RTL area/energy/timing unmeasured |
-| ChampSim boundary evidence | Empirical | SUPPORTED AS SCOPED | `paper/bouncer.tex:1192-1343` and committed logs; arithmetic for lbm 7.9%, roms 11.2%, replacement dhat 0.005 vs 0.233 | Figures rebuild from committed logs; only lbm/single replacement scripts automated; not full validation |
+| Three-term Lemma 1 | Mathematical | SUPPORTED | Statement/proof at `paper/bouncer.tex:503-540`; persistent regression at `experiments/exp_floor_longattack.py:71-116` gives measured 12.34–12.39, obsolete two-term 2.52, loose plug-in 123.6 | Expected regret under A1–A6; numerical plug-in additionally uses measured/assumed `D` |
+| Exposure high-probability term | Mathematical | SUPPORTED | `paper/bouncer.tex:542-561`; reproduced T=240 envelope 38.87 with empirical coverage 1.0 | Exposure only; released refinement uses one fresh assignment epoch per audit window |
+| P1 causal detection | Empirical | SUPPORTED | `paper/bouncer.tex:826-858`; `results/p1.json` gives 2 windows and 15-window re-trust | Seeded synthetic operating point |
+| Steady floor arithmetic | Methodological | SUPPORTED | `paper/bouncer.tex:832-843`; calculation 0.578846%, measured mean 0.580455%, worst 0.635338% | Synthetic reward-to-IPC map at injected stress `u=0.92`, not a universal predictor |
+| Descriptive “tight” form | Mathematical/empirical | SCOPED | `paper/bouncer.tex:1108-1121` and `results/floor_longattack.json`: tracker 12.29 under measured 12.34–12.39 | Explicitly not a bound or expectation guarantee |
+| Proposition 1 expectation form | Mathematical | SUPPORTED | `paper/bouncer.tex:585-622` | Unconditional expectation; representative/exchangeable within-domain sampling and intact secret |
+| Proposition 1 sustained form | Mathematical | SUPPORTED | `paper/bouncer.tex:603-635`; exact DP 0.0038147; floating sweep 2,068/654 and exact-rational sweep 2,094/682 | Requires conditional temporal independence and average mean below `tau-epsilon`; float rounding is conservative in this sweep |
+| E3 drift and R-latency | Empirical | SUPPORTED | `paper/bouncer.tex:1024-1072`; `results/rlatency.json`: sigma 0.015625/0.03125, drift 3.2/1.6, latency 2.0→13.875, TPR@10 1→0, TPR@20 1 | Eight tested gaps, 40 episodes/cell, 140-window episodes |
+| Warm-up generality mechanism | Empirical/interpretive | SUPPORTED AS SCOPED | `paper/bouncer.tex:996-1023`; corrected run: multiplicative 95%→5%, additive remains 0.300 ±0.0015 | Synthetic slice model only; no real predictor evidence |
+| Fixed set-heterogeneity robustness | Empirical | SUPPORTED AS SCOPED | `paper/bouncer.tex:973-995`: TPR 1, floor 0.59–0.64%, latency 2.0→2.7 | Does not test temporal dependence or remove `m_eff` premise |
+| Adaptive timing result | Empirical | SUPPORTED AS SCOPED | `paper/bouncer.tex:1074-1097`; 8-window boiling latency, 16.9% harmed windows | Constructed finite-horizon strategies, not a theorem |
+| Tier-A implementation and storage | Methodological | SUPPORTED AS PROPOSAL | `bouncer/tier_a.py:1-101`; `experiments/exp_p2_overhead_roc.py:118-153`; 406 B, 0.1549% | Floating-point reference; quantization, RTL area/energy/timing unmeasured |
+| ChampSim boundary evidence | Empirical | SUPPORTED AS SCOPED | `paper/bouncer.tex:1209-1360` and committed logs; arithmetic for lbm 7.9%, roms 11.2%, replacement dhat 0.005 vs 0.233 | Figures rebuild from committed logs; only lbm/single replacement scripts automated; not full validation |
 | Some TMLR subcommunity would find the work interesting | Interpretive | SUPPORTED | Formal runtime assurance, sequential detection, adaptive-systems monitoring, and ML-for-systems boundary results | Criterion A asks interest, not novelty/significance |
 
 ## 6. Proof certificates
@@ -146,7 +146,7 @@ an inaccurate claim recorded in Section 9, not silent scientific deletion.
   and nonindependent windows. The proof needs only the stated marginals.
 - Edge case: a hot set can incur one full-window loss; this refutes a pointwise
   `phi_P` bound but not the expectation.
-- Certificate: valid as written at `paper/bouncer.tex:501-538`.
+- Certificate: valid as written at `paper/bouncer.tex:503-540`.
 
 ### Exposure refinement — PROOF VALID
 
@@ -159,7 +159,7 @@ an inaccurate claim recorded in Section 9, not silent scientific deletion.
   mean sum.
 - Edge case: gate-history-adaptive traffic is permitted; current-assignment-aware
   traffic is not.
-- Certificate: valid at `paper/bouncer.tex:540-557`.
+- Certificate: valid at `paper/bouncer.tex:542-561`.
 
 ### Proposition 1(i) — PROOF VALID
 
@@ -171,7 +171,7 @@ an inaccurate claim recorded in Section 9, not silent scientific deletion.
   the expected gap, and rearrange.
 - Edge case: conditioning on realized evasion selects favorable audit noise; the
   proposition explicitly excludes that inference.
-- Certificate: valid at `paper/bouncer.tex:581-618`.
+- Certificate: valid at `paper/bouncer.tex:585-622`.
 
 ### Proposition 1(ii) — PROOF VALID
 
@@ -184,16 +184,16 @@ an inaccurate claim recorded in Section 9, not silent scientific deletion.
   hence the block mean is at least `K-H/W>=tau`; Hoeffding bounds that event.
 - Edge cases: equality `C=H` correctly does not alarm; exact DP and exhaustive
   implementation-order sweep agree.
-- Certificate: valid at `paper/bouncer.tex:599-631`.
+- Certificate: valid at `paper/bouncer.tex:603-635`.
 
 ## 7. Whole-paper word and page delta
 
 - Baseline TeXcount: 14,059 tokens/words under the project’s `-inc -sum -brief`
   convention.
-- Revised TeXcount: 12,259.
-- Net: -1,800 (-12.8%).
+- Revised TeXcount after independent-review follow-up: 12,451.
+- Net: -1,608 (-11.4%).
 - Baseline PDF: 34 pages.
-- Revised PDF before final release rebuild: 33 pages.
+- Revised PDF: 33 pages.
 - No page limit is specified in the supplied prompt; the revision is shorter and
   retains TMLR formatting.
 
@@ -217,14 +217,20 @@ claim.
 ## 9. Information removed, moved, or corrected
 
 - No supported empirical result, formal assumption, caveat, negative result,
-  citation, or reproducibility detail was silently removed.
+  citation, or reproducibility detail remains silently removed. A follow-up review
+  identified two compressed P1 observations that this section had failed to
+  disclose: the final cumulative regret is -69.48 IPC-windows (clean upside
+  capture), and parking Leader-L on the fallback would remove exposure while
+  blinding measured re-trust. Both are restored in P1 and recorded here.
 - Repeated revision-history narration was moved into this audit; the tests and
   reproduced numbers remain in the paper.
 - Incorrect claims were not “preserved” as facts: same-window routing, stale
   warm-up state, `b^2/2` at zero drift, the 1-window/14-window values, the
   28/36 sensitivity count, the 8.6% harmed-window value, the “tight bound,” the
   336-byte code match, zero-latency language, and full ChampSim regeneration were
-  corrected and recorded here.
+  corrected and recorded here. The follow-up review additionally corrected the
+  abstract's missing degrading-strategy premise, the 89% mixed-conditioning
+  sentence, and the initially incomplete 404-byte state count.
 - The pinned pre-edit commit `973fa10` is the authoritative baseline for direct
   before/after inspection and the Git diff is the paragraph-level change record.
   Local render and baseline files under `tmp/` are intentionally not versioned.
@@ -266,3 +272,26 @@ claim.
 - The final LaTeX log has no undefined references, undefined citations, or
   overfull boxes. Remaining underfull-box and PDF-string warnings do not alter
   content or legibility.
+
+## 13. Independent-review follow-up
+
+An independent audit of commit `f535f76` changed Criterion C from Yes to a narrow
+No on local presentation and premise-visibility defects. The following follow-up
+addresses every required item without adding a new experiment:
+
+| Finding | Resolution |
+|---|---|
+| Abstract omitted the degrading-strategy premise | Restored conditional mean $\le\tau-\epsilon$ in the abstract. |
+| Figure 8 rendered no data | ROC threshold grids are degenerate point sets; distinct nested markers now render the coincident $(0,1)$ points and the $(0,0)$ mimicry failure. |
+| ChampSim 89% mixed clean and attacked windows | Replaced by clean-only 84.6% reseeded and 80.4% fixed-leader rates. |
+| 404 B omitted two reference scalars and miscounted CUSUM state | Recounted as about 406 B (0.1549%): adds $S_{dec}$ reference and $S_{res}$ scale; uses three two-sided plus one one-sided CUSUM. |
+| Hidden concentration/refinement premises | Added within-pool cross-set uncorrelatedness and epoch-equals-window for the Azuma refinement; added an exchangeability discharge row. |
+| Missing experiment detail | Added $u=0.92$ provenance, the eight-gap/40-episode/140-window R-latency grid, 0.59--0.64% heterogeneity range, and $\pm0.0015$ warm-up dispersion. |
+| Float-specific exhaustive counts | Artifact now computes and reports float 2,068/654 and exact-rational 2,094/682; containment holds in both and the float difference is conservative. |
+| Two removals absent from the audit | Restored and disclosed P1's -69.48 IPC-window upside observation and the Leader-L parking/observability trade-off. |
+| Figure/citation polish | Moved Figure 16's combined legend outside the data, removed nested outer panel labels, fixed literal percent signs, converted parenthetical citations to `\citep`, and fixed TeX quotation marks. |
+
+The earlier blanket visual-inspection statement was therefore too strong for
+commit `f535f76`: it missed the invisible ROC points and the Figure 16 legend
+collisions. The follow-up figures are regenerated and are re-inspected in the
+final release pass recorded above.

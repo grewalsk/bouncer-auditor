@@ -284,8 +284,8 @@
   ],
   "delta_drop": 0.0,
   "overhead": {
-    "total_bits": 3232,
-    "total_bytes": 404.0,
+    "total_bits": 3248,
+    "total_bytes": 406.0,
     "table": [
       [
         "Set-dueling counters",
@@ -300,19 +300,25 @@
         "adjacent SRAM"
       ],
       [
-        "S_res: forward model g",
-        288,
+        "S_dec: reference mean",
+        16,
+        "reuse controller confidence",
+        "adjacent"
+      ],
+      [
+        "S_res: model g + residual scale",
+        304,
         "18 MACs on 1/k dec",
         "adjacent"
       ],
       [
-        "CUSUM detectors (x4)",
-        128,
-        "2 add/cmp each",
+        "CUSUM state: 3 two-sided + 1 one-sided",
+        112,
+        "1--2 add/cmp each",
         "adjacent"
       ]
     ],
-    "area_pct_est": 0.1541,
+    "area_pct_est": 0.1549,
     "energy_not_measured": true,
     "access_path_timing_not_measured": true,
     "proposed_quantization_bits": 16

@@ -100,7 +100,7 @@ equally-safe responses.
 ## 8–12. Instantiation, overhead, evaluation, build plan, hyperparameters
 See `paper/bouncer.tex` §8–12 and `champsim_plugin/champsim_knobs.md`. Pinned
 operating point: `n_sets=2048, n_L=n_F=32, m=64, τ=0.05, K=0.10, H=0.8`. Targets
-Illustrative storage: 404 bytes at 16 bits per coefficient/statistic (0.154% of
+Illustrative storage: 406 bytes at 16 bits per coefficient/statistic (0.155% of
 a 256 KB SRAM). The released Python uses floating point; quantized fidelity,
 RTL area, energy, and timing are unmeasured. Estimator/gate work is organized
 off path, but the per-access tag lookup and output mux remain.

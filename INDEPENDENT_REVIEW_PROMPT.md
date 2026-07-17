@@ -92,7 +92,8 @@ Independently audit at least the following:
    range-`2r_max` Hoeffding exponent.
 9. **Tier-A/storage.** Match the paper to `bouncer/tier_a.py`: dense 16-by-8
    projection plus projected mean/std and an 18-coefficient forward model.
-   Recompute the illustrative 404-byte, 0.154% count. Check that quantization,
+   Recompute the illustrative 406-byte, 0.155% count, including the confidence
+   reference, residual scale, and three two-sided plus one one-sided CUSUM. Check that quantization,
    RTL area, energy, and timing remain explicitly unmeasured.
 10. **ChampSim scope.** Verify what can actually be freshly regenerated, what is
     plotted from committed logs, and whether the real replacement result is

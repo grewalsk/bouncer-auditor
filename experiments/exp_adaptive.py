@@ -91,7 +91,7 @@ def main():
     ax.plot(t, df.ipc_fallback, color=C.PALETTE["fallback"], lw=1.0, ls="--", label=r"$\pi_0$ floor")
     ax.plot(t, df.ipc_unguarded, color=C.PALETTE["unguarded"], lw=0.8, alpha=0.6, label="unguarded")
     ax.set_xlabel("window $t$"); ax.set_ylabel("IPC"); ax.legend(loc="lower left", fontsize=6.5)
-    ax.set_title(f"(b) floor held: steady violation {bf['floor_v']*100:.2f}\\%")
+    ax.set_title(f"(b) floor held: steady violation {bf['floor_v']*100:.2f}%")
     C.savefig(fig, "adaptive_boiling.pdf")
 
     # --- probing-exploit figure ---

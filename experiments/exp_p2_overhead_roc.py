@@ -126,17 +126,25 @@ def overhead_budget():
     # storage (bits)
     rp_matrix = d * p * 16           # proposed 16-bit dense projection weights
     s_in_ref = p * 2 * 16            # projected reference mean and std
+    s_dec_ref = 1 * 16               # validation confidence mean
     fwd_model = (d + 2) * 16         # feature + action + bias coefficients
-    cusum_regs = 4 * 2 * 16          # 4 detectors x {C+,C-} x 16-bit
+    s_res_scale = 1 * 16             # validation residual standard deviation
+    # Tier-A has three two-sided CUSUMs (six registers); Tier-B is one-sided
+    # (one register). Thresholds/configuration constants are not counted as state.
+    cusum_regs = (3 * 2 + 1) * 16
     dueling_ctr = (n_L + n_F) * 8    # saturating counters (reuse ATD/sampler)
     total_bits = rp_matrix + s_in_ref + fwd_model + cusum_regs + dueling_ctr
     table = [
         ("Set-dueling counters", dueling_ctr, "reuse existing", "sampler"),
         ("S_in: dense projection + mean/std", rp_matrix + s_in_ref,
          f"{d * p} MACs on 1/k dec", "adjacent SRAM"),
-        ("S_res: forward model g", fwd_model, f"{d + 2} MACs on 1/k dec", "adjacent"),
-        ("CUSUM detectors (x4)", cusum_regs, "2 add/cmp each", "adjacent"),
+        ("S_dec: reference mean", s_dec_ref, "reuse controller confidence", "adjacent"),
+        ("S_res: model g + residual scale", fwd_model + s_res_scale,
+         f"{d + 2} MACs on 1/k dec", "adjacent"),
+        ("CUSUM state: 3 two-sided + 1 one-sided", cusum_regs,
+         "1--2 add/cmp each", "adjacent"),
     ]
+    total_bits += s_dec_ref + s_res_scale
     return dict(total_bits=total_bits, total_bytes=total_bits / 8.0,
                 table=table,
                 area_pct_est=round(total_bits / 8.0 / (1024.0 * 256) * 100, 4),  # vs 256KB SRAM budget
@@ -166,10 +174,16 @@ def main():
     fpr_im, tpr_im = roc_curve(clean_in, mim_in, "two", ref=0.0, k=0.02, Hgrid=np.linspace(0.02, 1.5, 24))
 
     fig, ax = plt.subplots(figsize=(3.7, 3.0))
-    ax.plot(fpr_cb, tpr_cb, "-", color=C.PALETTE["bouncer"], lw=1.8, label="competence Δ̂ · broad")
-    ax.plot(fpr_cm, tpr_cm, "-", color=C.PALETTE["oracle"], lw=1.8, label="competence Δ̂ · mimicry")
-    ax.plot(fpr_ib, tpr_ib, "--", color=C.PALETTE["sin"], lw=1.5, label="input-OOD $S_{in}$ · broad")
-    ax.plot(fpr_im, tpr_im, ":", color=C.PALETTE["unguarded"], lw=1.7, label="input-OOD $S_{in}$ · mimicry")
+    # These threshold sweeps collapse to point operating characteristics. Use
+    # nested open markers so coincident points at (0, 1) remain visible in print.
+    ax.plot(fpr_cb, tpr_cb, linestyle="none", marker="o", ms=10, mfc="none", mew=1.5,
+            color=C.PALETTE["bouncer"], zorder=4, label="competence Δ̂ · broad")
+    ax.plot(fpr_cm, tpr_cm, linestyle="none", marker="s", ms=7.5, mfc="none", mew=1.4,
+            color=C.PALETTE["oracle"], zorder=5, label="competence Δ̂ · mimicry")
+    ax.plot(fpr_ib, tpr_ib, linestyle="none", marker="x", ms=5.5, mew=1.4,
+            color=C.PALETTE["sin"], zorder=6, label="input-OOD $S_{in}$ · broad")
+    ax.plot(fpr_im, tpr_im, linestyle="none", marker="D", ms=5.5, mfc="none", mew=1.3,
+            color=C.PALETTE["unguarded"], zorder=6, label="input-OOD $S_{in}$ · mimicry")
     ax.plot([0, 1], [0, 1], color="#bbb", lw=0.7)
     ax.set_xlabel("false-alarm rate (clean)"); ax.set_ylabel("true-positive rate")
     ax.set_xlim(-0.02, 1.02); ax.set_ylim(-0.02, 1.02)

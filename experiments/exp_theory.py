@@ -111,7 +111,7 @@ def regret_validation():
 
     # --- N_ep sweep at L_att=60 (loose/tracker/measured) ---
     Neps = [1, 2, 3, 4, 5, 6]
-    meas, bound, tight, corrected = [], [], [], []
+    meas, bound, tracker, corrected = [], [], [], []
     for Nep in Neps:
         df, env = _run_pulses(comp, Nep, sim_T, seed=Nep)
         pos = np.cumsum(np.maximum((df["ipc_fallback"] - df["ipc_bouncer"]).values, 0))
@@ -121,15 +121,15 @@ def regret_validation():
         # Descriptive tracker: realized occupancy and gap with approximate mean D.
         n_gated = int((df["state"] == "GATED").sum())
         n_prob = int((df["state"] == "PROBING").sum())
-        tight.append(float(env.ipc_slope * gap * (Nep * D + phi_G * n_gated + phi_P * n_prob)))
+        tracker.append(float(env.ipc_slope * gap * (Nep * D + phi_G * n_gated + phi_P * n_prob)))
         T_att = Nep * sim_T
         corrected.append(float(det_term + env.ipc_slope * phi_P * T_att * comp.r_max))  # corrected loose
         print(f"  N_ep={Nep}: measured={meas[-1]:.2f}  two_term={bound[-1]:.2f}  "
-              f"tight={tight[-1]:.2f}  corrected_loose={corrected[-1]:.2f}  D={D:.2f}")
+              f"tracker={tracker[-1]:.2f}  corrected_loose={corrected[-1]:.2f}  D={D:.2f}")
 
     # --- L_att sweep at fixed N_ep=3: the two-term bound BREAKS as attacks lengthen ---
     Latts = [60, 240, 960]
-    la_meas, la_two, la_tight, la_corr = [], [], [], []
+    la_meas, la_two, la_tracker, la_corr = [], [], [], []
     Nep_la = 3
     for La in Latts:
         df, env = _run_pulses(comp, Nep_la, La, seed=Nep_la)
@@ -137,24 +137,24 @@ def regret_validation():
         g = df[df["state"] == "GATED"]; p = df[df["state"] == "PROBING"]
         la_meas.append(pos)
         la_two.append(float(Nep_la * D * env.ipc_slope))                       # constant in L_att
-        la_tight.append(float(env.ipc_slope * gap * (Nep_la * D + phi_G * len(g) + phi_P * len(p))))
+        la_tracker.append(float(env.ipc_slope * gap * (Nep_la * D + phi_G * len(g) + phi_P * len(p))))
         la_corr.append(float(Nep_la * D * env.ipc_slope + env.ipc_slope * phi_P * Nep_la * La))
         print(f"  L_att={La}: measured={pos:.2f}  two_term={la_two[-1]:.2f}"
               f"{'  <-- two-term VIOLATED' if pos > la_two[-1] else ''}"
-              f"  tight={la_tight[-1]:.2f}  corrected_loose={la_corr[-1]:.2f}")
+              f"  tracker={la_tracker[-1]:.2f}  corrected_loose={la_corr[-1]:.2f}")
 
     # In these two sweeps the tracker happens to cover; the separate persistent-drop
     # regression demonstrates that it is not an envelope. The loose form must dominate.
     for i, Nep in enumerate(Neps):
-        assert meas[i] <= tight[i] + 1e-6 <= corrected[i] + 2e-6, f"N_ep={Nep} ordering"
+        assert meas[i] <= tracker[i] + 1e-6 <= corrected[i] + 2e-6, f"N_ep={Nep} ordering"
     for i, La in enumerate(Latts):
-        assert la_meas[i] <= la_tight[i] + 1e-6 <= la_corr[i] + 2e-6, f"L_att={La} ordering"
+        assert la_meas[i] <= la_tracker[i] + 1e-6 <= la_corr[i] + 2e-6, f"L_att={La} ordering"
     assert la_meas[-1] > la_two[-1], "two-term bound must be VIOLATED at L_att=960"
 
-    return dict(Nep=Neps, measured=meas, bound=bound, tight=tight, corrected_loose=corrected,
+    return dict(Nep=Neps, measured=meas, bound=bound, tracker=tracker, corrected_loose=corrected,
                 D=float(D), phi_G=float(phi_G), phi_P=float(phi_P),
                 Latt=dict(L_att=Latts, N_ep=Nep_la, measured=la_meas, two_term=la_two,
-                          tight=la_tight, corrected_loose=la_corr))
+                          tracker=la_tracker, corrected_loose=la_corr))
 
 
 def main():
@@ -183,9 +183,9 @@ def main():
     ax = axes[0]
     ax.plot(reg["Nep"], reg["bound"], "s--", color="k", label=r"two-term $N_{ep}D\,r_{max}$")
     ax.plot(reg["Nep"], reg["corrected_loose"], "D:", color=C.PALETTE["unguarded"], label="corrected loose (+ exposure)")
-    ax.plot(reg["Nep"], reg["tight"], "^-", color=C.PALETTE["accent"], label="descriptive tracker")
+    ax.plot(reg["Nep"], reg["tracker"], "^-", color=C.PALETTE["accent"], label="descriptive tracker")
     ax.plot(reg["Nep"], reg["measured"], "o-", color=C.PALETTE["bouncer"], label="measured positive regret")
-    ax.fill_between(reg["Nep"], reg["measured"], reg["tight"], color=C.PALETTE["grid"], alpha=0.6)
+    ax.fill_between(reg["Nep"], reg["measured"], reg["tracker"], color=C.PALETTE["grid"], alpha=0.6)
     ax.set_xlabel("genuine drop episodes $N_{ep}$ ($L_{att}{=}60$)")
     ax.set_ylabel("cumulative regret vs floor (IPC·win)")
     ax.set_title("(a) short attacks: loose form covers")
@@ -194,7 +194,7 @@ def main():
     la = reg["Latt"]
     ax.plot(la["L_att"], la["two_term"], "s--", color="k", label="two-term (const.)")
     ax.plot(la["L_att"], la["corrected_loose"], "D:", color=C.PALETTE["unguarded"], label="corrected loose")
-    ax.plot(la["L_att"], la["tight"], "^-", color=C.PALETTE["accent"], label="tracker")
+    ax.plot(la["L_att"], la["tracker"], "^-", color=C.PALETTE["accent"], label="tracker")
     ax.plot(la["L_att"], la["measured"], "o-", color=C.PALETTE["bouncer"], label="measured")
     ax.set_xlabel(f"attack length $L_{{att}}$ (windows, $N_{{ep}}{{=}}{la['N_ep']}$)")
     ax.set_ylabel("cumulative regret vs floor (IPC·win)")

@@ -74,7 +74,7 @@ def main():
     cols = [C.PALETTE["bouncer"], C.PALETTE["fallback"], C.PALETTE["unguarded"]]
     ax.bar(range(3), [v * 100 for v in vals], color=cols, width=0.62)
     ax.set_xticks(range(3)); ax.set_xticklabels(names, fontsize=7.5)
-    ax.set_ylabel("whole-cache LLC hit rate (\\%)")
+    ax.set_ylabel("whole-cache LLC hit rate (%)")
     ax.set_title("(b) Real competence gap exists")
     C.savefig(fig, "e1_replacement.pdf")
 

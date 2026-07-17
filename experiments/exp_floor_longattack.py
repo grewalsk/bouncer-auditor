@@ -58,11 +58,11 @@ def run(T, onset, seed):
     corrected_loose = env.ipc_slope * (fb.detection_term + PHI_P * T_att * 1.0) + fb.false_alarm_term
     # Descriptive plug-in tracker (realized gap and occupancy), in IPC units. It is
     # intentionally not asserted as an envelope because D is only a mean approximation.
-    tight = env.ipc_slope * gap * (fb.detection_term + PHI_G * n_gated + PHI_P * n_prob)
+    tracker = env.ipc_slope * gap * (fb.detection_term + PHI_G * n_gated + PHI_P * n_prob)
     return dict(T=T, onset=onset, seed=seed, D=float(D), gap=float(gap), T_att=int(T_att),
                 phi_G=float(PHI_G), phi_P=float(PHI_P),
                 old_loose=float(old_loose), corrected_loose=float(corrected_loose),
-                tight=float(tight), measured_pos=pos, measured_raw=raw,
+                tracker=float(tracker), measured_pos=pos, measured_raw=raw,
                 n_gated=n_gated, n_prob=n_prob,
                 per_gated=float((g.ipc_fallback - g.ipc_bouncer).mean()),
                 per_prob=float((p.ipc_fallback - p.ipc_bouncer).mean()))
@@ -78,16 +78,16 @@ def main():
     for r in cells:
         assert r["measured_pos"] > r["old_loose"], \
             f"two-term bound should be VIOLATED: measured {r['measured_pos']:.2f} <= old_loose {r['old_loose']:.2f}"
-        assert r["tight"] <= r["corrected_loose"] + 1e-6, \
-            f"loose must dominate plug-in tracker: tracker {r['tight']:.2f} > corrected_loose {r['corrected_loose']:.2f}"
+        assert r["tracker"] <= r["corrected_loose"] + 1e-6, \
+            f"loose must dominate plug-in tracker: tracker {r['tracker']:.2f} > corrected_loose {r['corrected_loose']:.2f}"
         assert r["measured_pos"] <= r["corrected_loose"] + 1e-6, \
             f"corrected loose envelope failed: measured {r['measured_pos']:.2f} > loose {r['corrected_loose']:.2f}"
     assert long["measured_raw"] > long["old_loose"], "T=2600 raw must exceed the two-term bound"
-    assert long["tight"] <= long["corrected_loose"] + 1e-6
+    assert long["tracker"] <= long["corrected_loose"] + 1e-6
     assert long["measured_pos"] <= long["corrected_loose"] + 1e-6
 
     for r in cells:
-        print(f"  seed {r['seed']}: measured={r['measured_pos']:.2f}  plug-in={r['tight']:.2f}  "
+        print(f"  seed {r['seed']}: measured={r['measured_pos']:.2f}  tracker={r['tracker']:.2f}  "
               f"corrected_loose={r['corrected_loose']:.2f}  old_two_term={r['old_loose']:.2f}  "
               f"(n_gated={r['n_gated']} @ {r['per_gated']:.5f}, n_prob={r['n_prob']})")
     print(f"  T=2600: measured_raw={long['measured_raw']:.2f}  old_two_term={long['old_loose']:.2f}")
@@ -104,7 +104,7 @@ def main():
         summary=dict(
             old_two_term_loose=cells[0]["old_loose"],
             measured_pos_mean=float(np.mean([r["measured_pos"] for r in cells])),
-            tight_mean=float(np.mean([r["tight"] for r in cells])),
+            tracker_mean=float(np.mean([r["tracker"] for r in cells])),
             corrected_loose_mean=float(np.mean([r["corrected_loose"] for r in cells])),
             blended_exposure_frac=float(np.mean(
                 [(r["phi_G"] * r["n_gated"] + r["phi_P"] * r["n_prob"]) / (r["n_gated"] + r["n_prob"])

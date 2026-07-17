@@ -113,9 +113,10 @@ def main():
     ax.annotate(r"$\tau$", xy=(C.STD["tau"], ax.get_ylim()[1] * 0.9), color=C.PALETTE["unguarded"], fontsize=8)
     ax.set_xlabel(r"true competence $\Delta$ (off-policy: $\Delta<\tau$)")
     ax.set_ylabel("detection latency (windows)")
-    ax.set_title("Latency tracks $H/(K{-}\\Delta)$; fixed-deadline TPR falls near $\\tau$")
-    ax.legend(loc="upper left", fontsize=6.5)
-    ax2.legend(loc="lower left", fontsize=6.5)
+    h1, l1 = ax.get_legend_handles_labels()
+    h2, l2 = ax2.get_legend_handles_labels()
+    ax.legend(h1 + h2, l1 + l2, loc="lower center", bbox_to_anchor=(0.5, 1.01),
+              ncol=2, fontsize=6.3, frameon=True, framealpha=0.95)
     C.savefig(fig, "rlatency.pdf")
 
     C.save_json("rlatency.json", dict(

@@ -30,7 +30,7 @@ def main():
         ax.set_ylabel("IPC")
         lo = min(vals) - (max(vals) - min(vals)) * 0.4; hi = max(vals) + (max(vals) - min(vals)) * 0.25
         ax.set_ylim(lo, hi)
-        ax.set_title(f"SPEC {tr['name']}  (clean tax {100*(1-tr['clean_tax']):.0f}\\%)", fontsize=8)
+        ax.set_title(f"SPEC {tr['name']}  (clean tax {100*(1-tr['clean_tax']):.0f}%)", fontsize=8)
     fig.suptitle("Real ChampSim L1D on SPEC: floor cap holds; the auditor is only as good as its reward", fontsize=8.0)
     C.savefig(fig, "champsim.pdf")
     print("  clean tax: " + ", ".join(f"{k}={v['clean_tax']}" for k, v in traces))

@@ -152,6 +152,29 @@ def cusum_block_tests(seed=3):
                 n_boundary_paths += int(touched_H)
                 if np.mean(path) < K - H / W_ex - 1e-12:
                     exhaustive_ok = False
+
+    # Repeat the same finite sweep with exact rational arithmetic. Binary
+    # floating point rounds a few paths just above H and therefore reports fewer
+    # no-alarm paths. The difference is conservative, but the artifact records
+    # both counts instead of presenting the implementation-specific count as
+    # mathematical combinatorics.
+    K_q, H_q = Fraction(1, 10), Fraction(4, 5)
+    support_q = (Fraction(-65, 100), Fraction(5, 100), Fraction(35, 100))
+    exact_noalarm_paths, exact_boundary_paths, exact_containment_ok = 0, 0, True
+    for C0_q in (Fraction(0), Fraction(3, 10), Fraction(3, 5)):
+        for path_q in itertools.product(support_q, repeat=W_ex):
+            C_q, alarm_q, touched_q = C0_q, False, False
+            for x_q in path_q:
+                C_q = max(Fraction(0), C_q + K_q - x_q)
+                if C_q > H_q:
+                    alarm_q = True
+                    break
+                touched_q = touched_q or C_q == H_q
+            if not alarm_q:
+                exact_noalarm_paths += 1
+                exact_boundary_paths += int(touched_q)
+                if sum(path_q, Fraction(0)) / W_ex < K_q - H_q / W_ex:
+                    exact_containment_ok = False
     # (c) equality-at-threshold through the real detector: eight x=0 steps of K=0.125 land
     # C exactly at H=1.0 (0.125 is dyadic, so float-exact); strict > must NOT alarm
     c_eq = LowerCusum(K=0.125, H=1.0)
@@ -197,7 +220,12 @@ def cusum_block_tests(seed=3):
                 containment_holds=bool(containment_ok),
                 exhaustive=dict(W=W_ex, support=list(support), C0=[0.0, 0.3, 0.6],
                                 n_noalarm_paths=int(n_noalarm_paths),
-                                n_boundary_paths=int(n_boundary_paths), holds=bool(exhaustive_ok)),
+                                n_boundary_paths=int(n_boundary_paths), holds=bool(exhaustive_ok),
+                                exact_rational_noalarm_paths=int(exact_noalarm_paths),
+                                exact_rational_boundary_paths=int(exact_boundary_paths),
+                                exact_rational_holds=bool(exact_containment_ok),
+                                float_count_is_conservative=bool(
+                                    n_noalarm_paths <= exact_noalarm_paths)),
                 equality_at_H=dict(fired=bool(eq_fired), C_equals_H=eq_at_H),
                 exact_dp=dict(eps=eps, r_max=r_max, support=[x_lo, x_hi], mean=tau - eps,
                               p_noalarm_exact=p_noalarm_exact, p_noalarm_mc=float(p_noalarm_mc),
@@ -246,6 +274,9 @@ def main():
           f"final C={cb['counterexample']['final_C']:.2f}  (OLD 'fires within 2H/gamma' claim FALSE)")
     print(f"    no-alarm => block-mean containment: random streams {cb['containment_holds']}; "
           f"exhaustive (3^8 paths x 3 C_0, {cb['exhaustive']['n_noalarm_paths']} no-alarm paths) {cb['exhaustive']['holds']}")
+    print(f"    exact-rational sweep: {cb['exhaustive']['exact_rational_noalarm_paths']} no-alarm, "
+          f"{cb['exhaustive']['exact_rational_boundary_paths']} boundary-touching paths; "
+          f"float count is conservative={cb['exhaustive']['float_count_is_conservative']}")
     print(f"    equality-at-H: fired={cb['equality_at_H']['fired']} with C==H exactly ({cb['equality_at_H']['C_equals_H']}) -- strict > semantics")
     print(f"    exact-DP P(no alarm)={cb['exact_dp']['p_noalarm_exact']:.6f}  MC on real detector={cb['exact_dp']['p_noalarm_mc']:.6f} "
           f"(sigma {cb['exact_dp']['mc_sigma']:.6f})  <= envelope {cb['exact_dp']['corrected_envelope']:.4f}")
@@ -316,6 +347,10 @@ def main():
     assert cb["exhaustive"]["n_noalarm_paths"] > 0, "exhaustive sweep must exercise no-alarm paths"
     assert cb["exhaustive"]["n_boundary_paths"] > 0, \
         "exhaustive sweep must include a no-alarm path touching C == H exactly (strict > boundary)"
+    assert cb["exhaustive"]["exact_rational_holds"], \
+        "exact-rational exhaustive containment must hold"
+    assert cb["exhaustive"]["float_count_is_conservative"], \
+        "floating-point enumeration must not add no-alarm paths relative to exact arithmetic"
     assert not cb["equality_at_H"]["fired"] and cb["equality_at_H"]["C_equals_H"], \
         "C == H exactly must NOT alarm (the implemented detector is strict >)"
     assert abs(dp["p_noalarm_mc"] - dp["p_noalarm_exact"]) <= 5 * dp["mc_sigma"] + 1e-9, \
