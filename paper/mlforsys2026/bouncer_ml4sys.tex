@@ -1,0 +1,294 @@
+\documentclass{article}
+
+\PassOptionsToPackage{numbers,sort&compress}{natbib}
+\usepackage[dblblindworkshop]{neurips_2026}
+\workshoptitle{Machine Learning for Systems}
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage{amsmath,amssymb,amsthm}
+\usepackage{booktabs}
+\usepackage{graphicx}
+\usepackage{microtype}
+\usepackage{xcolor}
+\usepackage{xspace}
+\usepackage[hidelinks]{hyperref}
+
+\graphicspath{{../../figures/}}
+\newcommand{\dhat}{\hat{\Delta}}
+\newcommand{\pizero}{\pi_0}
+\newcommand{\rmax}{r_{\max}}
+\newcommand{\system}{\textsc{Bouncer}\xspace}
+
+\title{Bouncer: Runtime Competence Auditing for Learned Systems Controllers}
+\author{Anonymous authors}
+
+\begin{document}
+\maketitle
+
+\begin{abstract}
+Learned systems controllers can outperform fixed heuristics on their training
+distribution yet silently regress after workload shift.  Input-distribution
+monitors cannot determine whether a controller's decisions still improve the
+system.  We present \system, a runtime trust gate that measures \emph{realized
+competence}: a secret sample of resource partitions runs the learned controller,
+another runs a vetted fallback, and a sequential detector gates the remaining
+partitions when the learned-minus-fallback reward falls below a threshold.
+This requires representative sampling, set-local reward, and policy contrast
+that survives assignment.  In a new trained-controller case study, an offline
+logistic cache-insertion policy validates at 96.3\% and initially beats LRU, but
+a label-semantic shift reverses its advantage while leaving its input histogram
+exactly unchanged.  Across 12 seeds, \system detects all reversals in one audit
+window, retains 87.5\% of the clean learned gain, and recovers 87.5\% of the loss
+toward LRU.  The study is controlled trace replay rather than full-system
+validation; separate ChampSim experiments expose where reward locality and
+stateful reassignment fail.  The artifact is deterministic and released.
+\end{abstract}
+
+\section{Why monitor competence?}
+
+Learned cache replacement, prefetching, memory scheduling, and branch prediction
+can beat hand-designed policies by adapting to workload structure
+\citep{liu2020imitationcache,bera2021pythia,jain2016hawkeye,shi2019glider}.
+Their deployed advantage is nevertheless conditional: a model trained on one
+program or phase may become worse than the heuristic it displaced.  Aggregate
+counters show that performance changed, but not whether the learned policy
+caused the change.  Feature-based out-of-distribution (OOD) detection is also
+indirect: a concept shift can preserve inputs while reversing which action is
+useful \citep{hendrycks2017baseline,gama2014survey}.
+
+Suppose a learned controller $C$ has a vetted fallback $\pizero$.  For audit
+window $w$, define the competence advantage
+\begin{equation}
+  \Delta_w = \bar r_w^C-\bar r_w^{\pizero}, \qquad r\in[0,\rmax],
+  \label{eq:competence}
+\end{equation}
+where reward is the system outcome attributable to a decision, such as a cache
+hit.  We want to deploy $C$ while $\Delta_w\ge\tau$ and otherwise fall back.  The
+counterfactual is unavailable: one physical decision cannot simultaneously run
+both policies.
+
+\begin{figure}[t]
+  \centering
+  \includegraphics[width=0.94\linewidth]{concept.pdf}
+  \caption{\system measures rather than predicts trust.  Secret Leader-C
+  partitions run the learned controller, Leader-F partitions run the fallback,
+  and followers obey the gate.  The mechanism is faithful only when the sampled
+  reward represents deployed traffic and remains attributable to the sampled
+  partition.}
+  \label{fig:concept}
+\end{figure}
+
+\section{Secret online A/B auditing}
+
+\paragraph{Estimator and gate.}
+\system repurposes hardware set dueling \citep{qureshi2007dip}.  It secretly
+assigns $n_C$ cache sets to $C$, $n_F$ to $\pizero$, and the rest to a follower
+pool (Figure~\ref{fig:concept}).  Unlike a global before/after comparison, both
+leaders observe the same concurrent workload.  Their measured difference
+\begin{equation}
+  \dhat_w=\bar r_{C,w}-\bar r_{F,w}
+\end{equation}
+feeds a lower CUSUM $S_w=\max\{0,S_{w-1}+K-\dhat_w\}$, which gates followers when
+$S_w>H$ \citep{page1954cusum}.  Hysteresis and measured probes support re-trust.
+Leaders remain policy-fixed so the gate continues to observe both arms.
+
+\paragraph{When does the comparison mean what it says?}
+Three conditions are load-bearing.  \textbf{Representative sampling} requires
+the leader estimate to target decision-weighted follower traffic.
+\textbf{Set-locality} requires a decision and credited reward to share the
+sampled partition; replacement hits satisfy this, whereas a prefetch initiated
+in one set can benefit another.  \textbf{Assignment-identifiability} requires the
+policy contrast to survive leader assignment.  A stateless controller satisfies
+this immediately.  A stateful controller instead needs persistent leaders,
+shadow-updated state, or a warm-up quarantine.  Secret reshuffling that repeatedly
+cold-starts one arm can erase the very contrast being measured.
+
+\paragraph{Expected floor.}
+The full paper proves the following compact accounting result.  Over $T$ windows,
+partition regret into (i) fully open harmful windows, (ii) the learned-policy
+exposure retained for auditing after gating, and (iii) false-alarm switching.
+If the expected number of fully open windows per harmful episode is at most $D$,
+each set is exposed after gating with marginal probability at most $\phi$, the
+false-alarm probability per window is at most $\alpha$, and each false-alarm
+episode costs at most $c_{\rm sw}$, then
+\begin{equation}
+ \mathbb E[R_T]\le N_{\rm ep}D\rmax+\phi T_{\rm harm}\rmax
+             +\alpha T c_{\rm sw}.                          \label{eq:floor}
+\end{equation}
+The result is expectation-level and conditional on the stated assumptions; it
+does not make a pointwise safety claim.  Appendix~\ref{app:theory} gives the
+proof skeleton and separates this accounting guarantee from the experiment.
+
+\section{One trained controller under concept shift}
+
+We add the smallest experiment missing from the original artifact: a controller
+whose deployment decisions come from fitted parameters.  A logistic model sees
+one of four program-counter (PC) classes and predicts whether a line will be
+reused within 64 future references.  Training and validation labels are computed
+from independent seeded traces containing recurring and one-shot lines.  The
+controller inserts predicted-reusable lines and bypasses predicted-streaming
+lines; ordinary true LRU is the fallback.  The model uses 20,000 training and
+5,000 validation examples and achieves 96.28\% validation accuracy.
+
+The deployment cache has 64 sets, eight ways, and 64 accesses per set-window.
+Across 60 windows, half the accesses target four recurring lines and half are
+one-shot streams.  At window 30, the relationship between PC and future reuse
+reverses.  Crucially, every PC still occurs exactly 25\% of the time in every
+set-window, so a PC-histogram OOD detector has total-variation distance zero and
+never alarms.  We use eight fixed secret leaders per arm and 12 independently
+seeded deployments.  Fixed leaders avoid a cache-state reset confound; this
+benign-shift study therefore does not test assignment secrecy against an adaptive
+attacker.
+
+\begin{figure}[t]
+  \centering
+  \includegraphics[width=\linewidth]{trained_controller.pdf}
+  \caption{Mean and 95\% normal confidence intervals over 12 seeds.  The trained
+  insertion controller beats LRU before the semantic shift and collapses after
+  it, although the PC histogram is unchanged.  The measured leader gap reverses
+  and gates followers one window later.}
+  \label{fig:trained}
+\end{figure}
+
+Figure~\ref{fig:trained} shows the causal reversal.  Before the shift, hit rates
+are 0.4375 for the learned policy, 0.3276 for LRU, and 0.4237 for \system; hence
+\system retains 87.5\% of the available learned gain.  After the shift, they are
+0, 0.3279, and 0.2869.  All 12 runs gate one audit window after the shift and
+recover 87.5\% of the learned-to-LRU loss; the remaining gap is exactly the
+fixed Leader-C exposure.  These values are steady summaries that exclude five
+cold-start/transition windows per regime.  They demonstrate the intended
+mechanism under a controlled concept shift, not generalization to production
+cache policies or an IPC benefit.
+
+\section{Broader evidence and boundaries}
+
+The trained case complements, rather than replaces, the artifact's broader
+tests.  In the seeded competence harness, $\dhat$ tracks known ground truth
+($R^2=0.997$); the released operating point gates in two windows, limits the
+worst attacked steady window to 0.64\% below the fallback, and detects 50/50
+input-mimicry attacks while an input-OOD monitor detects 0/50.  These are
+synthetic mechanism tests with explicit reward models.
+
+The ChampSim integration supplies a different kind of evidence: it runs the
+auditor inside a cycle-level simulator on SPEC traces, but exposes two important
+boundaries rather than a clean learned-controller win.  Prefetch reward is not
+set-local, and repeatedly reassigned replacement sets carry path-dependent cache
+state.  Fixed replacement leaders recover a measurable gap, while reseeding can
+attenuate it.  Thus the new trained trace replay establishes that fitted
+decisions can be gated; ChampSim establishes that the abstraction cannot be
+transferred blindly.  Neither experiment measures RTL area, energy, timing, or
+real silicon.  A 16-bit state-count proposal is 406 bytes, but it is not a
+synthesis result.
+
+\begin{table}[h]
+\caption{Each evaluation answers a different question; none substitutes for
+the others.}
+\label{tab:evidence}
+\centering
+\small
+\begin{tabular}{@{}p{0.20\linewidth}p{0.30\linewidth}p{0.42\linewidth}@{}}
+\toprule
+Evidence & Strength & Deliberate boundary \\
+\midrule
+Trained trace replay & Fitted controller; 12 seeded concept shifts & Controlled
+workload, hit rate rather than IPC \\
+Synthetic harness & Known competence, adaptive attacks, exact claim checks &
+Parametric reward model \\
+ChampSim/SPEC & Cycle-level execution and real cache state & Boundary study;
+committed logs, no clean learned-controller validation \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\paragraph{Relationship to prior work.}
+OOD and concept-drift detectors ask whether deployment resembles reference data
+\citep{hendrycks2017baseline,gama2014survey}; \system instead asks whether the
+controller still beats a fallback.  Safe-control architectures such as Simplex
+and learned-policy shields switch to a trusted controller when a model or safety
+condition fails \citep{sha2001simplicity,alshiekh2018shielding}.  Our narrower
+systems setting replaces a verified plant invariant with a randomized online
+performance comparison.  Set dueling supplies the comparison substrate, while
+sequential detection supplies the decision rule.  The contribution is their use
+as a competence certificate with explicit locality and state conditions, not a
+new cache-replacement learner.
+
+\section{Limitations and conclusion}
+
+The controlled controller is intentionally small, its PC/reuse reversal is
+constructed, and hit rate is not IPC.  Fixed leaders preserve state but provide
+less freshness than epoch reshuffling, and the trained experiment evaluates
+benign shift rather than a leader-aware adversary.  More broadly, \system cannot
+faithfully audit nonlocal rewards, unrepresentative traffic, sub-resolution harm,
+or controllers whose relative behavior is destroyed by assignment.  These are
+scope boundaries, not details hidden by the detector.
+
+Within that scope, the result is encouraging: online randomized comparison can
+retain most of a trained controller's upside while recovering most of a known
+fallback when competence reverses, even when a simple input monitor has no signal.
+The released experiment and claim checker make that workshop-sized result directly
+reproducible, while the longer artifact retains the proofs, adaptive attacks, and
+full sensitivity studies.
+
+\clearpage
+\bibliographystyle{plainnat}
+\bibliography{../references}
+
+\clearpage
+\appendix
+\section{Trained-controller protocol}
+\label{app:protocol}
+
+The released script \texttt{experiments/exp\_trained\_controller.py} owns the
+entire trained experiment.  The model is a regularized binary logistic regressor
+with an intercept and four one-hot PC features.  Full-batch gradient descent runs
+for 800 steps at learning rate 0.4 with $10^{-3}$ weight decay.  Training traces
+contain equal numbers of recurring and one-shot references; 3\% of examples cross
+the usual PC/reuse association.  A label is one exactly when the same tag appears
+within the next 64 references.  Training and validation traces use different
+seeds.
+
+Deployment uses a set-associative trace replay with true LRU ordering.  On a
+miss, the learned policy inserts the line if its fitted reuse probability is at
+least 0.5 and otherwise bypasses it.  The fallback always inserts.  Hot and
+stream references are balanced, as are all four PC classes.  The PC classes
+associated with hot and stream references exchange at window 30.  Hot tags
+rotate each window, preventing the learned controller from coasting indefinitely
+on state established before the shift.
+
+Each evaluation seed draws one fixed secret partition: eight learned leaders,
+eight fallback leaders, and 48 followers.  The one-sided lower CUSUM uses
+$K=0.02$ and $H=0.12$.  Evidence from window $w$ changes follower routing at
+window $w+1$, so the reported one-window delay is causal rather than same-window
+routing.  The experiment asserts detection in every seed, an unchanged PC
+histogram, a positive pre-shift learned advantage, a negative post-shift
+advantage, and minimum retained/recovered utility.  The JSON and all manuscript
+numbers are checked by \texttt{scripts/check\_ml4sys\_numbers.py}.
+
+\section{Expected-floor proof skeleton}
+\label{app:theory}
+
+Let $R_T=\sum_{w=1}^T(\bar r_w^{\pizero}-\bar r_w^{\system})$.  Split windows
+into three disjoint charges.  During fully open harmful windows, bounded reward
+charges at most $\rmax$ per window; the assumed expected count is
+$N_{\rm ep}D$.  After gating, each harmful decision remains on $C$ only through
+the audit exposure.  Conditional on traffic and history, secret uniform sampling
+gives every set marginal exposure at most $\phi$, so linearity of expectation
+charges at most $\phi T_{\rm harm}\rmax$ without requiring independent traffic.
+Finally, the expected number of false alarms is at most $\alpha T$, and each
+episode costs at most $c_{\rm sw}$.  Summing the three charges yields
+Equation~\ref{eq:floor}; windows where $C$ outperforms $\pizero$ contribute
+nonpositive regret and may be discarded.  The premise $D$ includes both initial
+detection and any false re-trust.  Only the exposure term has a separate
+high-probability refinement in the full artifact.
+
+\section{Reproduction and claim ownership}
+
+Run \texttt{./run\_ml4sys.sh}.  It regenerates the training/evaluation JSON and
+figure, checks 13 headline values, compiles this PDF, and verifies that the main
+text ends by page four and references begin on page five.  All random generators
+are explicitly seeded.  The trained experiment requires NumPy and Matplotlib;
+the repository pins the complete environment.  The full synthetic and ChampSim
+artifact remains available through \texttt{./run\_all.sh}; the latter rebuilds
+figures from committed simulator logs and does not rerun every SPEC simulation.
+
+\end{document}

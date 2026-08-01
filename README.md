@@ -27,6 +27,15 @@ auditor inside a cycle-level simulator on SPEC CPU2017 traces.
 🔬 **Reproduce:** [`./run_all.sh`](run_all.sh) (machine-dependent: ~5 min on a fast machine, ~20 min in a constrained sandbox) ·
 🧩 **Real simulator:** [`champsim_plugin/`](champsim_plugin)
 
+**NeurIPS MLForSys 2026 workshop package.**  The branch
+`workshop/mlforsys-2026` adds one offline-trained cache-insertion controller, a
+controlled concept-shift evaluation, and a four-page NeurIPS-format extended
+abstract at [`paper/mlforsys2026/bouncer_ml4sys.pdf`](paper/mlforsys2026/bouncer_ml4sys.pdf).
+Run [`./run_ml4sys.sh`](run_ml4sys.sh) to regenerate the trained result, audit its
+13 headline values, compile the paper, and verify the four-page main-text limit.
+The experiment's narrower scope and venue-status notes are recorded in
+[`MLFORSYS2026.md`](MLFORSYS2026.md).
+
 ---
 
 ## 1. The problem: learned controllers have no floor
