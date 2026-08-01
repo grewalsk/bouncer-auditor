@@ -1,11 +1,12 @@
 # NeurIPS 2026 MLForSys workshop package
 
 This branch contains a focused, non-archival workshop version of Bouncer.  The
-2026 OpenReview venue is live for December 11, 2026, but as of August 1 its
-linked workshop site still displays the 2025 call.  The package therefore uses
-the official NeurIPS 2026 style while conservatively enforcing the last
-published MLForSys rule: at most four main-text pages, with references and an
-optional appendix outside the limit.
+live [2026 call](https://mlforsystems.org/call_for_papers.html) sets an August
+29, 2026 submission deadline and a strict limit of
+four main-text pages, excluding references and an optional appendix.  It allows
+non-anonymous submissions and requires the NeurIPS 2026 format.  This package
+vendors the June 23 official style file from the linked NeurIPS archive (SHA-256
+`c3fc2894e83d2517ca18b66741d6c595986d97957dc08ec08bb2125a7ec4555a`).
 
 ## One-command rebuild
 
@@ -35,12 +36,18 @@ ChampSim evaluation remains a separate real-simulator boundary study.
 Headline results across 12 deployment seeds:
 
 - validation accuracy: 96.28%;
+- validation majority baseline: 50.82%; validation log loss: 0.1603;
 - pre-shift hit rate: learned 0.4375, LRU 0.3276, Bouncer 0.4237;
 - post-shift hit rate: learned 0, LRU 0.3279, Bouncer 0.2869;
 - 12/12 detections, one-window mean delay;
 - PC-histogram total variation 0 and zero input-OOD alarms;
 - 87.5% of the clean learned gain retained and 87.5% of the shifted fallback
   loss recovered.
+
+Intervals in the JSON and Figure 2 are two-sided 95% Student-t intervals over
+the 12 deployment seeds (11 degrees of freedom).  Seeds randomize leader
+placement and within-window access order inside one controlled workload family;
+they are not twelve independent application traces.
 
 The authoritative outputs are `results/trained_controller.json`,
 `figures/trained_controller.pdf`, and

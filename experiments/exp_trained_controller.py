@@ -31,6 +31,11 @@ from bouncer.cusum import LowerCusum
 from experiments import common as C
 
 
+# Two-sided 95% Student-t critical value for the 12 deployment seeds (11 d.f.).
+# The experiment intentionally avoids a SciPy dependency for this single value.
+T95_DF11 = 2.200985
+
+
 @dataclass(frozen=True)
 class Config:
     n_sets: int = 64
@@ -249,7 +254,9 @@ def simulate(cfg: Config, model: LogisticInsertionPolicy, seed: int,
 def ci95(values: Iterable[float]) -> Tuple[float, float, float]:
     a = np.asarray(list(values), dtype=float)
     mean = float(np.mean(a))
-    half = float(1.96 * np.std(a, ddof=1) / np.sqrt(a.size)) if a.size > 1 else 0.0
+    if a.size != 12:
+        raise ValueError("The released Student-t interval is defined for 12 seeds")
+    half = float(T95_DF11 * np.std(a, ddof=1) / np.sqrt(a.size))
     return mean, mean - half, mean + half
 
 
@@ -266,6 +273,8 @@ def main() -> None:
     model.fit(pc_tr, y_tr)
     p_va = np.asarray(model.probability(pc_va))
     val_accuracy = float(np.mean((p_va >= 0.5) == y_va))
+    val_positive_rate = float(np.mean(y_va))
+    val_majority_accuracy = max(val_positive_rate, 1.0 - val_positive_rate)
     val_logloss = float(-np.mean(y_va * np.log(p_va + 1e-12) +
                                      (1 - y_va) * np.log(1 - p_va + 1e-12)))
 
@@ -298,7 +307,14 @@ def main() -> None:
                "insertion controller; controlled concept shift, not ChampSim or end-to-end IPC."),
         config=cfg.__dict__,
         model=dict(weights=model.w.tolist(), reuse_probability_by_pc=[model.probability(i) for i in range(4)],
-                   validation_accuracy=val_accuracy, validation_logloss=val_logloss),
+                   validation_accuracy=val_accuracy,
+                   validation_majority_accuracy=val_majority_accuracy,
+                   validation_positive_rate=val_positive_rate,
+                   validation_logloss=val_logloss),
+        uncertainty=dict(method="two-sided 95% Student-t intervals across deployment seeds",
+                         deployment_seeds=cfg.evaluation_seeds,
+                         degrees_of_freedom=cfg.evaluation_seeds - 1,
+                         critical_value=T95_DF11),
         pc_marginal=dict(reference=[0.25] * 4, max_total_variation=max_pc_tv,
                          input_ood_alarms=0,
                          note="Each set-window has exactly 25% of every PC before and after shift."),
@@ -315,10 +331,11 @@ def main() -> None:
             clean_learned_gain_retained=dict(zip(("mean", "ci95_low", "ci95_high"), ci95(clean_retained))),
             shifted_fallback_loss_recovered=dict(zip(("mean", "ci95_low", "ci95_high"), ci95(loss_recovered)))),
         curves={mode: dict(mean=np.mean(a, axis=0).tolist(),
-                           ci95_half=(1.96 * np.std(a, axis=0, ddof=1) / np.sqrt(a.shape[0])).tolist())
+                           ci95_half=(T95_DF11 * np.std(a, axis=0, ddof=1) /
+                                      np.sqrt(a.shape[0])).tolist())
                 for mode, a in curves.items()},
         delta_hat=dict(mean=np.mean(b_dhat, axis=0).tolist(),
-                       ci95_half=(1.96 * np.std(b_dhat, axis=0, ddof=1) /
+                       ci95_half=(T95_DF11 * np.std(b_dhat, axis=0, ddof=1) /
                                   np.sqrt(b_dhat.shape[0])).tolist()))
     C.save_json("trained_controller.json", summary)
 
@@ -330,7 +347,8 @@ def main() -> None:
                   bouncer=(C.PALETTE["bouncer"], "Bouncer"))
     for mode in ("learned", "fallback", "bouncer"):
         mean = np.mean(curves[mode], axis=0)
-        half = 1.96 * np.std(curves[mode], axis=0, ddof=1) / np.sqrt(cfg.evaluation_seeds)
+        half = (T95_DF11 * np.std(curves[mode], axis=0, ddof=1) /
+                np.sqrt(cfg.evaluation_seeds))
         color, label = styles[mode]
         ax.plot(x, mean, color=color, label=label)
         ax.fill_between(x, mean - half, mean + half, color=color, alpha=0.12, linewidth=0)
@@ -344,7 +362,8 @@ def main() -> None:
 
     ax = axes[1]
     dmean = np.mean(b_dhat, axis=0)
-    dhalf = 1.96 * np.std(b_dhat, axis=0, ddof=1) / np.sqrt(cfg.evaluation_seeds)
+    dhalf = (T95_DF11 * np.std(b_dhat, axis=0, ddof=1) /
+             np.sqrt(cfg.evaluation_seeds))
     ax.plot(x, dmean, color=C.PALETTE["accent"], label=r"measured $\hat\Delta$")
     ax.fill_between(x, dmean - dhalf, dmean + dhalf,
                     color=C.PALETTE["accent"], alpha=0.14, linewidth=0)
@@ -358,7 +377,8 @@ def main() -> None:
     ax.legend(loc="center right", fontsize=7)
     C.savefig(fig, "trained_controller.pdf")
 
-    print(f"  validation accuracy={val_accuracy:.4f}, log loss={val_logloss:.4f}")
+    print(f"  validation accuracy={val_accuracy:.4f}, majority={val_majority_accuracy:.4f}, "
+          f"log loss={val_logloss:.4f}")
     print(f"  pre hit rate learned/fallback/Bouncer: "
           f"{np.mean(pre_seed['learned']):.4f}/{np.mean(pre_seed['fallback']):.4f}/{np.mean(pre_seed['bouncer']):.4f}")
     print(f"  post hit rate learned/fallback/Bouncer: "

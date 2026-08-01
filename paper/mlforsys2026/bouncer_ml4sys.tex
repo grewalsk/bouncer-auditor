@@ -49,13 +49,16 @@ stateful reassignment fail.  The artifact is deterministic and released.
 
 Learned cache replacement, prefetching, memory scheduling, and branch prediction
 can beat hand-designed policies by adapting to workload structure
-\citep{liu2020imitationcache,bera2021pythia,jain2016hawkeye,shi2019glider}.
-Their deployed advantage is nevertheless conditional: a model trained on one
-program or phase may become worse than the heuristic it displaced.  Aggregate
-counters show that performance changed, but not whether the learned policy
-caused the change.  Feature-based out-of-distribution (OOD) detection is also
-indirect: a concept shift can preserve inputs while reversing which action is
-useful \citep{hendrycks2017baseline,gama2014survey}.
+\citep{ipek2008selfoptimizing,liu2020imitationcache,bera2021pythia,jain2016hawkeye,shi2019glider}.
+Frameworks such as Park and SmartChoices make learned decisions available across
+systems domains \citep{mao2019park,carstens2023smartchoices}.  Their deployed
+advantage is nevertheless conditional: a model trained on one program or phase
+may become worse than the heuristic it displaced.  This is a systems-specific
+instance of post-deployment model debt \citep{sculley2015technicaldebt}.
+Aggregate counters show that performance changed, but not whether the learned
+policy caused the change.  Feature-based out-of-distribution (OOD) detection is
+also indirect: a concept shift can preserve inputs while reversing which action
+is useful \citep{hendrycks2017baseline,gama2014survey,rabanser2019failing}.
 
 Suppose a learned controller $C$ has a vetted fallback $\pizero$.  For audit
 window $w$, define the competence advantage
@@ -67,6 +70,19 @@ where reward is the system outcome attributable to a decision, such as a cache
 hit.  We want to deploy $C$ while $\Delta_w\ge\tau$ and otherwise fall back.  The
 counterfactual is unavailable: one physical decision cannot simultaneously run
 both policies.
+
+This makes competence auditing an online causal-comparison problem, not a
+confidence-calibration problem.  A useful mechanism must compare policies under
+concurrent traffic, spend only a small fraction of the resource on measurement,
+and state when its sample ceases to represent deployed decisions.
+\begin{minipage}{\linewidth}
+\paragraph{Contributions.} We (i) define realized competence and an estimator
+with explicit validity conditions; (ii) decompose expected regret into detection,
+audit exposure, and switching; and (iii) evaluate one trained controller with
+independent training/validation traces, 12 seeded deployments, Student-$t$
+intervals, and checked numbers.  ChampSim remains boundary evidence, not a
+performance win.
+\end{minipage}
 
 \begin{figure}[t]
   \centering
@@ -93,6 +109,14 @@ feeds a lower CUSUM $S_w=\max\{0,S_{w-1}+K-\dhat_w\}$, which gates followers whe
 $S_w>H$ \citep{page1954cusum}.  Hysteresis and measured probes support re-trust.
 Leaders remain policy-fixed so the gate continues to observe both arms.
 
+Let $\Delta_w^{\rm fol}$ be the decision-weighted advantage that the follower
+pool would experience.  The estimator obeys
+$\mathbb E[\dhat_w\mid\mathcal H_{w-1}]=\Delta_w^{\rm fol}+b_w$, where $b_w$ is
+the aggregate sampling/attribution/state bias.  Sequential detection controls
+random fluctuation around this expectation; it cannot repair $b_w$.  This
+distinction is why the conditions below are premises rather than implementation
+details.
+
 \paragraph{When does the comparison mean what it says?}
 Three conditions are load-bearing.  \textbf{Representative sampling} requires
 the leader estimate to target decision-weighted follower traffic.
@@ -103,6 +127,9 @@ policy contrast to survive leader assignment.  A stateless controller satisfies
 this immediately.  A stateful controller instead needs persistent leaders,
 shadow-updated state, or a warm-up quarantine.  Secret reshuffling that repeatedly
 cold-starts one arm can erase the very contrast being measured.
+Diagnostically, these conditions target $b_w=b_{\rm sample}+b_{\rm local}+
+b_{\rm state}\approx0$; the decomposition does not claim that its components are
+observable online.
 
 \paragraph{Expected floor.}
 The full paper proves the following compact accounting result.  Over $T$ windows,
@@ -117,8 +144,11 @@ episode costs at most $c_{\rm sw}$, then
              +\alpha T c_{\rm sw}.                          \label{eq:floor}
 \end{equation}
 The result is expectation-level and conditional on the stated assumptions; it
-does not make a pointwise safety claim.  Appendix~\ref{app:theory} gives the
-proof skeleton and separates this accounting guarantee from the experiment.
+does not make a pointwise safety claim.  In particular, $D$ is an assumed or
+separately calibrated detection bound, not a latency predicted by the inequality,
+and biased leaders invalidate its interpretation.  Appendix~\ref{app:theory}
+gives the proof skeleton and separates this accounting guarantee from the
+experiment.
 
 \section{One trained controller under concept shift}
 
@@ -129,7 +159,9 @@ reused within 64 future references.  Training and validation labels are computed
 from independent seeded traces containing recurring and one-shot lines.  The
 controller inserts predicted-reusable lines and bypasses predicted-streaming
 lines; ordinary true LRU is the fallback.  The model uses 20,000 training and
-5,000 validation examples and achieves 96.28\% validation accuracy.
+5,000 validation examples.  Its fitted reuse probabilities for PCs 0--3 are
+$(0.937,0.942,0.046,0.041)$; on the independent validation trace it achieves
+96.28\% accuracy versus a 50.82\% majority baseline and 0.1603 log loss.
 
 The deployment cache has 64 sets, eight ways, and 64 accesses per set-window.
 Across 60 windows, half the accesses target four recurring lines and half are
@@ -137,14 +169,16 @@ one-shot streams.  At window 30, the relationship between PC and future reuse
 reverses.  Crucially, every PC still occurs exactly 25\% of the time in every
 set-window, so a PC-histogram OOD detector has total-variation distance zero and
 never alarms.  We use eight fixed secret leaders per arm and 12 independently
-seeded deployments.  Fixed leaders avoid a cache-state reset confound; this
-benign-shift study therefore does not test assignment secrecy against an adaptive
-attacker.
+seeded deployments.  $K=0.02$ and $H=0.12$ are fixed across all runs.  Seeds
+randomize leader placement and within-window access order inside one workload
+family; they are not 12 distinct application traces.  Fixed leaders avoid a
+cache-state reset confound; this benign-shift study therefore does not test
+assignment secrecy against an adaptive attacker.
 
 \begin{figure}[t]
   \centering
   \includegraphics[width=\linewidth]{trained_controller.pdf}
-  \caption{Mean and 95\% normal confidence intervals over 12 seeds.  The trained
+  \caption{Mean and two-sided 95\% Student-$t$ intervals over 12 seeds.  The trained
   insertion controller beats LRU before the semantic shift and collapses after
   it, although the PC histogram is unchanged.  The measured leader gap reverses
   and gates followers one window later.}
@@ -155,11 +189,12 @@ Figure~\ref{fig:trained} shows the causal reversal.  Before the shift, hit rates
 are 0.4375 for the learned policy, 0.3276 for LRU, and 0.4237 for \system; hence
 \system retains 87.5\% of the available learned gain.  After the shift, they are
 0, 0.3279, and 0.2869.  All 12 runs gate one audit window after the shift and
-recover 87.5\% of the learned-to-LRU loss; the remaining gap is exactly the
-fixed Leader-C exposure.  These values are steady summaries that exclude five
-cold-start/transition windows per regime.  They demonstrate the intended
-mechanism under a controlled concept shift, not generalization to production
-cache policies or an IPC benefit.
+recover 87.5\% of the learned-to-LRU loss; the two-sided 95\% $t$ intervals are
+[87.39,87.57]\% retained and [87.46,87.51]\% recovered.  The remaining gap is
+exactly the fixed Leader-C exposure.  These values are seed-level steady
+summaries that exclude five cold-start/transition windows per regime.  They
+demonstrate the intended mechanism under a controlled concept shift, not
+generalization to production cache policies or an IPC benefit.
 
 \section{Broader evidence and boundaries}
 
@@ -181,44 +216,52 @@ transferred blindly.  Neither experiment measures RTL area, energy, timing, or
 real silicon.  A 16-bit state-count proposal is 406 bytes, but it is not a
 synthesis result.
 
-\begin{table}[h]
-\caption{Each evaluation answers a different question; none substitutes for
-the others.}
-\label{tab:evidence}
-\centering
-\small
-\begin{tabular}{@{}p{0.20\linewidth}p{0.30\linewidth}p{0.42\linewidth}@{}}
-\toprule
-Evidence & Strength & Deliberate boundary \\
-\midrule
-Trained trace replay & Fitted controller; 12 seeded concept shifts & Controlled
-workload, hit rate rather than IPC \\
-Synthetic harness & Known competence, adaptive attacks, exact claim checks &
-Parametric reward model \\
-ChampSim/SPEC & Cycle-level execution and real cache state & Boundary study;
-committed logs, no clean learned-controller validation \\
-\bottomrule
-\end{tabular}
-\end{table}
+\section{Related work and positioning}
 
-\paragraph{Relationship to prior work.}
-OOD and concept-drift detectors ask whether deployment resembles reference data
-\citep{hendrycks2017baseline,gama2014survey}; \system instead asks whether the
-controller still beats a fallback.  Safe-control architectures such as Simplex
-and learned-policy shields switch to a trusted controller when a model or safety
-condition fails \citep{sha2001simplicity,alshiekh2018shielding}.  Our narrower
-systems setting replaces a verified plant invariant with a randomized online
-performance comparison.  Set dueling supplies the comparison substrate, while
-sequential detection supplies the decision rule.  The contribution is their use
-as a competence certificate with explicit locality and state conditions, not a
-new cache-replacement learner.
+\paragraph{Learned systems controllers.}
+RL memory scheduling and prefetching, oracle-imitation and neural cache
+replacement, and learned-systems platforms show that fitted decisions can beat
+heuristics \citep{ipek2008selfoptimizing,bera2021pythia,jain2016hawkeye,
+shi2019glider,liu2020imitationcache,mao2019park,carstens2023smartchoices}.  These
+works ask how to construct or deploy a better policy.  \system starts after a
+candidate and fallback exist and asks whether the candidate remains better on
+current traffic: it is an assurance wrapper, not another learned policy.
+
+\paragraph{Shift and performance monitoring.}
+OOD, two-sample, and concept-drift methods detect changes in inputs or
+representations \citep{hendrycks2017baseline,gama2014survey,rabanser2019failing}.
+Recent label-free methods more directly target harmful shift or model
+deterioration using learned error proxies or model disagreement
+\citep{amoukou2024sequential,d3m2024}.  These are valuable when task labels or
+outcomes are delayed.  A systems controller often produces an immediate local
+reward, so \system instead estimates a concurrent learned-minus-fallback reward.
+The methods are complementary: input monitoring can trigger more auditing, but
+an input alarm alone does not identify which policy caused a performance change.
+
+\paragraph{Fallback assurance and online policy selection.}
+Simplex, shielding, and constrained or safe policy-improvement methods retain a
+trusted controller or baseline when a state invariant or offline confidence
+condition is threatened \citep{sha2001simplicity,alshiekh2018shielding,
+thomas2015hcpi,laroche2019spibb}.  \system does not provide their constraint-safety
+guarantee; it supplies a conditional expected performance-regret bound from an
+online randomized comparison.  Architecturally, DIP and its shared-cache
+extensions already dedicate sampled sets to competing cache policies
+\citep{qureshi2007dip,jaleel2008tadip,jaleel2010rrip}.  We reuse that substrate
+but make the estimand, detector, and failure conditions explicit for a
+learned-versus-fallback competence decision.  CUSUM supplies the sequential rule
+\citep{page1954cusum,lorden1971reacting}; it addresses delay/false-alarm tradeoffs,
+not biased or nonlocal reward.
 
 \section{Limitations and conclusion}
 
 The controlled controller is intentionally small, its PC/reuse reversal is
-constructed, and hit rate is not IPC.  Fixed leaders preserve state but provide
-less freshness than epoch reshuffling, and the trained experiment evaluates
-benign shift rather than a leader-aware adversary.  More broadly, \system cannot
+constructed, and hit rate is not IPC.  The 12 seeds vary randomization within a
+single workload family, so their narrow intervals quantify repeatability, not
+application diversity.  The clean gap is far from the detector reference; zero
+false alarms here therefore does not calibrate a production false-alarm rate or
+show threshold robustness.  Fixed leaders preserve state but provide less
+freshness than epoch reshuffling, and the trained experiment evaluates benign
+shift rather than a leader-aware adversary.  More broadly, \system cannot
 faithfully audit nonlocal rewards, unrepresentative traffic, sub-resolution harm,
 or controllers whose relative behavior is destroyed by assignment.  These are
 scope boundaries, not details hidden by the detector.
@@ -228,7 +271,8 @@ retain most of a trained controller's upside while recovering most of a known
 fallback when competence reverses, even when a simple input monitor has no signal.
 The released experiment and claim checker make that workshop-sized result directly
 reproducible, while the longer artifact retains the proofs, adaptive attacks, and
-full sensitivity studies.
+full sensitivity studies.  Next steps are multiple learned policies and application
+traces with separately calibrated thresholds.
 
 \clearpage
 \bibliographystyle{plainnat}
@@ -263,7 +307,28 @@ window $w+1$, so the reported one-window delay is causal rather than same-window
 routing.  The experiment asserts detection in every seed, an unchanged PC
 histogram, a positive pre-shift learned advantage, a negative post-shift
 advantage, and minimum retained/recovered utility.  The JSON and all manuscript
-numbers are checked by \texttt{scripts/check\_ml4sys\_numbers.py}.
+numbers are checked by \texttt{scripts/check\_ml4sys\_numbers.py}.  Seed-level
+intervals use the two-sided Student-$t$ critical value 2.200985 for 11 degrees of
+freedom; no application-level population inference is intended.
+
+\begin{table}[h]
+\caption{Evidence map.  Each evaluation answers a different question.}
+\label{tab:evidence}
+\centering
+\small
+\begin{tabular}{@{}p{0.20\linewidth}p{0.30\linewidth}p{0.42\linewidth}@{}}
+\toprule
+Evidence & Strength & Deliberate boundary \\
+\midrule
+Trained trace replay & Fitted controller; 12 seeded concept shifts & Controlled
+workload, hit rate rather than IPC \\
+Synthetic harness & Known competence, adaptive attacks, exact claim checks &
+Parametric reward model \\
+ChampSim/SPEC & Cycle-level execution and real cache state & Boundary study;
+committed logs, no clean learned-controller validation \\
+\bottomrule
+\end{tabular}
+\end{table}
 
 \section{Expected-floor proof skeleton}
 \label{app:theory}
@@ -285,7 +350,7 @@ high-probability refinement in the full artifact.
 \section{Reproduction and claim ownership}
 
 Run \texttt{./run\_ml4sys.sh}.  It regenerates the training/evaluation JSON and
-figure, checks 13 headline values, compiles this PDF, and verifies that the main
+figure, checks 15 headline values, compiles this PDF, and verifies that the main
 text ends by page four and references begin on page five.  All random generators
 are explicitly seeded.  The trained experiment requires NumPy and Matplotlib;
 the repository pins the complete environment.  The full synthetic and ChampSim

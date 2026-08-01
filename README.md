@@ -32,7 +32,7 @@ auditor inside a cycle-level simulator on SPEC CPU2017 traces.
 controlled concept-shift evaluation, and a four-page NeurIPS-format extended
 abstract at [`paper/mlforsys2026/bouncer_ml4sys.pdf`](paper/mlforsys2026/bouncer_ml4sys.pdf).
 Run [`./run_ml4sys.sh`](run_ml4sys.sh) to regenerate the trained result, audit its
-13 headline values, compile the paper, and verify the four-page main-text limit.
+15 headline values, compile the paper, and verify the four-page main-text limit.
 The experiment's narrower scope and venue-status notes are recorded in
 [`MLFORSYS2026.md`](MLFORSYS2026.md).
 

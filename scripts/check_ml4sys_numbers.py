@@ -20,6 +20,13 @@ def close(actual: float, expected: float, tol: float, label: str) -> None:
 def main() -> None:
     d = json.loads(RESULT.read_text())
     close(d["model"]["validation_accuracy"], 0.9628, 5e-5, "validation accuracy")
+    close(d["model"]["validation_majority_accuracy"], 0.5082, 5e-5,
+          "validation majority baseline")
+    close(d["model"]["validation_logloss"], 0.1603, 5e-5,
+          "validation log loss")
+    if (d["uncertainty"]["method"] !=
+            "two-sided 95% Student-t intervals across deployment seeds"):
+        raise AssertionError(f"uncertainty method drifted: {d['uncertainty']}")
     close(d["pc_marginal"]["max_total_variation"], 0.0, 1e-12, "PC-marginal TV")
     if d["pc_marginal"]["input_ood_alarms"] != 0:
         raise AssertionError("input-OOD baseline must remain silent")
@@ -42,7 +49,7 @@ def main() -> None:
           "clean learned gain retained")
     close(d["utility"]["shifted_fallback_loss_recovered"]["mean"], 0.875, 5e-4,
           "shifted fallback loss recovered")
-    print("\n  13/13 MLForSys claim checks passed.")
+    print("\n  15/15 MLForSys claim checks passed.")
 
 
 if __name__ == "__main__":
