@@ -1,9 +1,16 @@
 {
-  "note": "Second audit condition = reseed-identifiability of the policy contrast, NOT statelessness. Multiplicative warmup (contrast scales with the warmup state) is not reseed-identifiable: the secret per-epoch reseed keeps every slice cold, so reseeded Delta-hat attenuates while fixed leaders recover the true gap (the ChampSim replacement reseed-confound, isolated here in a synthetic predictor-like slice model; real PC-indexed predictor rewards remain untested). Additive warmup (state-invariant contrast = GAP) IS reseed-identifiable: reseeded Delta-hat survives at ~GAP even though each reward is stateful -- a direct counterexample to 'statelessness is necessary'. Statelessness is one sufficient special case.",
+  "note": "Second audit condition = reseed-identifiability of the policy contrast, NOT statelessness. Multiplicative warmup (contrast scales with the warmup state) is not reseed-identifiable: the secret per-epoch reseed keeps every slice cold, so reseeded Delta-hat attenuates while fixed leaders recover the true gap (the ChampSim replacement reseed-confound, isolated here in a synthetic predictor-like slice model; real PC-indexed predictor rewards remain untested). Shadow-updating both policy counters restores the multiplicative contrast under rotation in this controlled counter-state model. Additive warmup (state-invariant contrast = GAP) IS reseed-identifiable: reseeded Delta-hat survives at ~GAP even though each reward is stateful -- a direct counterexample to 'statelessness is necessary'. Statelessness is one sufficient special case.",
   "mu_C": 0.8,
   "mu_F": 0.5,
   "gap": 0.30000000000000004,
   "b_additive": 0.2,
+  "shadow_metadata_model": {
+    "counters_per_set": 2,
+    "modeled_counter_bits": 8,
+    "bytes_for_64_sets": 128,
+    "bytes_for_2048_sets": 4096,
+    "scope": "Warm-up counters are shadow-updatable from every set-window; this is not duplicate cache contents or an RTL synthesis result."
+  },
   "multiplicative_cells": [
     {
       "kind": "mult",
@@ -13,6 +20,8 @@
       "reseeded_std": 0.0016038918129410056,
       "fixed_dhat": 0.2996177673339844,
       "fixed_std": 0.0009106669154752563,
+      "shadow_reseeded_dhat": 0.29913482666015623,
+      "shadow_reseeded_std": 0.001887947593561894,
       "attenuation": 0.9517741873878003
     },
     {
@@ -23,6 +32,8 @@
       "reseeded_std": 0.0013401985948877902,
       "fixed_dhat": 0.3000335693359375,
       "fixed_std": 0.0009657306764547144,
+      "shadow_reseeded_dhat": 0.299652099609375,
+      "shadow_reseeded_std": 0.001165176159705352,
       "attenuation": 0.63517647357982
     },
     {
@@ -33,6 +44,8 @@
       "reseeded_std": 0.0009313662862819356,
       "fixed_dhat": 0.29985809326171875,
       "fixed_std": 0.0010933036830220366,
+      "shadow_reseeded_dhat": 0.2991004943847656,
+      "shadow_reseeded_std": 0.0007584519975490462,
       "attenuation": 0.39784749255782004
     },
     {
@@ -43,6 +56,8 @@
       "reseeded_std": 0.0007750472621040336,
       "fixed_dhat": 0.3000175476074219,
       "fixed_std": 0.0011202463704939498,
+      "shadow_reseeded_dhat": 0.29984283447265625,
+      "shadow_reseeded_std": 0.0008992269924094236,
       "attenuation": 0.18395301585041157
     },
     {
@@ -53,6 +68,8 @@
       "reseeded_std": 0.0006164810439580464,
       "fixed_dhat": 0.30048828125000004,
       "fixed_std": 0.0005880160023772747,
+      "shadow_reseeded_dhat": 0.29910583496093746,
+      "shadow_reseeded_std": 0.0008354963850020764,
       "attenuation": 0.09675871384465387
     },
     {
@@ -63,6 +80,8 @@
       "reseeded_std": 0.0003861257601659796,
       "fixed_dhat": 0.29876861572265623,
       "fixed_std": 0.0007086832836369554,
+      "shadow_reseeded_dhat": 0.2976493835449219,
+      "shadow_reseeded_std": 0.0013805129572375054,
       "attenuation": 0.05004060244840425
     }
   ],
@@ -75,6 +94,8 @@
       "reseeded_std": 0.0014533345265450286,
       "fixed_dhat": 0.2996177673339844,
       "fixed_std": 0.0009106669154752563,
+      "shadow_reseeded_dhat": 0.29913482666015623,
+      "shadow_reseeded_std": 0.001887947593561894,
       "attenuation": 1.0015240059585195
     },
     {
@@ -85,6 +106,8 @@
       "reseeded_std": 0.0012149858100355797,
       "fixed_dhat": 0.29996490478515625,
       "fixed_std": 0.0008668805322250503,
+      "shadow_reseeded_dhat": 0.29933013916015627,
+      "shadow_reseeded_std": 0.00127839059978897,
       "attenuation": 1.0002390823307985
     },
     {
@@ -95,6 +118,8 @@
       "reseeded_std": 0.0013049806147628503,
       "fixed_dhat": 0.2998970031738281,
       "fixed_std": 0.0009400476048903988,
+      "shadow_reseeded_dhat": 0.29909744262695315,
+      "shadow_reseeded_std": 0.0007534346754801655,
       "attenuation": 0.9987394455595667
     },
     {
@@ -105,6 +130,8 @@
       "reseeded_std": 0.0013151849724927854,
       "fixed_dhat": 0.30005950927734376,
       "fixed_std": 0.0011981045318227234,
+      "shadow_reseeded_dhat": 0.29908294677734376,
+      "shadow_reseeded_std": 0.0008463540138342303,
       "attenuation": 0.9982748274827483
     },
     {
@@ -115,6 +142,8 @@
       "reseeded_std": 0.0012951952255039942,
       "fixed_dhat": 0.30010833740234377,
       "fixed_std": 0.0011311600817330335,
+      "shadow_reseeded_dhat": 0.2991188049316406,
+      "shadow_reseeded_std": 0.001972087215036821,
       "attenuation": 0.9980971532293736
     },
     {
@@ -125,12 +154,15 @@
       "reseeded_std": 0.001303206892836509,
       "fixed_dhat": 0.2997154235839844,
       "fixed_std": 0.0010658149472864082,
+      "shadow_reseeded_dhat": 0.30025482177734375,
+      "shadow_reseeded_std": 0.001243529523005018,
       "attenuation": 0.9993508857227951
     }
   ],
   "invariants": {
     "mult_fixed_recovers_gap_at_slow_warmup": true,
     "mult_reseeded_attenuates_at_slow_warmup": true,
+    "mult_shadow_recovers_gap_at_slow_warmup": true,
     "additive_reseeded_survives_at_slow_warmup": true
   }
 }

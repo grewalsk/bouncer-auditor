@@ -29,11 +29,13 @@ auditor inside a cycle-level simulator on SPEC CPU2017 traces.
 
 **NeurIPS MLForSys 2026 workshop package.**  The branch
 `workshop/mlforsys-2026` adds one offline-trained cache-insertion controller, a
-controlled concept-shift evaluation, and a four-page NeurIPS-format extended
+graded concept-shift characterization, and a four-page NeurIPS-format extended
 abstract at [`paper/mlforsys2026/bouncer_ml4sys.pdf`](paper/mlforsys2026/bouncer_ml4sys.pdf).
-Run [`./run_ml4sys.sh`](run_ml4sys.sh) to regenerate the trained result, audit its
-15 headline values, compile the paper, and verify the four-page main-text limit.
-The experiment's narrower scope and venue-status notes are recorded in
+Run [`./run_ml4sys.sh`](run_ml4sys.sh) to regenerate the trained-controller,
+graded-shift, traffic-stratified, adaptive-allocation, and shadow-state studies,
+audit 61 claims and boundary values, compile the paper, and verify the
+four-page main-text limit. The experiment's narrower scope, negative controls,
+and venue-status notes are recorded in
 [`MLFORSYS2026.md`](MLFORSYS2026.md).
 
 ---

@@ -5,7 +5,7 @@ claim from this picture and its title alone.
 """
 import matplotlib.pyplot as plt
 from matplotlib.patches import FancyBboxPatch, FancyArrowPatch, Rectangle
-import common as C
+from experiments import workshop_common as C
 
 
 def box(ax, x, y, w, h, text, fc, ec="#333", fs=8.5, tc="#111", bold=False):
@@ -26,7 +26,7 @@ def main():
     ax.set_xlim(0, 12); ax.set_ylim(0, 6); ax.axis("off")
     BL, FL, FOL = C.PALETTE["bouncer"], C.PALETTE["fallback"], "#eef3f9"
 
-    # --- the shared resource: a strip of sets, secretly tagged L / F / follower ---
+    # --- the shared resource: a strip of sets tagged L / F / follower ---
     tags = ["·", "L", "·", "F", "·", "·", "L", "·", "·", "F", "·", "·"]
     x0, y0, s = 0.5, 4.2, 0.62
     for i, tg in enumerate(tags):
@@ -36,8 +36,10 @@ def main():
         ax.text(x0 + i * s + s * 0.44, y0 + 0.4, tg, ha="center", va="center", fontsize=8, color=tc, fontweight="bold")
     ax.text(x0 + len(tags) * s / 2, y0 + 1.15, "shared resource: cache sets / buckets",
             ha="center", fontsize=8, color="#444")
-    # secret + reseed annotation
-    ax.text(x0 + len(tags) * s / 2, y0 - 0.42, "secret assignment, reseeded each epoch  (attacker cannot see L vs F)",
+    # Assignment policy: fixed for the trained stateful-cache experiment; secrecy
+    # and reseeding require a separate adaptive-workload threat model.
+    ax.text(x0 + len(tags) * s / 2, y0 - 0.42,
+            "fixed here to preserve state; hiding/reseeding is optional adversarial hardening",
             ha="center", fontsize=7.3, color=C.PALETTE["accent"], style="italic")
     arrow(ax, (x0 + len(tags) * s - 0.2, y0 + 1.0), (x0 + 0.2, y0 + 1.0),
           color=C.PALETTE["accent"], rad=-0.35, lw=0.9, ls=(0, (3, 2)))
@@ -69,8 +71,8 @@ def main():
             ha="center", fontsize=7.2, color="#444")
     arrow(ax, (9.0, 0.57), (7.7, 0.57), color="#999", lw=0.8)
 
-    fig.suptitle("Secretly A/B-duel the learned controller against its safe fallback on a hidden slice of\n"
-                 "the hardware; trust it only while it is measurably winning.",
+    fig.suptitle("Concurrently duel a learned controller against its fallback on sampled partitions;\n"
+                 "trust it only while it is measurably winning.",
                  fontsize=9.3, y=1.02)
     C.savefig(fig, "concept.pdf")
     print("  wrote figures/concept.pdf")

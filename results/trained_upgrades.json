@@ -1,0 +1,308 @@
+{
+  "scope": "Controlled synthetic-family mechanism upgrades; traffic skew, adaptive leader budgeting, and counter-like state are isolated rather than presented as application-level validation.",
+  "traffic_stratified_sampling": {
+    "zipf_exponent": 1.2,
+    "shifted_set_fraction": 0.125,
+    "shifted_request_weight": 0.6824492567859912,
+    "leader_budget_per_arm": 8,
+    "hot_stratum_sets": 8,
+    "hot_leaders_per_arm": 1,
+    "uniform": {
+      "weighted_follower_gap_post_mean": -0.19271266933113707,
+      "leader_estimate_post_mean": 0.054509089543269225,
+      "estimator_bias_post_mean": 0.2472217588744063,
+      "estimator_rmse_post": 0.2558943615375982,
+      "sign_agreement_seeds": 3,
+      "harmful_seeds": 12,
+      "detected_harmful_seeds": 4,
+      "post_deployed_hit_rate_mean": 0.2051290942741649,
+      "shifted_request_weight_within_followers_mean": 0.6888378143090864,
+      "gate_windows": [
+        NaN,
+        NaN,
+        NaN,
+        NaN,
+        22.0,
+        NaN,
+        NaN,
+        27.0,
+        NaN,
+        27.0,
+        NaN,
+        26.0
+      ]
+    },
+    "traffic_stratified": {
+      "weighted_follower_gap_post_mean": -0.17794155733730002,
+      "leader_estimate_post_mean": -0.17857259762043823,
+      "estimator_bias_post_mean": -0.0006310402831381651,
+      "estimator_rmse_post": 0.003046333964780503,
+      "sign_agreement_seeds": 12,
+      "harmful_seeds": 12,
+      "detected_harmful_seeds": 12,
+      "post_deployed_hit_rate_mean": 0.30692410729560354,
+      "shifted_request_weight_within_followers_mean": 0.6570274548705316,
+      "gate_windows": [
+        21.0,
+        21.0,
+        21.0,
+        21.0,
+        21.0,
+        21.0,
+        21.0,
+        21.0,
+        21.0,
+        21.0,
+        21.0,
+        21.0
+      ]
+    },
+    "scope": "Activity strata are known before the shift. Stratum aggregation uses follower request mass; it repairs this two-stratum correlated-shift construction, not arbitrary within-stratum heterogeneity."
+  },
+  "adaptive_audit_allocation": {
+    "base_leaders_per_arm": 2,
+    "maximum_leaders_per_arm": 8,
+    "base_probe_rotation_period_windows": 4,
+    "escalate_cusum_score": 0.03,
+    "escalate_if_gap_below": 0.04,
+    "shrink_after_stable_windows": 4,
+    "cells": [
+      {
+        "severity": 0.0,
+        "fixed_8_per_arm": {
+          "severity": 0.0,
+          "below_reference_seeds": 0,
+          "detected_below_reference_seeds": 0,
+          "false_gate_seeds": 0,
+          "delay_from_shift_mean": null,
+          "mean_leaders_per_arm_all": 8.0,
+          "mean_leaders_per_arm_pre": 8.0,
+          "mean_leaders_per_arm_post": 8.0,
+          "mean_dedicated_set_fraction_all": 0.25,
+          "post_deployed_hit_rate_mean": 0.42385042630709135,
+          "gate_windows": [
+            NaN,
+            NaN,
+            NaN,
+            NaN,
+            NaN,
+            NaN,
+            NaN,
+            NaN,
+            NaN,
+            NaN,
+            NaN,
+            NaN
+          ]
+        },
+        "adaptive_2_to_8_per_arm": {
+          "severity": 0.0,
+          "below_reference_seeds": 0,
+          "detected_below_reference_seeds": 0,
+          "false_gate_seeds": 0,
+          "delay_from_shift_mean": null,
+          "mean_leaders_per_arm_all": 2.025,
+          "mean_leaders_per_arm_pre": 2.0,
+          "mean_leaders_per_arm_post": 2.033333333333333,
+          "mean_dedicated_set_fraction_all": 0.06328125,
+          "post_deployed_hit_rate_mean": 0.43405816493890226,
+          "gate_windows": [
+            NaN,
+            NaN,
+            NaN,
+            NaN,
+            NaN,
+            NaN,
+            NaN,
+            NaN,
+            NaN,
+            NaN,
+            NaN,
+            NaN
+          ]
+        }
+      },
+      {
+        "severity": 0.375,
+        "fixed_8_per_arm": {
+          "severity": 0.375,
+          "below_reference_seeds": 12,
+          "detected_below_reference_seeds": 10,
+          "false_gate_seeds": 0,
+          "delay_from_shift_mean": 2.9,
+          "mean_leaders_per_arm_all": 8.0,
+          "mean_leaders_per_arm_pre": 8.0,
+          "mean_leaders_per_arm_post": 8.0,
+          "mean_dedicated_set_fraction_all": 0.25,
+          "post_deployed_hit_rate_mean": 0.3142856695713141,
+          "gate_windows": [
+            22.0,
+            22.0,
+            25.0,
+            NaN,
+            21.0,
+            22.0,
+            22.0,
+            27.0,
+            21.0,
+            21.0,
+            NaN,
+            26.0
+          ]
+        },
+        "adaptive_2_to_8_per_arm": {
+          "severity": 0.375,
+          "below_reference_seeds": 12,
+          "detected_below_reference_seeds": 11,
+          "false_gate_seeds": 0,
+          "delay_from_shift_mean": 2.272727272727273,
+          "mean_leaders_per_arm_all": 3.83125,
+          "mean_leaders_per_arm_pre": 2.0,
+          "mean_leaders_per_arm_post": 4.441666666666666,
+          "mean_dedicated_set_fraction_all": 0.1197265625,
+          "post_deployed_hit_rate_mean": 0.3196598933293269,
+          "gate_windows": [
+            21.0,
+            23.0,
+            22.0,
+            24.0,
+            21.0,
+            22.0,
+            23.0,
+            23.0,
+            21.0,
+            22.0,
+            NaN,
+            23.0
+          ]
+        }
+      },
+      {
+        "severity": 0.5,
+        "fixed_8_per_arm": {
+          "severity": 0.5,
+          "below_reference_seeds": 12,
+          "detected_below_reference_seeds": 11,
+          "false_gate_seeds": 0,
+          "delay_from_shift_mean": 1.8181818181818181,
+          "mean_leaders_per_arm_all": 8.0,
+          "mean_leaders_per_arm_pre": 8.0,
+          "mean_leaders_per_arm_post": 8.0,
+          "mean_dedicated_set_fraction_all": 0.25,
+          "post_deployed_hit_rate_mean": 0.3091548039362981,
+          "gate_windows": [
+            21.0,
+            21.0,
+            22.0,
+            22.0,
+            21.0,
+            21.0,
+            21.0,
+            27.0,
+            21.0,
+            21.0,
+            NaN,
+            22.0
+          ]
+        },
+        "adaptive_2_to_8_per_arm": {
+          "severity": 0.5,
+          "below_reference_seeds": 12,
+          "detected_below_reference_seeds": 12,
+          "false_gate_seeds": 0,
+          "delay_from_shift_mean": 1.6666666666666667,
+          "mean_leaders_per_arm_all": 2.7375,
+          "mean_leaders_per_arm_pre": 2.0,
+          "mean_leaders_per_arm_post": 2.9833333333333334,
+          "mean_dedicated_set_fraction_all": 0.085546875,
+          "post_deployed_hit_rate_mean": 0.32361700595953524,
+          "gate_windows": [
+            21.0,
+            21.0,
+            22.0,
+            21.0,
+            21.0,
+            22.0,
+            21.0,
+            23.0,
+            21.0,
+            21.0,
+            24.0,
+            22.0
+          ]
+        }
+      },
+      {
+        "severity": 1.0,
+        "fixed_8_per_arm": {
+          "severity": 1.0,
+          "below_reference_seeds": 12,
+          "detected_below_reference_seeds": 12,
+          "false_gate_seeds": 0,
+          "delay_from_shift_mean": 1.0,
+          "mean_leaders_per_arm_all": 8.0,
+          "mean_leaders_per_arm_pre": 8.0,
+          "mean_leaders_per_arm_post": 8.0,
+          "mean_dedicated_set_fraction_all": 0.25,
+          "post_deployed_hit_rate_mean": 0.28691727075821316,
+          "gate_windows": [
+            21.0,
+            21.0,
+            21.0,
+            21.0,
+            21.0,
+            21.0,
+            21.0,
+            21.0,
+            21.0,
+            21.0,
+            21.0,
+            21.0
+          ]
+        },
+        "adaptive_2_to_8_per_arm": {
+          "severity": 1.0,
+          "below_reference_seeds": 12,
+          "detected_below_reference_seeds": 12,
+          "false_gate_seeds": 0,
+          "delay_from_shift_mean": 1.0,
+          "mean_leaders_per_arm_all": 2.0,
+          "mean_leaders_per_arm_pre": 2.0,
+          "mean_leaders_per_arm_post": 2.0,
+          "mean_dedicated_set_fraction_all": 0.0625,
+          "post_deployed_hit_rate_mean": 0.3176132593399439,
+          "gate_windows": [
+            21.0,
+            21.0,
+            21.0,
+            21.0,
+            21.0,
+            21.0,
+            21.0,
+            21.0,
+            21.0,
+            21.0,
+            21.0,
+            21.0
+          ]
+        }
+      }
+    ],
+    "scope": "Nested candidate leaders are safe in this stateless, rotating-tag trace. The separate stateful experiment tests the reset problem and shadow repair."
+  },
+  "state_preserving_shadow_metadata": {
+    "warmup_timescale_windows": 20.0,
+    "true_warm_gap": 0.30000000000000004,
+    "reset_on_rotation_gap": 0.0149505615234375,
+    "fixed_leader_gap": 0.29876861572265623,
+    "shadow_state_gap": 0.2976493835449219,
+    "shadow_metadata_model": {
+      "counters_per_set": 2,
+      "modeled_counter_bits": 8,
+      "bytes_for_64_sets": 128,
+      "bytes_for_2048_sets": 4096,
+      "scope": "Warm-up counters are shadow-updatable from every set-window; this is not duplicate cache contents or an RTL synthesis result."
+    },
+    "scope": "Controlled multiplicative warm-up reward with counter-like shadow state; not a full stateful cache-content replica."
+  }
+}

@@ -52,6 +52,19 @@
     "input_ood_alarms": 0,
     "note": "Each set-window has exactly 25% of every PC before and after shift."
   },
+  "model_confidence_monitor": {
+    "absolute_margin_by_pc": [
+      0.4366563931171671,
+      0.4422040935628565,
+      0.4538269377189188,
+      0.4593433285495878
+    ],
+    "mean_absolute_margin_pre": 0.44800768823713255,
+    "mean_absolute_margin_post": 0.44800768823713255,
+    "distribution_total_variation": 0.0,
+    "alarms": 0,
+    "note": "The PC histogram is unchanged exactly, so every deterministic function of PC alone, including the model's confidence distribution, is unchanged."
+  },
   "steady_hit_rate": {
     "pre_shift": {
       "learned": {
@@ -94,9 +107,13 @@
     "delay_windows_min": 1,
     "delay_windows_max": 1,
     "detected_seeds": 12,
-    "total_seeds": 12
+    "total_seeds": 12,
+    "pre_shift_false_alarms": 0
   },
   "utility": {
+    "designed_clean_gain_retention": 0.875,
+    "designed_shift_loss_recovery": 0.875,
+    "note": "These 7/8 values are allocation ceilings in expectation: one fallback leader arm remains exposed before gating and one learned leader arm remains exposed after gating. Seed variation comes from which sets are leaders.",
     "clean_learned_gain_retained": {
       "mean": 0.8748038729435322,
       "ci95_low": 0.8739129167884413,
@@ -107,6 +124,14 @@
       "ci95_low": 0.8745646131815322,
       "ci95_high": 0.8751232640346936
     }
+  },
+  "estimator_audit": {
+    "estimand": "shadow learned-minus-fallback advantage on follower sets",
+    "mean_bias_all": -0.00030246310763888884,
+    "rmse_all": 0.010423537919721297,
+    "mean_bias_pre": 2.2786458333333517e-05,
+    "mean_bias_post": -0.0005685763888888893,
+    "note": "The shadow outcomes are diagnostic only and are never supplied to Bouncer. This homogeneous, equal-traffic experiment makes sampling/locality/state bias small; the result does not establish the premise for skewed workloads."
   },
   "curves": {
     "learned": {

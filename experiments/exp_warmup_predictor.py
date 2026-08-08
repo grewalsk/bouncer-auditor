@@ -22,22 +22,29 @@ consecutive windows on a policy) but differ in how the *contrast* depends on sta
     stateful reward that IS auditable -- the direct counterexample to "statelessness is
     necessary."
 
+We additionally model a SHADOW-STATE repair: both policy warm-up counters are updated
+on every set-window, although only the assigned arm supplies physical reward.  The
+shadow state therefore survives leader rotation and restores the multiplicative
+contrast.  This is a controlled state model, not a claim that arbitrary cache contents
+can be shadowed at the same cost.
+
 So the precise condition is reseed-identifiability of the contrast (statelessness is one
-sufficient special case; a state-invariant contrast is another). Deterministic; emits
+sufficient special case; a state-invariant contrast is another), and shadow updating is
+one explicit repair when the required state is counter-like. Deterministic; emits
 results/warmup_predictor.json.
 """
-import sys, json
 import numpy as np
-sys.path.insert(0, 'experiments')
-import common as C
 import matplotlib.pyplot as plt
+
+from experiments import workshop_common as C
 
 MU_C, MU_F = 0.80, 0.50          # warm competence gap = 0.30 (C beats F)
 GAP = MU_C - MU_F
 B_ADD = 0.20                     # additive cold-start deficit (shared by both policies)
 
 
-def _run(kind, c, reseed, W=160, n_sets=2048, n_L=32, m=64, seed=0):
+def _run(kind, c, reseed, *, shadow=False, W=160, n_sets=2048, n_L=32,
+         m=64, seed=0):
     """One trajectory. ``k`` counts consecutive windows in a leader pool.
 
     A slice that is not sampled in the current window leaves both policy histories; if it
@@ -46,6 +53,11 @@ def _run(kind, c, reseed, W=160, n_sets=2048, n_L=32, m=64, seed=0):
     rng = np.random.default_rng(seed)
     consec = np.zeros(n_sets)     # consecutive windows the slice has run its current leader policy
     pol = np.full(n_sets, -1)     # last-window policy per slice: -1 none, 0=F, 1=C
+    # Shadow mode retains one warm-up state per (set, policy).  Every set sees
+    # every trace window, so both counters advance even when only one policy is
+    # physically selected for reward.  This models shadow-updatable predictor
+    # metadata, not duplicate cache contents.
+    shadow_consec = np.zeros((n_sets, 2))
     perm = rng.permutation(n_sets)
     lC, lF = perm[:n_L], perm[n_L:2 * n_L]
     dhats = []
@@ -53,21 +65,30 @@ def _run(kind, c, reseed, W=160, n_sets=2048, n_L=32, m=64, seed=0):
         if reseed and t > 0:
             perm = rng.permutation(n_sets)
             lC, lF = perm[:n_L], perm[n_L:2 * n_L]
-        # Increment only when a slice ran the same sampled policy in the immediately
-        # preceding window. Non-leaders leave the modeled policy and reset to cold.
-        next_consec = np.zeros(n_sets)
-        next_pol = np.full(n_sets, -1)
-        for arr, p in [(lC, 1), (lF, 0)]:
-            next_consec[arr] = np.where(pol[arr] == p, consec[arr] + 1, 1)
-            next_pol[arr] = p
-        consec, pol = next_consec, next_pol
-        warm = 1 - np.exp(-c * consec)
+        if shadow:
+            shadow_consec += 1
+            kC = shadow_consec[lC, 1]
+            kF = shadow_consec[lF, 0]
+        else:
+            # Increment only when a slice ran the same sampled policy in the
+            # immediately preceding window. Non-leaders leave the modeled
+            # policy and reset to cold.
+            next_consec = np.zeros(n_sets)
+            next_pol = np.full(n_sets, -1)
+            for arr, p in [(lC, 1), (lF, 0)]:
+                next_consec[arr] = np.where(pol[arr] == p, consec[arr] + 1, 1)
+                next_pol[arr] = p
+            consec, pol = next_consec, next_pol
+            kC = consec[lC]
+            kF = consec[lF]
+        warmC = 1 - np.exp(-c * kC)
+        warmF = 1 - np.exp(-c * kF)
         if kind == "mult":                          # contrast scales with warm state
-            accC = MU_C * warm[lC]
-            accF = MU_F * warm[lF]
+            accC = MU_C * warmC
+            accF = MU_F * warmF
         else:                                       # additive: contrast state-invariant (= GAP)
-            accC = MU_C - B_ADD * np.exp(-c * consec[lC])
-            accF = MU_F - B_ADD * np.exp(-c * consec[lF])
+            accC = MU_C - B_ADD * np.exp(-c * kC)
+            accF = MU_F - B_ADD * np.exp(-c * kF)
         rL = rng.binomial(m, np.clip(accC, 0, 1)) / m
         rF = rng.binomial(m, np.clip(accF, 0, 1)) / m
         dhats.append(float(rL.mean() - rF.mean()))
@@ -75,15 +96,19 @@ def _run(kind, c, reseed, W=160, n_sets=2048, n_L=32, m=64, seed=0):
 
 
 def cell(kind, c, n_seed=8):
-    res, fix = [], []
+    res, fix, shadow = [], [], []
     for s in range(n_seed):
         dr = _run(kind, c, reseed=True, seed=s)
         df = _run(kind, c, reseed=False, seed=s)
+        ds = _run(kind, c, reseed=True, shadow=True, seed=s)
         res.append(dr.mean())                    # reseeded: mean over all windows
         fix.append(df[df.shape[0] // 2:].mean())  # fixed: steady-state (2nd half, after warmup)
+        shadow.append(ds[ds.shape[0] // 2:].mean())
     return dict(kind=kind, c=c, warmup_windows=round(1.0 / c, 1),
                 reseeded_dhat=float(np.mean(res)), reseeded_std=float(np.std(res)),
                 fixed_dhat=float(np.mean(fix)), fixed_std=float(np.std(fix)),
+                shadow_reseeded_dhat=float(np.mean(shadow)),
+                shadow_reseeded_std=float(np.std(shadow)),
                 attenuation=float(np.mean(res) / max(np.mean(fix), 1e-9)))
 
 
@@ -106,19 +131,23 @@ def main():
     # multiplicative: fixed recovers gap, reseeded attenuates (the cache reseed-confound)
     mult_fixed_recovers = slow_m["fixed_dhat"] >= 0.9 * GAP
     mult_reseeded_attenuates = slow_m["reseeded_dhat"] <= 0.5 * GAP
+    mult_shadow_recovers = slow_m["shadow_reseeded_dhat"] >= 0.9 * GAP
     # additive: reseeded SURVIVES at ~GAP even at the slowest warmup -> statelessness NOT necessary
     add_reseeded_survives = slow_a["reseeded_dhat"] >= 0.9 * GAP
     print(f"  slow warmup (c={slow_m['c']}): mult fixed recovers? {mult_fixed_recovers}  "
           f"mult reseeded attenuates? {mult_reseeded_attenuates}  |  "
+          f"mult shadow recovers? {mult_shadow_recovers}  |  "
           f"add reseeded survives (stateful yet auditable)? {add_reseeded_survives}")
 
     fig, ax = plt.subplots(figsize=(4.4, 2.9))
     ww = [r["warmup_windows"] for r in mult]
     ax.plot(ww, [r["fixed_dhat"] for r in mult], "s-", color=C.PALETTE["bouncer"], label="mult., fixed leaders")
     ax.plot(ww, [r["reseeded_dhat"] for r in mult], "o-", color=C.PALETTE["unguarded"],
-            label="mult., secret reseed")
+            label="mult., reset on rotation")
+    ax.plot(ww, [r["shadow_reseeded_dhat"] for r in mult], "^-", color=C.PALETTE["oracle"],
+            label="mult., shadow state")
     ax.plot(ww, [r["reseeded_dhat"] for r in add], "D--", color=C.PALETTE["oracle"],
-            label="add., secret reseed")
+            alpha=0.65, label="add., state-invariant")
     ax.axhline(GAP, color="k", lw=0.8, ls=":", label=f"true gap {GAP:.2f}")
     ax.set_xscale("log")
     ax.set_xlabel("warmup timescale $1/c$ (windows)")
@@ -133,16 +162,27 @@ def main():
               "secret per-epoch reseed keeps every slice cold, so reseeded Delta-hat attenuates while fixed "
               "leaders recover the true gap (the ChampSim replacement reseed-confound, isolated here in a "
               "synthetic predictor-like slice model; real PC-indexed predictor rewards remain untested). "
-              "Additive warmup (state-invariant contrast = GAP) IS reseed-identifiable: "
+              "Shadow-updating both policy counters restores the multiplicative contrast "
+              "under rotation in this controlled counter-state model. Additive warmup "
+              "(state-invariant contrast = GAP) IS reseed-identifiable: "
               "reseeded Delta-hat survives at ~GAP even though each reward is stateful -- a direct "
               "counterexample to 'statelessness is necessary'. Statelessness is one sufficient special case."),
         mu_C=MU_C, mu_F=MU_F, gap=GAP, b_additive=B_ADD,
+        shadow_metadata_model=dict(
+            counters_per_set=2,
+            modeled_counter_bits=8,
+            bytes_for_64_sets=128,
+            bytes_for_2048_sets=4096,
+            scope=("Warm-up counters are shadow-updatable from every set-window; this is "
+                   "not duplicate cache contents or an RTL synthesis result.")),
         multiplicative_cells=mult, additive_cells=add,
         invariants=dict(mult_fixed_recovers_gap_at_slow_warmup=mult_fixed_recovers,
                         mult_reseeded_attenuates_at_slow_warmup=mult_reseeded_attenuates,
+                        mult_shadow_recovers_gap_at_slow_warmup=mult_shadow_recovers,
                         additive_reseeded_survives_at_slow_warmup=add_reseeded_survives)))
     assert mult_fixed_recovers, "multiplicative fixed leaders should recover the gap at slow warmup"
     assert mult_reseeded_attenuates, "multiplicative reseeded should attenuate at slow warmup"
+    assert mult_shadow_recovers, "shadow-updated state should restore the multiplicative gap"
     assert add_reseeded_survives, "additive (state-invariant contrast) reseeded should survive -- statelessness is not necessary"
 
 
